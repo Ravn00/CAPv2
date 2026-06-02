@@ -766,57 +766,42 @@ async function licHash(clientId, month, year2d) {
 }
 
 async function validateLicense(code) {
-  const p = String(code||'').trim().toUpperCase().replace(/\s/g, '').split('-');
-  if (p.length !== 4 || p[0] !== 'AP')
-    return { ok:false, error:'Formato inválido. Ejemplo: AP-C001-0526-XXXXXXXX' };
-  const clientId = p[1];
-  const mmyy = p[2], hash = p[3];
-  if (mmyy.length !== 4 || hash.length !== 8)
-    return { ok:false, error:'Longitud incorrecta en el código' };
-  const mm = parseInt(mmyy.slice(0,2)), yy = parseInt(mmyy.slice(2,4));
-  if (isNaN(mm) || mm < 1 || mm > 12)
-    return { ok:false, error:'Mes inválido en el código' };
-  const fullYear = 2000 + yy;
-  const now = new Date();
-  const codeVal = fullYear * 12 + mm;
-  const currVal = now.getFullYear() * 12 + (now.getMonth() + 1);
-  if (codeVal < currVal)
-    return { ok:false, expired:true, error:`Licencia vencida — solicita el código de ${now.toLocaleString('es-CL',{month:'long'})} a tu proveedor` };
-  const expected = await licHash(clientId, mm, yy);
-  if (expected !== hash)
-    return { ok:false, error:'Código incorrecto. Verifica que lo copiaste bien.' };
-  const expiry = new Date(fullYear, mm, 0);
-  const daysLeft = Math.ceil((expiry - now) / 864e5);
-  return { ok:true, clientId, month:mm, year:fullYear, daysLeft, expiry };
-}
+  try {
+    const res = await fetch("https://xkguzluwbbxsbustlcxo.supabase.co/functions/v1/dynamic-worker", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: code.trim().toUpperCase() })
+    });
 
-// ── Brute-force lockout ──
-const _LK_KEY = "ap_lk_v2";
-const MAX_TRIES = 3;
-const LOCK_MS = 24 * 60 * 60 * 1000;
-function getLockState() { try { return JSON.parse(localStorage.getItem(_LK_KEY)||"{}"); } catch(_){return {};} }
-function setLockState(s) { localStorage.setItem(_LK_KEY, JSON.stringify(s)); }
-function checkLockout() {
-  const s = getLockState();
-  if (!s.lockedAt) return null;
-  const rem = LOCK_MS - (Date.now() - s.lockedAt);
-  if (rem <= 0) { localStorage.removeItem(_LK_KEY); return null; }
-  return rem;
+    if (!res.ok) {
+      return { ok: false, error: "Error de conexión con el servidor de licencias" };
+    }
+
+    const data = await res.json();
+
+    if (!data.valid) {
+      return { ok: false, error: data.error || "Código incorrecto", expired: data.expired };
+    }
+
+    return {
+      ok: true,
+      clientId: data.clientId,
+      month: data.month,
+      year: data.year,
+      daysLeft: data.daysLeft || 30
+    };
+  } catch (err) {
+    console.error("validateLicense error:", err);
+    return { ok: false, error: "Error al verificar la licencia" };
+  }
 }
-function registerFailedAttempt() {
-  const s = getLockState();
-  const tries = (s.tries||0) + 1;
-  if (tries >= MAX_TRIES) { setLockState({ tries, lockedAt: Date.now() }); return { locked:true, tries }; }
-  setLockState({ tries });
-  return { locked:false, tries, remaining: MAX_TRIES - tries };
-}
-function clearFailedAttempts() { localStorage.removeItem(_LK_KEY); }
 
 async function activateLicense() {
   const code = (document.getElementById('lic-input').value || '').trim().toUpperCase();
   const errEl = document.getElementById('lic-error');
   const btn = document.getElementById('lic-btn');
   errEl.textContent = '';
+
   const remaining = checkLockout();
   if (remaining) {
     const hrs = Math.floor(remaining / 36e5);
@@ -824,10 +809,15 @@ async function activateLicense() {
     errEl.textContent = `Demasiados intentos. Bloqueado por ${hrs > 0 ? hrs+'h ' : ''}${mins} min más.`;
     return;
   }
+
   if (!code) { errEl.textContent = 'Ingresa tu código de licencia'; return; }
-  btn.disabled = true; btn.textContent = 'Verificando…';
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando…';
+
   try {
     const result = await validateLicense(code);
+
     if (!result.ok) {
       const lock = registerFailedAttempt();
       if (lock.locked) {
@@ -835,27 +825,42 @@ async function activateLicense() {
       } else {
         errEl.textContent = `Código incorrecto (${lock.remaining} intento${lock.remaining!==1?'s':''} restante${lock.remaining!==1?'s':''})`;
       }
-      btn.disabled = false; btn.textContent = 'Activar Licencia';
-      const box = document.querySelector('.lic-box');
-      if (box) { box.style.animation = 'none'; void box.offsetHeight; box.style.animation = 'shake .4s ease'; }
+      btn.disabled = false;
+      btn.textContent = 'Activar Licencia';
       return;
     }
+
     clearFailedAttempts();
-    try { localStorage.setItem('ap_license_v2', JSON.stringify({ code, clientId:result.clientId, month:result.month, year:result.year, savedAt:Date.now() })); }
-    catch(se) { console.warn('localStorage write failed:', se); }
+
+    try {
+      localStorage.setItem('ap_license_v2', JSON.stringify({
+        code,
+        clientId: result.clientId,
+        month: result.month,
+        year: result.year,
+        savedAt: Date.now()
+      }));
+    } catch(se) { console.warn('localStorage write failed:', se); }
+
     const gate = document.getElementById('lic-gate');
     gate.classList.add('hiding');
+
     setTimeout(async () => {
       gate.classList.add('gone');
       try { updateLicPill(result); } catch(_) {}
       try { await initApp(); } catch(ie) { console.error('initApp error:', ie); }
     }, 320);
-    btn.disabled = false; btn.textContent = 'Activar Licencia';
+
+    btn.disabled = false;
+    btn.textContent = 'Activar Licencia';
+
   } catch(err) {
     console.error('activateLicense error:', err);
     errEl.textContent = 'Error al verificar: ' + (err.message || String(err)).slice(0, 60);
-    btn.disabled = false; btn.textContent = 'Activar Licencia';
+    btn.disabled = false;
+    btn.textContent = 'Activar Licencia';
   }
+}
 }
 
 async function checkSavedLicense() {
