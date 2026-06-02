@@ -911,13 +911,17 @@ async function showLicenseInfo() {
   } catch(_) { toast('Error al leer licencia'); }
 }
 
-// ── Anti-devtools: closes license if devtools open ──
+// ── Anti-devtools: closes license if devtools open (desktop only) ──
 (function() {
+  // Skip entirely on mobile/touch devices — outerWidth difference is unreliable
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
+  if (isMobile) return;
   let _open = false;
   setInterval(() => {
     const dw = window.outerWidth - window.innerWidth;
     const dh = window.outerHeight - window.innerHeight;
-    if (dw > 160 || dh > 160) {
+    // Use 300px threshold on desktop to avoid false positives
+    if (dw > 300 || dh > 300) {
       if (!_open) {
         _open = true;
         localStorage.removeItem("ap_license_v2");
