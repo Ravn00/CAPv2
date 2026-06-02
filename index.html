@@ -764,7 +764,45 @@ async function licHash(clientId, month, year2d) {
   } catch(e) {}
   return sha256(raw).toUpperCase().slice(0, 8);
 }
+// ── Brute-force lockout ──
+const _LK_KEY = "ap_lk_v2";
+const MAX_TRIES = 3;
+const LOCK_MS = 24 * 60 * 60 * 1000;
 
+function getLockState() { 
+  try { return JSON.parse(localStorage.getItem(_LK_KEY)||"{}"); } 
+  catch(_) { return {}; } 
+}
+
+function setLockState(s) { 
+  localStorage.setItem(_LK_KEY, JSON.stringify(s)); 
+}
+
+function checkLockout() {
+  const s = getLockState();
+  if (!s.lockedAt) return null;
+  const rem = LOCK_MS - (Date.now() - s.lockedAt);
+  if (rem <= 0) { 
+    localStorage.removeItem(_LK_KEY); 
+    return null; 
+  }
+  return rem;
+}
+
+function registerFailedAttempt() {
+  const s = getLockState();
+  const tries = (s.tries||0) + 1;
+  if (tries >= MAX_TRIES) { 
+    setLockState({ tries, lockedAt: Date.now() }); 
+    return { locked:true, tries }; 
+  }
+  setLockState({ tries });
+  return { locked:false, tries, remaining: MAX_TRIES - tries };
+}
+
+function clearFailedAttempts() { 
+  localStorage.removeItem(_LK_KEY); 
+}
 async function validateLicense(code) {
   try {
     const res = await fetch("https://xkguzluwbbxsbustlcxo.supabase.co/functions/v1/dynamic-worker", {
