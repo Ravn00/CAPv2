@@ -256,6 +256,33 @@ a{color:var(--gold)}
 #diag-real-log{display:none;background:var(--bg);border:1px solid var(--bdr2);border-radius:var(--r8);padding:10px;font-size:11px;color:var(--t3);font-family:var(--font-mono);white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-bottom:10px}
 #diag-img-zone{border:1px dashed var(--bdr2);border-radius:var(--r8);padding:16px;text-align:center;cursor:pointer;margin-bottom:10px;transition:border-color .2s}
 #diag-img-zone:hover{border-color:rgba(200,169,110,.3)}
+.diag-grid{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.diag-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border:1px solid var(--bdr2);border-radius:var(--r8);transition:border-color .2s}
+.diag-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.diag-dot.idle{background:var(--t5)}
+.diag-dot.ok{background:var(--green-lt)}
+.diag-dot.err{background:var(--red-lt)}
+.diag-dot.warn{background:var(--amber-lt)}
+.diag-dot.run{background:var(--t4)}
+.diag-name{font-size:11px;font-weight:500;color:var(--t2);flex-shrink:0;min-width:80px}
+.diag-msg{font-size:10px;color:var(--t4);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.diag-run-btn{padding:4px 10px;font-size:9px;font-weight:500;background:var(--s3);border:1px solid var(--bdr2);border-radius:var(--r6);color:var(--t3);cursor:pointer;flex-shrink:0;transition:all .15s}
+.diag-run-btn:hover{background:var(--s4);color:var(--t2)}
+.diag-run-btn:disabled{opacity:.4;cursor:not-allowed}
+.diag-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.diag-run-all{padding:8px 16px;background:var(--gold);color:#0D0F12;border:none;border-radius:var(--r8);font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;transition:all .15s;white-space:nowrap}
+.diag-run-all:hover{opacity:.9}
+.diag-run-all:disabled{background:var(--s3);color:var(--t4);cursor:not-allowed}
+.diag-ai-section{border:1px solid var(--bdr2);border-radius:var(--r8);overflow:hidden;margin-bottom:12px}
+.diag-ai-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s2);cursor:pointer;font-size:11px;font-weight:500;color:var(--t2);user-select:none}
+.diag-ai-hdr:hover{background:var(--s3)}
+.diag-ai-arrow{transition:transform .2s;font-size:10px;color:var(--t4)}
+.diag-ai-arrow.open{transform:rotate(180deg)}
+.diag-ai-body{display:none;padding:12px;border-top:1px solid var(--bdr2)}
+.diag-ai-body.open{display:block}
+.diag-log{margin-bottom:12px}
+.diag-log-title{font-size:9px;font-weight:600;color:var(--t4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+#diag-log-content{background:var(--bg);border:1px solid var(--bdr2);border-radius:var(--r8);padding:10px;font-size:10px;color:var(--t3);font-family:var(--font-mono);white-space:pre-wrap;max-height:150px;overflow-y:auto;min-height:40px;line-height:1.6}
 
 /* --- Confirm --- */
 #confirm-bg{display:none;position:fixed;inset:0;background:rgba(5,7,9,.92);z-index:600;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
@@ -348,29 +375,47 @@ a{color:var(--gold)}
 <!-- NETWORK BANNER -->
 <div id="net-banner">Sin conexión — los cambios se guardarán cuando vuelvas a estar online</div>
 
-<!-- IMAGE TEST MODAL (only diag kept) -->
-<div class="modal-bg" id="diag-test-modal">
+<!-- DIAGNOSTIC PANEL -->
+<div class="modal-bg" id="diag-panel">
   <div class="modal-sheet">
-    <div class="modal-title">Probar IA con foto real</div>
-    <div class="modal-sub">Subí una foto y verás cada paso de lo que hace la IA en tiempo real.</div>
-    <div id="diag-img-zone" onclick="document.getElementById('diag-file-in').click()">
-      <div style="color:var(--t4);margin-bottom:4px;display:flex;align-items:center;justify-content:center">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+    <div class="diag-header">
+      <div>
+        <div class="modal-title">Diagnóstico del Sistema</div>
+        <div class="modal-sub">Verificaciones completas de todos los sistemas</div>
       </div>
-      <div style="font-size:11px;color:var(--t4);letter-spacing:.3px">Toca para seleccionar una foto</div>
+      <button class="diag-run-all" id="diag-run-all">Ejecutar todo</button>
     </div>
-    <input type="file" id="diag-file-in" accept="image/*" style="display:none"/>
-    <div id="diag-real-wrap" style="display:none">
-      <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
-        <img id="diag-real-preview" src="" alt=""/>
-        <div id="diag-real-meta"></div>
+    <div class="diag-grid" id="diag-grid"></div>
+    <div class="diag-ai-section">
+      <div class="diag-ai-hdr" id="diag-ai-toggle">
+        <span>Prueba de IA con foto real</span>
+        <span class="diag-ai-arrow open" id="diag-ai-arrow">&#9660;</span>
       </div>
-      <div id="diag-real-steps"></div>
-      <div id="diag-real-log"></div>
-      <button class="btn-primary" id="diag-real-run" style="width:100%">Probar con esta foto</button>
+      <div class="diag-ai-body open" id="diag-ai-body">
+        <div id="diag-img-zone" onclick="document.getElementById('diag-file-in').click()">
+          <div style="color:var(--t4);margin-bottom:4px;display:flex;align-items:center;justify-content:center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          </div>
+          <div style="font-size:11px;color:var(--t4);letter-spacing:.3px">Toca para seleccionar una foto</div>
+        </div>
+        <input type="file" id="diag-file-in" accept="image/*" style="display:none"/>
+        <div id="diag-real-wrap" style="display:none">
+          <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
+            <img id="diag-real-preview" src="" alt=""/>
+            <div id="diag-real-meta"></div>
+          </div>
+          <div id="diag-real-steps"></div>
+          <div id="diag-real-log"></div>
+          <button class="btn-primary" id="diag-real-run" style="width:100%">Probar con esta foto</button>
+        </div>
+      </div>
+    </div>
+    <div class="diag-log">
+      <div class="diag-log-title">Registro</div>
+      <pre id="diag-log-content"></pre>
     </div>
     <div class="modal-btns">
-      <button class="btn-ghost-sm" style="flex:1" onclick="closeModal('diag-test-modal')">Cerrar</button>
+      <button class="btn-ghost-sm" style="flex:1" onclick="closeModal('diag-panel')">Cerrar</button>
     </div>
   </div>
 </div>
@@ -436,8 +481,8 @@ a{color:var(--gold)}
     </div>
   </div>
   <div class="hdr-right">
-    <button class="ico-btn" id="btn-test-ai" aria-label="Probar IA" title="Probar IA">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <button class="ico-btn" id="btn-diag" aria-label="Diagnóstico" title="Diagnóstico del Sistema">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06"/><path d="M4.6 15a1.65 1.65 0 0 1-.33 1.82l-.06.06a2 2 0 0 0 2.83 2.83l.06-.06"/><path d="M15 4.6a1.65 1.65 0 0 1 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06"/><path d="M9 4.6a1.65 1.65 0 0 0-1.82-.33l-.06-.06a2 2 0 0 0-2.83 2.83l.06.06"/></svg>
     </button>
     <button class="ico-btn" id="btn-resync" aria-label="Sincronizar fotos a la nube" title="Sincronizar fotos a la nube" onclick="resyncMissingPhotos()">
       <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
@@ -1670,13 +1715,191 @@ $("manual-save").onclick=async ()=>{
 };
 
 // ---
-// IMAGE TEST (kept from diag)
+// DIAGNOSTIC PANEL
 // ---
-$("btn-test-ai").onclick = () => {
-  $("diag-file-in").value=""; $("diag-real-wrap").style.display="none";
-  $("diag-real-steps").innerHTML=""; $("diag-real-log").style.display="none";
-  $("diag-real-log").textContent="";
-  $("diag-test-modal").classList.add("on");
+const DIAG_ITEMS = [
+  { id:"network",    label:"Red" },
+  { id:"supabase",   label:"Supabase" },
+  { id:"apikeys",    label:"API Keys" },
+  { id:"license",    label:"Licencia" },
+  { id:"storage",    label:"Almacenamiento" },
+  { id:"catalog",    label:"Catálogo" },
+  { id:"sw",         label:"Service Worker" },
+  { id:"device",     label:"Dispositivo" },
+  { id:"photosync",  label:"Fotos" },
+];
+const diagState = {};
+DIAG_ITEMS.forEach(i => diagState[i.id] = { status:"idle", msg:"" });
+
+function diagLog(msg) {
+  const el = $("diag-log-content");
+  if (!el) return;
+  el.textContent += msg + "\n";
+  el.scrollTop = el.scrollHeight;
+}
+
+function buildDiagGrid() {
+  const grid = $("diag-grid");
+  grid.innerHTML = "";
+  DIAG_ITEMS.forEach(item => {
+    const st = diagState[item.id];
+    const row = document.createElement("div");
+    row.className = "diag-item";
+    row.innerHTML = `<span class="diag-dot ${st.status}" id="dot-${item.id}"></span>
+      <span class="diag-name">${item.label}</span>
+      <span class="diag-msg" id="msg-${item.id}">${st.msg || "—"}</span>
+      <button class="diag-run-btn" data-check="${item.id}">Probar</button>`;
+    row.querySelector("[data-check]").onclick = () => runDiag(item.id);
+    grid.appendChild(row);
+  });
+}
+
+function setDiagStatus(id, status, msg) {
+  diagState[id] = { status, msg };
+  const dot = $(`dot-${id}`); if (dot) { dot.className = `diag-dot ${status}`; }
+  const msgEl = $(`msg-${id}`); if (msgEl) { msgEl.textContent = msg; }
+}
+
+async function runDiag(id) {
+  const btn = document.querySelector(`[data-check="${id}"]`);
+  if (btn) btn.disabled = true;
+  setDiagStatus(id, "run", "Probando…");
+  diagLog(`[${id}] Iniciando…`);
+  try {
+    const fn = { network: diagNetwork, supabase: diagSupabase, apikeys: diagApiKeys, license: diagLicense, storage: diagStorage, catalog: diagCatalog, sw: diagSW, device: diagDevice, photosync: diagPhotoSync }[id];
+    if (!fn) { setDiagStatus(id, "err", "Check no encontrado"); diagLog(`[${id}] Error: check no encontrado`); return; }
+    const result = await fn();
+    setDiagStatus(id, result.status, result.message);
+    diagLog(`[${id}] ${result.status.toUpperCase()}: ${result.message}`);
+    if (result.detail) diagLog(`[${id}] Detalle: ${result.detail}`);
+  } catch(e) {
+    setDiagStatus(id, "err", e.message || "Error");
+    diagLog(`[${id}] ERROR: ${e.message}`);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function runDiagAll() {
+  const btn = $("diag-run-all");
+  btn.disabled = true; btn.textContent = "Ejecutando…";
+  diagLog("=== DIAGNÓSTICO COMPLETO ===");
+  for (const item of DIAG_ITEMS) {
+    await runDiag(item.id);
+  }
+  diagLog("=== FINALIZADO ===");
+  btn.disabled = false; btn.textContent = "Ejecutar todo";
+}
+
+async function diagNetwork() {
+  if (!navigator.onLine) return { status:"err", message:"Sin conexión a internet" };
+  try {
+    const c = await fetch("https://clients3.google.com/generate_204", { mode:"no-cors", signal:AbortSignal.timeout(5000) });
+    return { status:"ok", message:"Conectado a internet" };
+  } catch(e) {
+    return { status:"warn", message:"Red limitada o muy lenta" };
+  }
+}
+
+async function diagSupabase() {
+  const t0 = Date.now();
+  try {
+    const data = await sbFetch("/rest/v1/partes?select=count&limit=0", "GET");
+    const ms = Date.now() - t0;
+    if (data !== null) return { status:"ok", message:`Conexión exitosa (${ms}ms)` };
+    const fallback = await fetch(`${SB_URL}/rest/v1/`, { method:"HEAD", headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }, signal:AbortSignal.timeout(8000) });
+    if (fallback.ok) return { status:"ok", message:`Conexión exitosa (${ms}ms)` };
+    return { status:"err", message:`Sin respuesta (${ms}ms)` };
+  } catch(e) {
+    return { status:"err", message:e.message || "Sin conexión" };
+  }
+}
+
+async function diagApiKeys() {
+  if (!apiKeys.length) return { status:"err", message:"Ninguna API Key configurada" };
+  const provs = apiKeys.map(k => k.startsWith("sk-or-")?"OpenRouter":k.startsWith("gsk_")?"Groq":"Gemini");
+  const counts = {};
+  provs.forEach(p => { counts[p] = (counts[p]||0)+1; });
+  const detail = Object.entries(counts).map(([p,c]) => `${p}: ${c}`).join(", ");
+  return { status:"ok", message:`${apiKeys.length} key(s) configuradas`, detail };
+}
+
+async function diagLicense() {
+  const pill = $("lic-pill");
+  if (pill.classList.contains("ok")) return { status:"ok", message:"Licencia activa y válida" };
+  if (pill.classList.contains("warn")) return { status:"warn", message:"Licencia por vencer pronto" };
+  return { status:"err", message:"Sin licencia activa" };
+}
+
+async function diagStorage() {
+  try {
+    const used = (localStorage.getItem("ap_parts_v2")||"").length;
+    const max = 5e6;
+    const pct = (used / max * 100).toFixed(1);
+    const free = ((max - used) / 1024).toFixed(0);
+    const status = used > 4e6 ? "warn" : "ok";
+    return { status, message:`${(used/1024).toFixed(0)}KB usado (${pct}%), ${free}KB libre` };
+  } catch(e) {
+    return { status:"err", message:e.message };
+  }
+}
+
+async function diagCatalog() {
+  if (!parts.length) return { status:"warn", message:"Catálogo vacío" };
+  const avail = parts.filter(p => !p.sold).length;
+  const sold = parts.filter(p => p.sold).length;
+  const cats = new Set(parts.map(p => p.categoria).filter(Boolean)).size;
+  const withCat = parts.filter(p => p.categoria).length;
+  const noCat = parts.length - withCat;
+  let detail = `${parts.length} partes · ${avail} disp. · ${sold} vend. · ${cats} cats.`;
+  if (noCat) detail += ` · ${noCat} sin categoría`;
+  return { status:"ok", message:detail };
+}
+
+async function diagSW() {
+  if (!("serviceWorker" in navigator)) return { status:"warn", message:"No soportado en este navegador" };
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (reg) return { status:"ok", message:"Registrado y activo" };
+    return { status:"warn", message:"No registrado (puede estar en http)" };
+  } catch(e) {
+    return { status:"err", message:e.message };
+  }
+}
+
+async function diagDevice() {
+  const info = [];
+  info.push(`SO: ${navigator.platform || "desconocido"}`);
+  info.push(`Idioma: ${navigator.language}`);
+  info.push(`Pantalla: ${window.innerWidth}×${window.innerHeight}`);
+  info.push(`User Agent: ${navigator.userAgent.slice(0,40)}…`);
+  try {
+    const hasCam = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    info.push(`Cámara: ${hasCam ? "sí" : "no"}`);
+  } catch(_) { info.push("Cámara: no detectable"); }
+  return { status:"ok", message:info.join(" · ") };
+}
+
+async function diagPhotoSync() {
+  const total = parts.length;
+  if (!total) return { status:"warn", message:"Catálogo vacío" };
+  const withPhoto = parts.filter(p => p.preview).length;
+  const without = total - withPhoto;
+  const status = without === 0 ? "ok" : without > total * 0.3 ? "warn" : "ok";
+  return { status, message:`${withPhoto} con foto · ${without} sin foto (${(without/total*100).toFixed(0)}%)` };
+}
+
+$("btn-diag").onclick = () => {
+  buildDiagGrid();
+  $("diag-file-in").value = ""; $("diag-real-wrap").style.display = "none";
+  $("diag-real-steps").innerHTML = ""; $("diag-real-log").style.display = "none";
+  $("diag-real-log").textContent = ""; $("diag-log-content").textContent = "";
+  $("diag-panel").classList.add("on");
+};
+$("diag-run-all").onclick = runDiagAll;
+$("diag-ai-toggle").onclick = () => {
+  $("diag-ai-body").classList.toggle("open");
+  $("diag-ai-arrow").classList.toggle("open");
 };
 $("diag-file-in").onchange = async e => {
   const file = e.target.files[0]; if(!file) return;
