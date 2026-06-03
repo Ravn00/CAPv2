@@ -1755,6 +1755,11 @@ window.addEventListener("load", async () => {
   }
   // If not valid: gate stays visible, activateLicense() calls initApp() on success
 });
+// ---
+// Service Worker registration
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js', { scope: '/CAPv2/' }).catch(() => {});
+}
 </script>
 </body>
 </html>
