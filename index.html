@@ -1,4 +1,4 @@
-﻿﻿?<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -46,13 +46,13 @@ a{color:var(--gold)}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 @keyframes pulse-gold{0%,100%{opacity:1}50%{opacity:.5}}
 
-/* �??�?? Admin banner �??�?? */
+/* --- */
 #admin-banner{display:none;background:var(--s1);border-bottom:2px solid var(--bdr2);padding:10px 14px;text-align:center;font-size:12px;color:var(--t2);line-height:1.5;position:sticky;top:0;z-index:400}
 #admin-banner.on{display:block;animation:fadeUp .2s ease}
 #admin-banner.warning{border-color:var(--amber-lt);color:var(--amber-lt)}
 #admin-banner.critical{border-color:var(--red-lt);color:var(--red-lt)}
 
-/* �??�?? License Gate �??�?? */
+/* --- */
 #lic-gate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(13,15,18,.97);backdrop-filter:blur(20px);padding:20px;transition:opacity .3s}
 #lic-gate.hiding{opacity:0;pointer-events:none}
 #lic-gate.gone{display:none}
@@ -78,7 +78,7 @@ a{color:var(--gold)}
 #lic-pill.warn{background:rgba(200,169,110,.1);color:var(--gold);border-color:rgba(200,169,110,.3);animation:pulse-gold 2s ease infinite}
 #lic-pill.on{display:flex}
 .lic-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
-/* �??�?? Maintenance overlay �??�?? */
+/* --- */
 #maint-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(13,15,18,.97);backdrop-filter:blur(20px);align-items:center;justify-content:center;padding:20px}
 #maint-overlay.on{display:flex}
 .maint-box{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r16);padding:32px 24px 28px;max-width:360px;width:100%;text-align:center;animation:fadeUp .35s ease}
@@ -86,7 +86,7 @@ a{color:var(--gold)}
 .maint-title{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:8px;color:var(--gold)}
 .maint-msg{font-size:12px;color:var(--t3);line-height:1.6;margin-bottom:16px}
 
-/* �??�?? HEADER �??�?? */
+/* --- */
 #hdr{
   background:var(--s1);border-bottom:1px solid var(--bdr2);
   padding:0;position:sticky;top:0;z-index:300;display:flex;flex-direction:column;
@@ -137,7 +137,7 @@ a{color:var(--gold)}
 
 #main{max-width:700px;margin:0 auto;padding:16px 14px 90px;position:relative;z-index:1}
 
-/* �??�?? UPLOAD �??�?? */
+/* --- */
 #up-panel{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r12);overflow:hidden;margin-bottom:14px}
 #up-toggle{width:100%;padding:13px 16px;background:transparent;color:var(--t2);font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between;letter-spacing:.5px}
 #up-toggle:hover{background:var(--s2)}#up-toggle:active{background:var(--s3)}
@@ -155,14 +155,14 @@ a{color:var(--gold)}
 .up-cat-label{font-size:10px;font-weight:500;color:var(--t3);letter-spacing:.8px;text-transform:uppercase}
 .up-hint{font-size:10px;color:var(--t4);text-align:center;line-height:1.6;padding:0 6px;letter-spacing:.3px}
 
-/* �??�?? PROGRESS �??�?? */
+/* --- */
 #prog-wrap{display:none;margin-bottom:14px}
 #prog-wrap.on{display:block}
 #prog-track{height:2px;background:var(--s3);border-radius:1px;overflow:hidden;margin-bottom:8px}
 #prog-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--gold));border-radius:1px;transition:width .4s ease;width:0%;box-shadow:0 0 8px rgba(200,169,110,.4)}
 #prog-label{font-size:10px;color:var(--t4);text-align:center;letter-spacing:.5px}
 
-/* �??�?? QUEUE �??�?? */
+/* --- */
 #queue-wrap{display:none;background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r10);padding:12px;margin-bottom:14px}
 #queue-wrap.on{display:block}
 #queue-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -173,7 +173,7 @@ a{color:var(--gold)}
 .q-th img{width:100%;height:100%;object-fit:cover}
 .q-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
 
-/* �??�?? FOLDER TABS �??�?? */
+/* --- */
 #folder-nav{margin-bottom:0;position:sticky;top:88px;z-index:200;background:var(--bg);padding-bottom:0}
 .tabs-scroll{display:flex;gap:2px;overflow-x:auto;padding:12px 14px 0;scrollbar-width:none}
 .tabs-scroll::-webkit-scrollbar{display:none}
@@ -201,7 +201,7 @@ a{color:var(--gold)}
 .add-manual-btn{width:32px;height:32px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r8);display:flex;align-items:center;justify-content:center;color:var(--t3);flex-shrink:0;font-size:16px}
 .add-manual-btn:hover{border-color:rgba(200,169,110,.3);color:var(--gold)}
 
-/* �??�?? PRODUCT CARDS �??�?? */
+/* --- */
 .prod-list{display:flex;flex-direction:column;gap:5px;padding:0 10px}
 .pcard{background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r10);display:flex;align-items:stretch;overflow:hidden;transition:border-color .2s,background .2s;animation:fadeUp .2s ease}
 .pcard-img{width:72px;min-width:72px;height:72px;object-fit:cover;cursor:zoom-in;flex-shrink:0;background:var(--s3)}
@@ -225,7 +225,7 @@ a{color:var(--gold)}
 .pact.del:hover{background:rgba(192,57,43,.15);color:var(--red-lt)}
 .pact svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 
-/* �??�?? MODALS �??�?? */
+/* --- */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(5,7,9,.9);z-index:500;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(4px)}
 .modal-bg.on{display:flex;animation:fadeUp .15s ease}
 .modal-sheet{background:var(--s1);border-radius:18px 18px 0 0;border-top:1px solid var(--bdr3);padding:20px 16px 36px;width:100%;max-height:90vh;overflow-y:auto;animation:slideIn .22s ease;position:relative}
@@ -242,7 +242,7 @@ a{color:var(--gold)}
 .btn-primary:hover{background:#D4B87A}
 .btn-ghost-sm{padding:12px 14px;background:var(--s2);border:1px solid var(--bdr2);color:var(--t3);border-radius:var(--r8);font-size:12px;font-weight:400}
 
-/* �??�?? Image test modal (kept from diag) �??�?? */
+/* --- */
 #diag-real-preview{width:68px;height:68px;object-fit:cover;border-radius:var(--r8);border:1px solid var(--bdr2);flex-shrink:0}
 #diag-real-meta{font-size:11px;color:var(--t4);font-family:var(--font-mono)}
 #diag-real-steps{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
@@ -250,7 +250,7 @@ a{color:var(--gold)}
 #diag-img-zone{border:1px dashed var(--bdr2);border-radius:var(--r8);padding:16px;text-align:center;cursor:pointer;margin-bottom:10px}
 #diag-img-zone:hover{border-color:rgba(200,169,110,.3)}
 
-/* �??�?? CONFIRM �??�?? */
+/* --- */
 #confirm-bg{display:none;position:fixed;inset:0;background:rgba(5,7,9,.9);z-index:600;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
 #confirm-bg.on{display:flex}
 #confirm-box{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r12);padding:24px 20px;max-width:300px;width:100%;text-align:center;animation:fadeUp .15s ease}
@@ -260,21 +260,21 @@ a{color:var(--gold)}
 #conf-ok.danger{background:var(--red)}
 #conf-cancel{background:var(--s2);border:1px solid var(--bdr2);color:var(--t3)}
 
-/* �??�?? TOAST �??�?? */
+/* --- */
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--bdr3);border-radius:var(--r8);padding:9px 16px;font-size:11px;color:var(--t2);z-index:700;display:none;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.5);letter-spacing:.3px}
 #toast.on{display:block;animation:fadeUp .2s ease}
 
-/* �??�?? LIGHTBOX �??�?? */
+/* --- */
 #lightbox{display:none;position:fixed;inset:0;background:rgba(5,7,9,.96);z-index:800;align-items:center;justify-content:center;cursor:zoom-out}
 #lightbox.on{display:flex}
 #lb-img{max-width:94vw;max-height:88vh;border-radius:var(--r10);object-fit:contain}
 #lb-close{position:fixed;top:14px;right:14px;width:34px;height:34px;background:var(--s2);border:1px solid var(--bdr2);color:var(--t2);border-radius:50%;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 
-/* �??�?? Manual photo �??�?? */
+/* --- */
 #manual-photo-preview{width:100%;height:140px;background:var(--s2);border:1px dashed var(--bdr2);border-radius:var(--r10);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;cursor:pointer;overflow:hidden;position:relative;margin-bottom:12px}
 #manual-file{display:none}
 
-/* �??�?? FAB �??�?? */
+/* --- */
 #fab-export{display:none;position:fixed;bottom:20px;right:14px;background:var(--gold);color:#0D0F12;border-radius:var(--r10);padding:11px 16px;font-size:12px;font-weight:500;letter-spacing:.5px;box-shadow:0 4px 20px rgba(200,169,110,.3);z-index:200}
 #fab-export.on{display:flex;align-items:center;gap:7px}
 #fab-export svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -332,7 +332,7 @@ a{color:var(--gold)}
 <!-- MAINTENANCE OVERLAY -->
 <div id="maint-overlay">
   <div class="maint-box">
-    <div class="maint-icon">�??�</div>
+    <div class="maint-icon">????</div>
     <div class="maint-title">Mantenimiento</div>
     <div class="maint-msg" id="maint-msg">El sistema está en mantenimiento. Volvé más tarde.</div>
   </div>
@@ -391,7 +391,7 @@ a{color:var(--gold)}
     <div class="fld"><div class="fld-label">Categoría</div>
       <select class="fld-input" id="m-cat">
         <option value="parachoques">Parachoques</option>
-        <option value="opticos">�?pticos</option>
+        <option value="opticos">??pticos</option>
         <option value="focos">Focos</option>
         <option value="guardabarros">Guardabarros</option>
         <option value="capots">Capots</option>
@@ -462,10 +462,10 @@ a{color:var(--gold)}
     </button>
     <div id="up-body" class="open">
       <div class="up-grid" id="up-grid"></div>
-      <div class="up-hint">Seleccioná la categoría �?? elegí las fotos �?? la IA detecta marca, modelo y años</div>
+      <div class="up-hint">Seleccioná la categoría ??? elegí las fotos ??? la IA detecta marca, modelo y años</div>
     </div>
   </div>
-  <div id="prog-wrap"><div id="prog-track"><div id="prog-fill"></div></div><div id="prog-label">Iniciando�?�</div></div>
+  <div id="prog-wrap"><div id="prog-track"><div id="prog-fill"></div></div><div id="prog-label">Iniciando???</div></div>
   <div id="queue-wrap">
     <div id="queue-hdr"><div id="queue-title">En proceso</div><div id="queue-prog"></div></div>
     <div class="q-row" id="queue-row"></div>
@@ -482,7 +482,7 @@ a{color:var(--gold)}
 <!-- LIGHTBOX -->
 <div id="lightbox" onclick="closeLightbox()">
   <img id="lb-img" src="" alt=""/>
-  <div id="lb-close" onclick="closeLightbox()">�??</div>
+  <div id="lb-close" onclick="closeLightbox()">???</div>
 </div>
 
 <button id="fab-export" onclick="exportExcel()">
@@ -491,13 +491,13 @@ a{color:var(--gold)}
 </button>
 
 <script>
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
-// CONFIG �?? leída desde Supabase admin_config
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
+// CONFIG ??? leída desde Supabase admin_config
+// ---
 const SB_URL = "https://xkguzluwbbxsbustlcxo.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrZ3V6bHV3YmJ4c2J1c3RsY3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNzQwOTUsImV4cCI6MjA5NTc1MDA5NX0.N6oatsQFuRPdlpKcwWnqNSvagtg1dGqjSNg2dzU9Tl0";
 
-// Device ID �?? persistente para tracking
+// Device ID ??? persistente para tracking
 let deviceId = localStorage.getItem("ap_device_id");
 if (!deviceId) { deviceId = "dev_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8); localStorage.setItem("ap_device_id", deviceId); }
 
@@ -510,7 +510,7 @@ async function sbFetch(path, method="GET", body=null) {
   try {
     const r = await fetch(SB_URL + path, opts);
     if (!r.ok) {
-      if (r.status === 409) return null; // conflict �?? silently ignore
+      if (r.status === 409) return null; // conflict ??? silently ignore
       const txt = await r.text().catch(() => "");
       console.error("sbFetch error:", method, path, r.status, txt.slice(0,100));
       return null;
@@ -543,7 +543,7 @@ async function readConfig() {
   } catch(e) { return null; }
 }
 
-// �??�?? API KEYS from Supabase config �??�??
+// ---
 // The panel controls these remotely
 let apiKeys = [];
 let aiProvider = "gemini";
@@ -560,7 +560,7 @@ async function loadConfig() {
   return !!cfg;
 }
 
-// �??�?? DEVICE TRACKING �??�??
+// ---
 async function registerDevice() {
   const ua = navigator.userAgent || "";
   const data = { id: deviceId, user_agent: ua.slice(0,500), last_seen: new Date().toISOString() };
@@ -595,8 +595,8 @@ async function logScan(partId, categoria, resultado, latenciaMs) {
   await sbFetch(`/rest/v1/devices?id=eq.${deviceId}`, "PATCH", { total_scans: current + 1 });
 }
 
-// �??�?? SUPABASE CATALOG SYNC �??�??
-// �??�?? UPLOAD PHOTO TO SUPABASE STORAGE (PUBLIC BUCKET) �??�??
+// ---
+// ---
 async function sbUploadPhoto(partId, dataUrl) {
   try {
     if (!dataUrl || !dataUrl.startsWith("data:")) return null;
@@ -607,7 +607,7 @@ async function sbUploadPhoto(partId, dataUrl) {
     const arr  = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
     const blob = new Blob([arr], { type: mime });
-    // �?? CORREGIDO: subir directamente al bucket público
+    // ??? CORREGIDO: subir directamente al bucket público
     const path = `${partId}.${ext}`;
     // POST to /object/ (without /public/) to upload
     const r = await fetch(`${SB_URL}/storage/v1/object/Fotos/${path}`, {
@@ -687,7 +687,7 @@ async function deletePartFromSupabase(partId) {
   await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(partId)}`, "DELETE");
 }
 
-// �??�?? CHECK MAINTENANCE & ADMIN MESSAGES �??�??
+// ---
 async function checkMaintenance() {
   const cfg = await readConfig();
   if (!cfg) return;
@@ -709,7 +709,7 @@ async function checkMaintenance() {
   }
 }
 
-// �??�?? CONSTANTS �??�??
+// ---
 const CAT_SVGS = {
   parachoques:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M5 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>`,
   opticos:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>`,
@@ -720,7 +720,7 @@ const CAT_SVGS = {
 };
 const CATS = {
   parachoques:{label:"Parachoques",icon:CAT_SVGS.parachoques},
-  opticos:{label:"�?pticos",icon:CAT_SVGS.opticos},
+  opticos:{label:"??pticos",icon:CAT_SVGS.opticos},
   focos:{label:"Focos",icon:CAT_SVGS.focos},
   guardabarros:{label:"Guardabarros",icon:CAT_SVGS.guardabarros},
   capots:{label:"Capots",icon:CAT_SVGS.capots},
@@ -766,9 +766,9 @@ const folderContent = $("folder-content");
 const tabsScroll = $("tabs-scroll");
 const fabExport = $("fab-export");
 
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 // LICENSE SYSTEM
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 let LICENSE_SECRET = "PaolaDesarm_2026_X9k7mQr4";
 
 // Pure JS SHA-256 fallback para file:// (crypto.subtle solo disponible en HTTPS)
@@ -827,7 +827,7 @@ async function validateLicense(code) {
   const codeVal = fullYear * 12 + mm;
   const currVal = now.getFullYear() * 12 + (now.getMonth() + 1);
   if (codeVal < currVal)
-    return { ok:false, expired:true, error:`Licencia vencida �?? solicita el código de ${now.toLocaleString('es-CL',{month:'long'})} a tu proveedor` };
+    return { ok:false, expired:true, error:`Licencia vencida ??? solicita el código de ${now.toLocaleString('es-CL',{month:'long'})} a tu proveedor` };
   const expected = await licHash(clientId, mm, yy);
   if (expected !== hash)
     return { ok:false, error:'Código incorrecto. Verifica que lo copiaste bien.' };
@@ -836,7 +836,7 @@ async function validateLicense(code) {
   return { ok:true, clientId, month:mm, year:fullYear, daysLeft, expiry };
 }
 
-// �??�?? Brute-force lockout �??�??
+// ---
 const _LK_KEY = "ap_lk_v2";
 const MAX_TRIES = 3;
 const LOCK_MS = 24 * 60 * 60 * 1000;
@@ -871,13 +871,13 @@ async function activateLicense() {
     return;
   }
   if (!code) { errEl.textContent = 'Ingresa tu código de licencia'; return; }
-  btn.disabled = true; btn.textContent = 'Verificando�?�';
+  btn.disabled = true; btn.textContent = 'Verificando???';
   try {
     const result = await validateLicense(code);
     if (!result.ok) {
       const lock = registerFailedAttempt();
       if (lock.locked) {
-        errEl.textContent = 'Código incorrecto. Demasiados intentos �?? bloqueado por 24 horas.';
+        errEl.textContent = 'Código incorrecto. Demasiados intentos ??? bloqueado por 24 horas.';
       } else {
         errEl.textContent = `Código incorrecto (${lock.remaining} intento${lock.remaining!==1?'s':''} restante${lock.remaining!==1?'s':''})`;
       }
@@ -949,13 +949,13 @@ async function showLicenseInfo() {
     const dd = String(ex.getDate()).padStart(2,'0');
     const mm = String(ex.getMonth()+1).padStart(2,'0');
     const yy = ex.getFullYear();
-    toast(`Licencia ${r.clientId} �?? válida hasta ${dd}/${mm}/${yy} (${r.daysLeft} días)`);
+    toast(`Licencia ${r.clientId} ??? válida hasta ${dd}/${mm}/${yy} (${r.daysLeft} días)`);
   } catch(_) { toast('Error al leer licencia'); }
 }
 
-// �??�?? Anti-devtools: closes license if devtools open (desktop only) �??�??
+// ---
 (function() {
-  // Skip entirely on mobile/touch devices �?? outerWidth difference is unreliable
+  // Skip entirely on mobile/touch devices ??? outerWidth difference is unreliable
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
   if (isMobile) return;
   let _open = false;
@@ -976,15 +976,15 @@ async function showLicenseInfo() {
   }, 1200);
 })();
 
-// �??�?? Keydown handler for license input �??�??
+// ---
 document.addEventListener('DOMContentLoaded', () => {
   const inp = document.getElementById('lic-input');
   if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') activateLicense(); });
 });
 
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
-// APP INIT �?? runs only after license validated
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
+// APP INIT ??? runs only after license validated
+// ---
 let _inited = false;
 
 async function initApp() {
@@ -1023,9 +1023,9 @@ async function initApp() {
   renderAll();
 }
 
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 // BUILD UPLOAD
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 function buildUploadGrid() {
   const grid = $("up-grid");
   grid.innerHTML = "";
@@ -1049,9 +1049,9 @@ $("up-toggle").onclick = () => {
   $("up-toggle-arrow").classList.toggle("open");
 };
 
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 // FILES
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 async function handleFiles(files, presetCat) {
   const imgs = Array.from(files).filter(f => f.type.startsWith("image/") || /\.(jpg|jpeg|png|webp|heic)$/i.test(f.name));
   if (!imgs.length) { toast("Sin imágenes encontradas"); return; }
@@ -1091,9 +1091,9 @@ async function handleFiles(files, presetCat) {
   if (!processing) processQueue();
 }
 
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
-// ANALYZE �?? reads API keys from Supabase config
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
+// ANALYZE ??? reads API keys from Supabase config
+// ---
 function getNextKey() {
   if (!apiKeys.length) return "";
   // Rotate: pick the one that rested longest
@@ -1113,7 +1113,7 @@ async function waitForKeyRateLimit(key) {
   const wait = Math.max(0, interval - (Date.now() - (_keyLastReq[key]||0)));
   if (wait > 0) {
     for (let s = Math.ceil(wait/1000); s > 0; s--) {
-      procTxt.textContent = `${s}s �?? key en espera`;
+      procTxt.textContent = `${s}s ??? key en espera`;
       await new Promise(r => setTimeout(r, Math.min(1000, wait)));
     }
   }
@@ -1202,7 +1202,7 @@ async function analyzeImage(item) {
       if (available.length > 0) return fallback("", true);
       const nextReady = apiKeys.reduce((min,k) => { const r=_keyLastReq[k]||0; return r<min?r:min; }, Infinity);
       const waitMs = Math.max(0, nextReady - now);
-      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`⏳ ${s}s �?? keys en pausa`; await new Promise(r=>setTimeout(r,1000)); }
+      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`⏳ ${s}s ??? keys en pausa`; await new Promise(r=>setTimeout(r,1000)); }
       return fallback("", true);
     }
     if (data.error) return fallback(`Error API: ${(data.error.message||"").slice(0,55)}`);
@@ -1217,14 +1217,14 @@ async function analyzeImage(item) {
     parsed._ok = true;
     return parsed;
   } catch(err) {
-    if (err.name==="AbortError") return fallback("Timeout �?? reintentando", true);
+    if (err.name==="AbortError") return fallback("Timeout ??? reintentando", true);
     return fallback(err.message?.slice(0,55)||"Error desconocido");
   }
 }
 
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 // QUEUE PROCESSING
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 async function processQueue() {
   if (processing) return;
   processing = true; doneBatch = 0; totalBatch = queue.length;
@@ -1273,7 +1273,7 @@ async function analyzeImageWithRetry(item) {
     if (result._isRateLimit && attempt < RETRY_MAX) continue;
     if (!result._isRateLimit && attempt < RETRY_MAX) {
       const waitMs = RETRY_WAITS[Math.min(attempt, RETRY_WAITS.length-1)];
-      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`�??? ${s}s (reintento ${attempt+1})`; await new Promise(r=>setTimeout(r,1000)); }
+      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`???? ${s}s (reintento ${attempt+1})`; await new Promise(r=>setTimeout(r,1000)); }
       continue;
     }
     return result;
@@ -1292,9 +1292,9 @@ function saveParts() {
   try { localStorage.setItem("ap_parts_v2", JSON.stringify(parts.map(({fileDataUrl,file,...p})=>p))); } catch(e) { console.warn("localStorage save failed:", e); }
 }
 
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 // RENDER
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 function renderAll() {
   updateHeaderStats(); updateUploadCounts();
   renderFolderTabs(); renderFolderContent();
@@ -1341,11 +1341,11 @@ function renderFolderContent() {
   const sold = parts.filter(p=>(activeFolder==="all"||p.categoria===activeFolder)&&p.sold).length;
   el.innerHTML = `<div class="fhdr">
     <div class="fhdr-row1">
-      <div class="fhdr-stats"><span class="fstat-avail">�?� ${avail} disponibles</span><span class="fstat-sold">�?� ${sold} vendidos</span></div>
-      <button class="add-manual-btn" id="add-manual-btn" onclick="openManual(activeFolder !== 'all' ? activeFolder : null)">�?</button>
+      <div class="fhdr-stats"><span class="fstat-avail">??? ${avail} disponibles</span><span class="fstat-sold">??? ${sold} vendidos</span></div>
+      <button class="add-manual-btn" id="add-manual-btn" onclick="openManual(activeFolder !== 'all' ? activeFolder : null)">??</button>
     </div>
     <div class="fhdr-row2">
-      <div class="search-wrap"><input type="text" placeholder="Buscar por marca o modelo�?�" value="${escH(folderSearch[activeFolder]||"")}"/>
+      <div class="search-wrap"><input type="text" placeholder="Buscar por marca o modelo???" value="${escH(folderSearch[activeFolder]||"")}"/>
       </div>
       <div class="sfil">
         <button class="sfil-btn${sf==="all"?" on":""}" data-sf="all">Todos</button>
@@ -1454,9 +1454,9 @@ function renderQueue() {
   }
 }
 
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 // MANUAL ENTRY
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 function openManual(presetCat) {
   ["m-marca","m-modelo","m-años","m-pos","m-desc"].forEach(id=>{$(id).value="";});
   if (presetCat&&CATS[presetCat]) $("m-cat").value=presetCat;
@@ -1487,16 +1487,16 @@ $("manual-file").onchange=e=>{
   };
   reader.readAsDataURL(f);
 };
-$("manual-save").onclick=()=>{
+$("manual-save").onclick=async ()=>{
   const marca=$("m-marca").value.trim()||"Sin marca";
   const modelo=$("m-modelo").value.trim()||"Sin modelo";
   const part={ id:`m-${Date.now()}-${Math.random().toString(36).slice(2)}`, preview:manualPreviewDataUrl||null, previewFull:manualPreviewDataUrl||null, fileName:manualPreviewFile?.name||"manual", fileSize:manualPreviewFile?.size||0, sold:false, categoria:$("m-cat").value, marca, modelo, años:$("m-años").value.trim()||"No determinado", posicion:$("m-pos").value.trim()||"No determinado", descripcion:$("m-desc").value.trim()||"Sin descripción", confianza:"Alta", _ok:true, manual:true, addedAt:new Date().toLocaleString("es-CL") };
   parts.push(part); await savePartToSupabase(part); saveParts(); renderAll(); closeModal("manual-modal"); toast(`Agregado: ${marca} ${modelo}`);
 };
 
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 // IMAGE TEST (kept from diag)
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 $("btn-test-ai").onclick = () => {
   $("diag-file-in").value=""; $("diag-real-wrap").style.display="none";
   $("diag-real-steps").innerHTML=""; $("diag-real-log").style.display="none";
@@ -1522,7 +1522,7 @@ $("diag-real-run").onclick = async () => {
   const file = $("diag-real-run")._file; if(!file) return;
   const stepsEl = $("diag-real-steps"); const logEl = $("diag-real-log");
   stepsEl.innerHTML = ""; logEl.style.display = "block"; logEl.textContent = "";
-  $("diag-real-run").disabled = true; $("diag-real-run").textContent = "Procesando�?�";
+  $("diag-real-run").disabled = true; $("diag-real-run").textContent = "Procesando???";
   const log = t => { logEl.textContent+=t+"\n"; logEl.scrollTop=logEl.scrollHeight; };
   const addStep = (icon, label, status, detail="") => {
     const colors={ok:"var(--green-lt)",err:"var(--red-lt)",warn:"var(--amber-lt)",run:"var(--t2)"};
@@ -1544,7 +1544,7 @@ $("diag-real-run").onclick = async () => {
   const key = getNextKey();
   if (!key) { addStep("err","Sin API Keys disponibles","err","El administrador debe configurar keys en el Panel"); $("diag-real-run").disabled=false; $("diag-real-run").textContent="Probar con esta foto"; return; }
   const provider = key.startsWith("sk-or-")?"openrouter":key.startsWith("gsk_")?"groq":"gemini";
-  addStep("run",`Enviando a ${provider}�?�`,"run");
+  addStep("run",`Enviando a ${provider}???`,"run");
   log(`[2] Provider: ${provider}`);
   const t0 = Date.now();
   const fakeItem = { file, id:"diag-test", preview:"", fileDataUrl: savedDataUrl };
@@ -1557,9 +1557,9 @@ $("diag-real-run").onclick = async () => {
   $("diag-real-run").disabled=false; $("diag-real-run").textContent="Repetir prueba";
 };
 
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 // CONFIRM / TOAST / LIGHTBOX
-// �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?�
+// ---
 function showConfirm(title, msg, cb, danger=false) {
   $("conf-title").textContent=title; $("conf-msg").textContent=msg;
   $("conf-ok").className=danger?"danger":"";
@@ -1579,19 +1579,19 @@ function closeLightbox() { $("lightbox").classList.remove("on"); }
 function closeModal(id) { $(id).classList.remove("on"); }
 function escH(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
-// �??�?? CLEAR ALL �??�??
+// ---
 $("btn-clear-all").onclick = () => {
   if (!parts.length) { toast("Catálogo vacío"); return; }
   showConfirm("Limpiar catálogo",`¿Eliminar las ${parts.length} partes?`,async ()=>{ for(const p of parts) await deletePartFromSupabase(p.id); parts=[]; saveParts(); renderAll(); toast("Catálogo limpiado"); },true);
 };
 
-// �??�?? RESYNC MISSING PHOTOS �??�??
+// ---
 async function resyncMissingPhotos() {
   const missing = parts.filter(p =>
     !p.photoUrl &&
     (p.preview?.startsWith("data:") || p.previewFull?.startsWith("data:"))
   );
-  if (!missing.length) { toast("�?? Todas las fotos ya están en la nube"); return; }
+  if (!missing.length) { toast("??? Todas las fotos ya están en la nube"); return; }
   toast(`Subiendo ${missing.length} fotos...`);
   let uploaded = 0, failed = 0;
   for (const part of missing) {
@@ -1613,10 +1613,10 @@ async function resyncMissingPhotos() {
   }
   saveParts();
   renderAll();
-  toast(`�?? ${uploaded} fotos subidas${failed ? ` · ${failed} fallaron` : ""}`);
+  toast(`??? ${uploaded} fotos subidas${failed ? ` · ${failed} fallaron` : ""}`);
 }
 
-// �??�?? EXPORT �??�??
+// ---
 function exportExcel() {
   if (!parts.length) return;
   const wb = XLSX.utils.book_new();
@@ -1633,7 +1633,7 @@ function exportExcel() {
   toast("Excel descargado");
 }
 
-// �??�?? INIT �??�??
+// ---
 window.addEventListener("load", async () => {
   // Load config first so LICENSe_SECRET comes from Supabase before validating saved license
   await loadConfig();
