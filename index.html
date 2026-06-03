@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Desarmaduria Paola</title>
 <meta name="theme-color" content="#0D0F12"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -29,14 +29,15 @@ html{background:var(--bg)}
 body{
   background:var(--bg);color:var(--text);font-family:var(--font-mono);
   font-size:13px;font-weight:400;min-height:100vh;
-  -webkit-tap-highlight-color:transparent;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
   padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
 }
 ::-webkit-scrollbar{width:2px;height:2px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
-button{font-family:var(--font-mono);cursor:pointer;border:none;outline:none}
-input,select,textarea{font-family:var(--font-mono);outline:none}
+button{font-family:var(--font-mono);cursor:pointer;border:none}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+input,select,textarea{font-family:var(--font-mono)}
 a{color:var(--gold)}
 
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -45,6 +46,7 @@ a{color:var(--gold)}
 @keyframes slideIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 @keyframes pulse-gold{0%,100%{opacity:1}50%{opacity:.5}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
 /* --- */
 #admin-banner{display:none;background:var(--s1);border-bottom:2px solid var(--bdr2);padding:10px 14px;text-align:center;font-size:12px;color:var(--t2);line-height:1.5;position:sticky;top:0;z-index:400}
@@ -230,7 +232,7 @@ a{color:var(--gold)}
 .pact svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 
 /* --- */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(5,7,9,.9);z-index:500;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(4px)}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(5,7,9,.9);z-index:500;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(4px);overscroll-behavior:contain}
 .modal-bg.on{display:flex;animation:fadeUp .15s ease}
 .modal-sheet{background:var(--s1);border-radius:18px 18px 0 0;border-top:1px solid var(--bdr3);padding:20px 16px 36px;width:100%;max-height:90vh;overflow-y:auto;animation:slideIn .22s ease;position:relative}
 .modal-title{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:4px;letter-spacing:-.4px;color:var(--text)}
@@ -316,13 +318,13 @@ a{color:var(--gold)}
 <!-- LICENSE GATE -->
 <div id="lic-gate">
   <div class="lic-box">
-    <div class="lic-logo-wrap">
+    <div class="lic-logo-wrap" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </div>
     <div class="lic-title">Desarmaduria Paola</div>
     <div class="lic-sub">Catálogo IA · Sistema Profesional</div>
     <div class="lic-input-wrap">
-      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       <input id="lic-input" type="text" inputmode="text" placeholder="AP-XXXX-MMAA-XXXXXXXX" maxlength="22" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done"/>
     </div>
     <div class="lic-error" id="lic-error"></div>
@@ -338,7 +340,7 @@ a{color:var(--gold)}
 <!-- MAINTENANCE OVERLAY -->
 <div id="maint-overlay">
   <div class="maint-box">
-    <div class="maint-icon">????</div>
+    <div class="maint-icon">&#9881;</div>
     <div class="maint-title">Mantenimiento</div>
     <div class="maint-msg" id="maint-msg">El sistema está en mantenimiento. Volvé más tarde.</div>
   </div>
@@ -431,7 +433,7 @@ a{color:var(--gold)}
   <div id="hdr-row1">
     <div class="logo">
       <div class="logo-mark">
-        <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </div>
       <div class="logo-text">
         <div class="logo-name">Desarmaduria Paola</div>
@@ -439,14 +441,14 @@ a{color:var(--gold)}
       </div>
     </div>
     <div id="hdr-actions">
-      <button class="ico-btn" id="btn-test-ai" title="Probar IA">
-        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <button class="ico-btn" id="btn-test-ai" aria-label="Probar IA" title="Probar IA">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       </button>
-      <button class="ico-btn" id="btn-resync" title="Sincronizar fotos a la nube" onclick="resyncMissingPhotos()">
-        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+      <button class="ico-btn" id="btn-resync" aria-label="Sincronizar fotos a la nube" title="Sincronizar fotos a la nube" onclick="resyncMissingPhotos()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
       </button>
-      <button class="ico-btn" id="btn-clear-all" title="Limpiar catálogo">
-        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      <button class="ico-btn" id="btn-clear-all" aria-label="Limpiar catálogo" title="Limpiar catálogo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </button>
     </div>
   </div>
@@ -471,10 +473,10 @@ a{color:var(--gold)}
     </button>
     <div id="up-body" class="open">
       <div class="up-grid" id="up-grid"></div>
-      <div class="up-hint">Seleccioná la categoría ??? elegí las fotos ??? la IA detecta marca, modelo y años</div>
+      <div class="up-hint">Seleccioná la categoría, elegí las fotos, la IA detecta marca, modelo y años</div>
     </div>
   </div>
-  <div id="prog-wrap"><div id="prog-track"><div id="prog-fill"></div></div><div id="prog-label">Iniciando???</div></div>
+  <div id="prog-wrap"><div id="prog-track"><div id="prog-fill"></div></div><div id="prog-label">Iniciando…</div></div>
   <div id="queue-wrap">
     <div id="queue-hdr"><div id="queue-title">En proceso</div><div id="queue-prog"></div><button id="queue-pause" style="background:none;border:1px solid var(--bdr3);border-radius:var(--r6);padding:3px 8px;font-size:10px;color:var(--t2);cursor:pointer;margin-left:auto">Pausar</button></div>
     <div class="q-row" id="queue-row"></div>
@@ -491,7 +493,7 @@ a{color:var(--gold)}
 <!-- LIGHTBOX -->
 <div id="lightbox" onclick="closeLightbox()">
   <img id="lb-img" src="" alt=""/>
-  <div id="lb-close" onclick="closeLightbox()">???</div>
+  <button id="lb-close" onclick="closeLightbox()" aria-label="Cerrar">&#10005;</button>
 </div>
 
 <button id="fab-export" onclick="exportExcel()">
@@ -860,7 +862,7 @@ async function validateLicense(code) {
   const codeVal = fullYear * 12 + mm;
   const currVal = now.getFullYear() * 12 + (now.getMonth() + 1);
   if (codeVal < currVal)
-    return { ok:false, expired:true, error:`Licencia vencida ??? solicita el código de ${now.toLocaleString('es-CL',{month:'long'})} a tu proveedor` };
+    return { ok:false, expired:true, error:`Licencia vencida — solicita el código de ${now.toLocaleString('es-CL',{month:'long'})} a tu proveedor` };
   const expected = await licHash(clientId, mm, yy);
   if (expected !== hash)
     return { ok:false, error:'Código incorrecto. Verifica que lo copiaste bien.' };
@@ -904,13 +906,13 @@ async function activateLicense() {
     return;
   }
   if (!code) { errEl.textContent = 'Ingresa tu código de licencia'; return; }
-  btn.disabled = true; btn.textContent = 'Verificando???';
+  btn.disabled = true; btn.textContent = 'Verificando…';
   try {
     const result = await validateLicense(code);
     if (!result.ok) {
       const lock = registerFailedAttempt();
       if (lock.locked) {
-        errEl.textContent = 'Código incorrecto. Demasiados intentos ??? bloqueado por 24 horas.';
+        errEl.textContent = 'Código incorrecto. Demasiados intentos — bloqueado por 24 horas.';
       } else {
         errEl.textContent = `Código incorrecto (${lock.remaining} intento${lock.remaining!==1?'s':''} restante${lock.remaining!==1?'s':''})`;
       }
@@ -982,7 +984,7 @@ async function showLicenseInfo() {
     const dd = String(ex.getDate()).padStart(2,'0');
     const mm = String(ex.getMonth()+1).padStart(2,'0');
     const yy = ex.getFullYear();
-    toast(`Licencia ${r.clientId} ??? válida hasta ${dd}/${mm}/${yy} (${r.daysLeft} días)`);
+    toast(`Licencia ${r.clientId} — válida hasta ${dd}/${mm}/${yy} (${r.daysLeft} días)`);
   } catch(_) { toast('Error al leer licencia'); }
 }
 
@@ -1174,7 +1176,7 @@ async function waitForKeyRateLimit(key) {
   const wait = Math.max(0, interval - (Date.now() - (_keyLastReq[key]||0)));
   if (wait > 0) {
     for (let s = Math.ceil(wait/1000); s > 0; s--) {
-      procTxt.textContent = `${s}s ??? key en espera`;
+      procTxt.textContent = `${s}s — key en espera`;
       await new Promise(r => setTimeout(r, Math.min(1000, wait)));
     }
   }
@@ -1282,7 +1284,7 @@ async function analyzeImage(item) {
       if (available.length > 0) return fallback("", true);
       const nextReady = apiKeys.reduce((min,k) => { const r=_keyLastReq[k]||0; return r<min?r:min; }, Infinity);
       const waitMs = Math.max(0, nextReady - now);
-      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`⏳ ${s}s ??? keys en pausa`; await new Promise(r=>setTimeout(r,1000)); }
+      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`⏳ ${s}s — keys en pausa`; await new Promise(r=>setTimeout(r,1000)); }
       return fallback("", true);
     }
     if (data.error) return fallback(`Error API: ${(data.error.message||"").slice(0,55)}`);
@@ -1297,7 +1299,7 @@ async function analyzeImage(item) {
     parsed._ok = true;
     return parsed;
   } catch(err) {
-    if (err.name==="AbortError") return fallback("Timeout ??? reintentando", true);
+    if (err.name==="AbortError") return fallback("Timeout — reintentando", true);
     return fallback(err.message?.slice(0,55)||"Error desconocido");
   }
 }
@@ -1365,7 +1367,7 @@ async function analyzeImageWithRetry(item) {
     if (result._isRateLimit && attempt < RETRY_MAX) continue;
     if (!result._isRateLimit && attempt < RETRY_MAX) {
       const waitMs = RETRY_WAITS[Math.min(attempt, RETRY_WAITS.length-1)];
-      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`???? ${s}s (reintento ${attempt+1})`; await new Promise(r=>setTimeout(r,1000)); }
+      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`⏳ ${s}s (reintento ${attempt+1})`; await new Promise(r=>setTimeout(r,1000)); }
       continue;
     }
     return result;
@@ -1441,11 +1443,11 @@ function renderFolderContent() {
   const sold = parts.filter(p=>(activeFolder==="all"||p.categoria===activeFolder)&&p.sold).length;
   el.innerHTML = `<div class="fhdr">
     <div class="fhdr-row1">
-      <div class="fhdr-stats"><span class="fstat-avail">??? ${avail} disponibles</span><span class="fstat-sold">??? ${sold} vendidos</span></div>
+      <div class="fhdr-stats"><span class="fstat-avail">&bull; ${avail} disponibles</span><span class="fstat-sold">&bull; ${sold} vendidos</span></div>
       <button class="add-manual-btn" id="add-manual-btn" onclick="openManual(activeFolder !== 'all' ? activeFolder : null)">??</button>
     </div>
     <div class="fhdr-row2">
-      <div class="search-wrap"><input type="text" placeholder="Buscar por marca o modelo???" value="${escH(folderSearch[activeFolder]||"")}"/>
+      <div class="search-wrap"><input type="text" placeholder="Buscar por marca o modelo…" value="${escH(folderSearch[activeFolder]||"")}"/>
       </div>
       <div class="sfil">
         <button class="sfil-btn${sf==="all"?" on":""}" data-sf="all">Todos</button>
@@ -1488,7 +1490,7 @@ function buildPartCard(part) {
     <div class="pcard-right">
       <button class="sold-btn ${part.sold?'sold':'avail'}" data-id="${part.id}"><span class="sold-dot"></span>${part.sold?'Vendido':'Disponible'}</button>
       <div class="pcard-actions">
-        <button class="pact" data-edit="${part.id}" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="pact" data-edit="${part.id}" aria-label="Editar" title="Editar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="pact del" data-del="${part.id}" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
     </div>`;
@@ -1652,7 +1654,7 @@ $("diag-real-run").onclick = async () => {
   const file = $("diag-real-run")._file; if(!file) return;
   const stepsEl = $("diag-real-steps"); const logEl = $("diag-real-log");
   stepsEl.innerHTML = ""; logEl.style.display = "block"; logEl.textContent = "";
-  $("diag-real-run").disabled = true; $("diag-real-run").textContent = "Procesando???";
+  $("diag-real-run").disabled = true; $("diag-real-run").textContent = "Procesando…";
   const log = t => { logEl.textContent+=t+"\n"; logEl.scrollTop=logEl.scrollHeight; };
   const addStep = (icon, label, status, detail="") => {
     const colors={ok:"var(--green-lt)",err:"var(--red-lt)",warn:"var(--amber-lt)",run:"var(--t2)"};
@@ -1674,7 +1676,7 @@ $("diag-real-run").onclick = async () => {
   const key = getNextKey();
   if (!key) { addStep("err","Sin API Keys disponibles","err","El administrador debe configurar keys en el Panel"); $("diag-real-run").disabled=false; $("diag-real-run").textContent="Probar con esta foto"; return; }
   const provider = key.startsWith("sk-or-")?"openrouter":key.startsWith("gsk_")?"groq":"gemini";
-  addStep("run",`Enviando a ${provider}???`,"run");
+  addStep("run",`Enviando a ${provider}…`,"run");
   log(`[2] Provider: ${provider}`);
   const t0 = Date.now();
   const fakeItem = { file, id:"diag-test", preview:"", fileDataUrl: savedDataUrl };
@@ -1736,7 +1738,7 @@ async function resyncMissingPhotos() {
     !p.photoUrl &&
     (p.preview?.startsWith("data:") || p.previewFull?.startsWith("data:"))
   );
-  if (!missing.length) { toast("??? Todas las fotos ya están en la nube"); return; }
+  if (!missing.length) { toast("Todas las fotos ya están en la nube"); return; }
   toast(`Subiendo ${missing.length} fotos...`);
   let uploaded = 0, failed = 0;
   for (const part of missing) {
@@ -1758,7 +1760,7 @@ async function resyncMissingPhotos() {
   }
   saveParts();
   renderAll();
-  toast(`??? ${uploaded} fotos subidas${failed ? ` · ${failed} fallaron` : ""}`);
+  toast(`${uploaded} fotos subidas${failed ? ` · ${failed} fallaron` : ""}`);
 }
 
 // ---
