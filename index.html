@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"/>
-<title>Panel â€” Desarmaduria Paola</title>
+<title>Desarmaduria Paola</title>
 <meta name="theme-color" content="#0D0F12"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="Panel â€” Desarmaduria Paola"/>
+<meta name="apple-mobile-web-app-title" content="Desarmaduria Paola"/>
+<link rel="manifest" href="manifest.json" id="pwa-manifest"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -40,543 +41,737 @@ a{color:var(--gold)}
 
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-300% 0}100%{background-position:300% 0}}
+@keyframes slideIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 @keyframes pulse-gold{0%,100%{opacity:1}50%{opacity:.5}}
-@keyframes modalIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes overlayIn{from{opacity:0}to{opacity:1}}
 
-/* â”€â”€ Password Gate â”€â”€ */
-#pw-gate{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
-#pw-gate.gone{display:none}
-.pw-box{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r16);padding:36px 28px 28px;max-width:340px;width:100%;text-align:center;animation:fadeUp .35s ease}
-.pw-icon{font-size:36px;margin-bottom:12px;opacity:.6}
-.pw-title{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:4px;color:var(--gold)}
-.pw-sub{font-size:11px;color:var(--t4);margin-bottom:20px;line-height:1.5}
-.pw-input{width:100%;background:var(--bg);border:1px solid var(--bdr2);border-radius:var(--r8);padding:10px 12px;color:var(--text);font-size:13px;margin-bottom:12px;text-align:center}
-.pw-input:focus{border-color:var(--gold-glow)}
-.pw-btn{width:100%;background:var(--gold);color:var(--bg);font-weight:700;padding:10px;border-radius:var(--r8);font-size:13px;transition:opacity .2s}
-.pw-btn:hover{opacity:.85}
-.pw-error{font-size:11px;color:var(--red-lt);margin-top:8px;min-height:16px}
+/* ── Admin banner ── */
+#admin-banner{display:none;background:var(--s1);border-bottom:2px solid var(--bdr2);padding:10px 14px;text-align:center;font-size:12px;color:var(--t2);line-height:1.5;position:sticky;top:0;z-index:400}
+#admin-banner.on{display:block;animation:fadeUp .2s ease}
+#admin-banner.warning{border-color:var(--amber-lt);color:var(--amber-lt)}
+#admin-banner.critical{border-color:var(--red-lt);color:var(--red-lt)}
 
-/* â”€â”€ Toolbar â”€â”€ */
-#toolbar{background:var(--s1);border-bottom:1px solid var(--bdr2);position:sticky;top:0;z-index:300}
-.tb-row{display:flex;align-items:center;gap:6px;padding:0 10px;height:48px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.tb-brand{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-right:8px}
-.tb-brand svg{width:16px;height:16px;fill:var(--gold);flex-shrink:0}
-.tb-brand span{font-family:var(--font-display);font-weight:800;font-size:12px;letter-spacing:-.3px;color:var(--text);white-space:nowrap}
-.tb-actions{display:flex;gap:4px;margin-left:auto;flex-shrink:0}
-.tb-btn{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r8);padding:6px 10px;font-size:10px;color:var(--t3);white-space:nowrap;display:flex;align-items:center;gap:4px;transition:all .2s;font-weight:500;letter-spacing:.2px}
-.tb-btn:hover{background:var(--s3);color:var(--text);border-color:var(--bdr2)}
-.tb-btn svg{width:13px;height:13px;flex-shrink:0}
-.tb-btn .cnt{background:var(--s3);color:var(--t3);font-size:8px;border-radius:6px;padding:0 5px;line-height:14px;min-width:14px;text-align:center}
-.tb-spacer{flex:1;min-width:8px}
+/* ── License Gate ── */
+#lic-gate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(13,15,18,.97);backdrop-filter:blur(20px);padding:20px;transition:opacity .3s}
+#lic-gate.hiding{opacity:0;pointer-events:none}
+#lic-gate.gone{display:none}
+.lic-box{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r16);padding:32px 24px 28px;max-width:360px;width:100%;text-align:center;animation:fadeUp .35s ease;box-shadow:0 32px 80px rgba(0,0,0,.7),inset 0 1px 0 rgba(200,169,110,.12)}
+.lic-logo-wrap{width:52px;height:52px;background:var(--s3);border:1px solid var(--gold-glow);border-radius:var(--r12);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.lic-logo-wrap svg{width:26px;height:26px;fill:var(--gold)}
+.lic-title{font-family:var(--font-display);font-weight:800;font-size:22px;letter-spacing:-.5px;color:var(--text);margin-bottom:4px}
+.lic-sub{font-size:11px;color:var(--t4);letter-spacing:1px;text-transform:uppercase;margin-bottom:24px}
+.lic-input-wrap{background:var(--bg);border:1px solid var(--bdr2);border-radius:var(--r10);padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;transition:border-color .2s}
+.lic-input-wrap:focus-within{border-color:rgba(200,169,110,.4)}
+.lic-input-wrap svg{width:15px;height:15px;fill:none;stroke:var(--t4);stroke-width:1.5;stroke-linecap:round;flex-shrink:0}
+.lic-input-wrap input{flex:1;min-width:0;width:100%;background:transparent;border:none;color:var(--text);font-family:var(--font-mono);font-size:14px;letter-spacing:1px;text-transform:uppercase;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;caret-color:var(--gold)}
+.lic-input-wrap input::placeholder{color:var(--t5);letter-spacing:.5px;text-transform:none}
+.lic-btn{width:100%;padding:13px;background:var(--gold);color:#0D0F12;border:none;border-radius:var(--r10);font-family:var(--font-display);font-weight:700;font-size:15px;letter-spacing:.5px;cursor:pointer;transition:all .15s;margin-bottom:14px}
+.lic-btn:hover{background:#D4B47A}
+.lic-btn:active{background:#B89660;transform:scale(.99)}
+.lic-btn:disabled{background:var(--s3);color:var(--t4);cursor:not-allowed;transform:none}
+.lic-error{font-size:12px;color:var(--red-lt);min-height:18px;margin-bottom:8px;letter-spacing:.3px}
+.lic-help{font-size:11px;color:var(--t4);line-height:1.6;border-top:1px solid var(--bdr);padding-top:14px;margin-top:4px}
+.lic-help strong{color:var(--t3)}
+#lic-pill{display:none;align-items:center;gap:5px;border-radius:20px;padding:3px 9px;font-size:10px;font-weight:500;letter-spacing:.3px;cursor:pointer;flex-shrink:0;border:1px solid;transition:all .15s}
+#lic-pill.ok{background:rgba(42,157,111,.1);color:var(--green-lt);border-color:rgba(42,157,111,.25)}
+#lic-pill.warn{background:rgba(200,169,110,.1);color:var(--gold);border-color:rgba(200,169,110,.3);animation:pulse-gold 2s ease infinite}
+#lic-pill.on{display:flex}
+.lic-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+/* ── Maintenance overlay ── */
+#maint-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(13,15,18,.97);backdrop-filter:blur(20px);align-items:center;justify-content:center;padding:20px}
+#maint-overlay.on{display:flex}
+.maint-box{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r16);padding:32px 24px 28px;max-width:360px;width:100%;text-align:center;animation:fadeUp .35s ease}
+.maint-icon{font-size:40px;margin-bottom:16px;opacity:.6}
+.maint-title{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:8px;color:var(--gold)}
+.maint-msg{font-size:12px;color:var(--t3);line-height:1.6;margin-bottom:16px}
 
-/* â”€â”€ Home â”€â”€ */
-#home{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 48px);padding:20px;text-align:center}
-#home .hw{max-width:400px}
-#home .hi{font-size:32px;margin-bottom:8px;opacity:.3}
-#home .ht{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--t2);margin-bottom:4px}
-#home .hs{font-size:11px;color:var(--t4);line-height:1.6;margin-bottom:16px}
-#home .hg{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-#home .hg .tb-btn{font-size:10px;padding:8px 14px}
+/* ── HEADER ── */
+#hdr{
+  background:var(--s1);border-bottom:1px solid var(--bdr2);
+  padding:0;position:sticky;top:0;z-index:300;display:flex;flex-direction:column;
+}
+#hdr-row1{
+  display:flex;align-items:center;gap:8px;padding:0 12px;height:50px;flex-shrink:0;
+}
+#hdr-row2{
+  display:flex;align-items:center;gap:8px;padding:0 12px 8px;
+  flex-wrap:nowrap;overflow:hidden;border-top:1px solid var(--bdr);
+}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-mark{
+  width:30px;height:30px;background:var(--s3);border:1px solid var(--gold-glow);
+  border-radius:var(--r8);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  position:relative;overflow:hidden;
+}
+.logo-mark svg{width:16px;height:16px;fill:var(--gold);position:relative;z-index:1}
+.logo-text{display:flex;flex-direction:column;gap:1px}
+.logo-name{font-family:var(--font-display);font-weight:800;font-size:14px;letter-spacing:-.4px;color:var(--text);line-height:1}
+.logo-sub{font-family:var(--font-mono);font-size:8px;color:var(--gold);letter-spacing:2px;line-height:1;font-weight:500;text-transform:uppercase}
 
-/* â”€â”€ Modal System â”€â”€ */
-.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;padding:60px 16px 16px;overflow-y:auto;animation:overlayIn .15s ease}
-.modal-overlay.on{display:flex}
-.modal-frame{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r12);width:100%;max-width:820px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;animation:modalIn .2s ease;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.modal-frame.wide{max-width:1060px}
-.modal-top{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--bdr2);flex-shrink:0}
-.modal-top .md-ico{width:18px;height:18px;flex-shrink:0;fill:var(--gold)}
-.modal-title{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--text);flex:1}
-.modal-close{background:none;border:none;color:var(--t4);font-size:20px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--r6);transition:all .2s}
-.modal-close:hover{background:var(--s3);color:var(--text)}
-.modal-body{padding:16px;overflow-y:auto;flex:1;min-height:100px}
-.modal-empty{padding:40px 20px;text-align:center;color:var(--t4);font-size:12px;line-height:1.6}
-.modal-full{max-width:100%;margin:0;border-radius:0;min-height:100vh;max-height:100vh}
-.modal-full .modal-body{flex:1;overflow-y:auto}
+#proc-pill{
+  display:none;align-items:center;gap:5px;
+  background:var(--s2);border:1px solid rgba(226,168,75,.3);
+  border-radius:20px;padding:3px 8px;font-size:10px;color:var(--amber-lt);
+  white-space:nowrap;flex-shrink:0;letter-spacing:.5px;
+}
+#proc-pill.on{display:flex}
+.spin{width:10px;height:10px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
 
-/* â”€â”€ Cards / Sections (inside modals) â”€â”€ */
-.sec-title{font-family:var(--font-display);font-weight:700;font-size:15px;margin-bottom:4px;color:var(--text)}
-.sec-sub{font-size:11px;color:var(--t4);margin-bottom:16px;line-height:1.5}
-.sec-card{background:var(--bg);border:1px solid var(--bdr2);border-radius:var(--r10);padding:14px;margin-bottom:12px}
+#hdr-stats{display:flex;gap:12px;flex-shrink:0}
+.hdr-stat{text-align:center}
+.hdr-stat-n{font-family:var(--font-display);font-weight:700;font-size:15px;line-height:1;letter-spacing:-.5px}
+.hdr-stat-l{font-size:8px;color:var(--t4);letter-spacing:1px;text-transform:uppercase;margin-top:1px}
+.n-avail{color:var(--green-lt)}
+.n-sold{color:var(--sold-lt)}
 
-/* â”€â”€ Tables â”€â”€ */
-.tbl-wrap{overflow-x:auto;border-radius:var(--r8);border:1px solid var(--bdr2)}
-table{width:100%;border-collapse:collapse;font-size:11px}
-th{text-align:left;padding:7px 8px;background:var(--s2);color:var(--t3);font-weight:600;letter-spacing:.3px;text-transform:uppercase;font-size:9px;border-bottom:1px solid var(--bdr2);white-space:nowrap}
-td{padding:7px 8px;border-bottom:1px solid var(--bdr);color:var(--t2);vertical-align:middle}
-tr:hover td{background:var(--s2)}
-tr:last-child td{border-bottom:none}
+#hdr-actions{display:flex;gap:5px;margin-left:auto;flex-shrink:0}
+.ico-btn{
+  width:32px;height:32px;background:var(--s2);border:1px solid var(--bdr2);
+  border-radius:var(--r8);display:flex;align-items:center;justify-content:center;
+  transition:all .15s;color:var(--t3);
+}
+.ico-btn:hover{border-color:var(--bdr3);background:var(--s3);color:var(--t2)}
+.ico-btn:active{background:var(--s4);transform:scale(.96)}
+.ico-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 
-/* â”€â”€ Badges â”€â”€ */
-.badge{display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:4px;letter-spacing:.3px}
-.badge-active{background:var(--green-dim);color:var(--green-lt)}
-.badge-blocked{background:rgba(192,57,43,.15);color:var(--red-lt)}
-.badge-away{background:rgba(192,138,46,.15);color:var(--amber-lt)}
-.badge-success{background:var(--green-dim);color:var(--green-lt)}
-.badge-error{background:rgba(192,57,43,.15);color:var(--red-lt)}
+#main{max-width:700px;margin:0 auto;padding:16px 14px 90px;position:relative;z-index:1}
 
-/* â”€â”€ Forms â”€â”€ */
-.fld-group{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-.fld-row{display:flex;gap:8px;align-items:center}
-.fld-row label{font-size:11px;color:var(--t3);min-width:72px;flex-shrink:0}
-.fld-in{flex:1;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r6);padding:7px 10px;color:var(--text);font-size:12px}
-.fld-in:focus{border-color:var(--gold-glow)}
-.fld-in::placeholder{color:var(--t5)}
-textarea.fld-in{resize:vertical;min-height:56px}
-.fld-hint{font-size:10px;color:var(--t4);margin-top:2px}
-.btn-primary{background:var(--gold);color:var(--bg);font-weight:700;padding:7px 14px;border-radius:var(--r6);font-size:12px;transition:opacity .2s}
-.btn-primary:hover{opacity:.85}
-.btn-primary:disabled{opacity:.4;cursor:default}
-.btn-ghost{background:var(--s2);border:1px solid var(--bdr2);color:var(--t2);padding:7px 14px;border-radius:var(--r6);font-size:12px;transition:all .2s}
-.btn-ghost:hover{background:var(--s3);color:var(--text)}
-.btn-danger{background:var(--red);color:#fff;font-weight:600;padding:7px 14px;border-radius:var(--r6);font-size:12px;transition:opacity .2s}
-.btn-danger:hover{opacity:.85}
-.btn-sm{padding:4px 9px;font-size:10px}
+/* ── UPLOAD ── */
+#up-panel{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r12);overflow:hidden;margin-bottom:14px}
+#up-toggle{width:100%;padding:13px 16px;background:transparent;color:var(--t2);font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between;letter-spacing:.5px}
+#up-toggle:hover{background:var(--s2)}#up-toggle:active{background:var(--s3)}
+.up-toggle-label{display:flex;align-items:center;gap:8px;color:var(--t2)}
+.up-toggle-label svg{width:14px;height:14px;fill:none;stroke:var(--gold);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+#up-toggle-arrow{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--t4);transition:transform .25s}
+#up-toggle-arrow svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#up-toggle-arrow.open{transform:rotate(180deg)}
+#up-body{display:none;padding:4px 12px 14px;border-top:1px solid var(--bdr)}
+#up-body.open{display:block;animation:fadeUp .15s ease}
+.up-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.up-cat-btn{padding:14px 10px 12px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r10);display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s;cursor:pointer}
+.up-cat-btn:hover{border-color:var(--bdr3);background:var(--s3)}
+.up-cat-count{position:absolute;top:7px;right:8px;background:var(--s4);border-radius:6px;padding:1px 6px;font-size:9px;color:var(--t4);font-weight:500}
+.up-cat-label{font-size:10px;font-weight:500;color:var(--t3);letter-spacing:.8px;text-transform:uppercase}
+.up-hint{font-size:10px;color:var(--t4);text-align:center;line-height:1.6;padding:0 6px;letter-spacing:.3px}
 
-/* â”€â”€ Toggle â”€â”€ */
-.toggle-wrap{display:flex;align-items:center;gap:10px}
-.toggle-track{width:38px;height:22px;background:var(--s3);border-radius:11px;position:relative;cursor:pointer;transition:background .3s;flex-shrink:0}
-.toggle-track.on{background:var(--green)}
-.toggle-knob{width:18px;height:18px;background:var(--text);border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .3s}
-.toggle-track.on .toggle-knob{transform:translateX(16px)}
+/* ── PROGRESS ── */
+#prog-wrap{display:none;margin-bottom:14px}
+#prog-wrap.on{display:block}
+#prog-track{height:2px;background:var(--s3);border-radius:1px;overflow:hidden;margin-bottom:8px}
+#prog-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--gold));border-radius:1px;transition:width .4s ease;width:0%;box-shadow:0 0 8px rgba(200,169,110,.4)}
+#prog-label{font-size:10px;color:var(--t4);text-align:center;letter-spacing:.5px}
 
-/* â”€â”€ Toast â”€â”€ */
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r10);padding:10px 18px;font-size:12px;color:var(--t2);display:none;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+/* ── QUEUE ── */
+#queue-wrap{display:none;background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r10);padding:12px;margin-bottom:14px}
+#queue-wrap.on{display:block}
+#queue-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+#queue-title{font-size:9px;font-weight:500;color:var(--t4);letter-spacing:2px;text-transform:uppercase}
+#queue-prog{font-size:10px;color:var(--amber-lt);letter-spacing:.5px}
+.q-row{display:flex;flex-wrap:wrap;gap:6px}
+.q-th{position:relative;width:44px;height:44px;border-radius:var(--r6);overflow:hidden;border:1.5px solid var(--bdr2);flex-shrink:0;transition:border-color .2s}
+.q-th img{width:100%;height:100%;object-fit:cover}
+.q-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+
+/* ── FOLDER TABS ── */
+#folder-nav{margin-bottom:0;position:sticky;top:88px;z-index:200;background:var(--bg);padding-bottom:0}
+.tabs-scroll{display:flex;gap:2px;overflow-x:auto;padding:12px 14px 0;scrollbar-width:none}
+.tabs-scroll::-webkit-scrollbar{display:none}
+.ftab{
+  flex-shrink:0;padding:8px 12px;background:var(--s2);border:1px solid var(--bdr2);
+  border-bottom:none;border-radius:var(--r8) var(--r8) 0 0;color:var(--t4);
+  font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;
+  transition:all .15s;letter-spacing:.3px;
+}
+.ftab:hover{background:var(--s3);color:var(--t3)}
+.ftab.on{background:var(--s1);border-color:var(--bdr3);border-bottom-color:var(--s1);color:var(--text)}
+.ftab-badge{background:var(--s4);color:var(--t4);border-radius:5px;padding:1px 5px;font-size:9px;font-weight:500}
+.ftab.on .ftab-badge{background:var(--gold-dim);color:var(--gold)}
+.ftab-content{border-top:1px solid var(--bdr3);background:var(--s1);border-radius:0 var(--r8) var(--r8) var(--r8);min-height:200px;padding:0 0 14px}
+.fhdr{padding:12px 14px 10px;display:flex;flex-direction:column;gap:8px}
+.fhdr-row1{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fhdr-stats{font-size:10px;color:var(--t4);display:flex;gap:12px;letter-spacing:.5px}
+.fhdr-row2{display:flex;gap:7px;align-items:center}
+.search-wrap{flex:1;display:flex;align-items:center;gap:7px;background:var(--s2);border:1px solid var(--bdr2);border-radius:20px;padding:7px 12px}
+.search-wrap input{flex:1;background:transparent;border:none;color:var(--text);font-size:12px;font-family:var(--font-mono)}
+.search-wrap input::placeholder{color:var(--t4)}
+.sfil{display:flex;background:var(--s2);border:1px solid var(--bdr2);border-radius:20px;overflow:hidden;flex-shrink:0}
+.sfil-btn{padding:6px 10px;font-size:10px;font-weight:500;color:var(--t4);background:transparent;white-space:nowrap;letter-spacing:.3px}
+.sfil-btn.on{background:var(--s4);color:var(--text)}
+.add-manual-btn{width:32px;height:32px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r8);display:flex;align-items:center;justify-content:center;color:var(--t3);flex-shrink:0;font-size:16px}
+.add-manual-btn:hover{border-color:rgba(200,169,110,.3);color:var(--gold)}
+
+/* ── PRODUCT CARDS ── */
+.prod-list{display:flex;flex-direction:column;gap:5px;padding:0 10px}
+.pcard{background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r10);display:flex;align-items:stretch;overflow:hidden;transition:border-color .2s,background .2s;animation:fadeUp .2s ease}
+.pcard-img{width:72px;min-width:72px;height:72px;object-fit:cover;cursor:zoom-in;flex-shrink:0;background:var(--s3)}
+.pcard-img.no-img{display:flex;align-items:center;justify-content:center;color:var(--t5)}
+.pcard-img.no-img svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+.pcard-body{flex:1;padding:9px 10px;display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
+.pcard-title{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px;line-height:1.2}
+.pcard-meta{font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.3px}
+.pcard-desc{font-size:10px;color:var(--t4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard-tags{display:flex;gap:4px;align-items:center;margin-top:3px;flex-wrap:wrap}
+.ptag{font-size:9px;font-weight:500;padding:2px 6px;border-radius:4px;white-space:nowrap;letter-spacing:.4px}
+.ptag-cat{background:var(--gold-dim);color:var(--gold)}
+.pcard-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;padding:8px 10px;gap:6px;flex-shrink:0}
+.sold-btn{border-radius:20px;padding:4px 10px;font-size:10px;font-weight:500;display:flex;align-items:center;gap:4px;transition:all .2s;white-space:nowrap;border:none;letter-spacing:.3px}
+.sold-btn.avail{background:var(--green-dim);color:var(--green-lt);border:1px solid rgba(42,157,111,.25)}
+.sold-btn.sold{background:var(--s3);color:var(--sold-lt);border:1px solid var(--s4)}
+.sold-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.pcard-actions{display:flex;gap:4px}
+.pact{width:26px;height:26px;background:var(--s3);border-radius:var(--r6);display:flex;align-items:center;justify-content:center;transition:all .15s;color:var(--t4)}
+.pact:hover{background:var(--s4);color:var(--t2)}
+.pact.del:hover{background:rgba(192,57,43,.15);color:var(--red-lt)}
+.pact svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── MODALS ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(5,7,9,.9);z-index:500;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(4px)}
+.modal-bg.on{display:flex;animation:fadeUp .15s ease}
+.modal-sheet{background:var(--s1);border-radius:18px 18px 0 0;border-top:1px solid var(--bdr3);padding:20px 16px 36px;width:100%;max-height:90vh;overflow-y:auto;animation:slideIn .22s ease;position:relative}
+.modal-title{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:4px;letter-spacing:-.4px;color:var(--text)}
+.modal-sub{font-size:11px;color:var(--t4);margin-bottom:18px;line-height:1.6;letter-spacing:.2px}
+.fld{margin-bottom:12px}
+.fld-label{font-size:9px;font-weight:500;color:var(--t4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.fld-input{width:100%;background:var(--bg);border:1px solid var(--bdr2);color:var(--text);padding:10px 12px;border-radius:var(--r8);font-size:12px;font-family:var(--font-mono)}
+.fld-input:focus{border-color:rgba(200,169,110,.4)}
+.fld-row{display:flex;gap:8px}
+.fld-row .fld{flex:1;margin-bottom:0}
+.modal-btns{display:flex;gap:8px;margin-top:16px}
+.btn-primary{flex:1;background:var(--gold);color:#0D0F12;padding:12px;border-radius:var(--r8);font-size:13px;font-weight:500;text-align:center;letter-spacing:.3px}
+.btn-primary:hover{background:#D4B87A}
+.btn-ghost-sm{padding:12px 14px;background:var(--s2);border:1px solid var(--bdr2);color:var(--t3);border-radius:var(--r8);font-size:12px;font-weight:400}
+
+/* ── Image test modal (kept from diag) ── */
+#diag-real-preview{width:68px;height:68px;object-fit:cover;border-radius:var(--r8);border:1px solid var(--bdr2);flex-shrink:0}
+#diag-real-meta{font-size:11px;color:var(--t4);font-family:var(--font-mono)}
+#diag-real-steps{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+#diag-real-log{display:none;background:var(--bg);border:1px solid var(--bdr2);border-radius:var(--r8);padding:10px;font-size:11px;color:var(--t3);font-family:var(--font-mono);white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-bottom:10px}
+#diag-img-zone{border:1px dashed var(--bdr2);border-radius:var(--r8);padding:16px;text-align:center;cursor:pointer;margin-bottom:10px}
+#diag-img-zone:hover{border-color:rgba(200,169,110,.3)}
+
+/* ── CONFIRM ── */
+#confirm-bg{display:none;position:fixed;inset:0;background:rgba(5,7,9,.9);z-index:600;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+#confirm-bg.on{display:flex}
+#confirm-box{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r12);padding:24px 20px;max-width:300px;width:100%;text-align:center;animation:fadeUp .15s ease}
+.confirm-btns{display:flex;gap:8px}
+.confirm-btns button{flex:1;padding:11px;border-radius:var(--r8);font-size:12px;font-weight:500;letter-spacing:.3px}
+#conf-ok{background:var(--green);color:#fff}
+#conf-ok.danger{background:var(--red)}
+#conf-cancel{background:var(--s2);border:1px solid var(--bdr2);color:var(--t3)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--bdr3);border-radius:var(--r8);padding:9px 16px;font-size:11px;color:var(--t2);z-index:700;display:none;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.5);letter-spacing:.3px}
 #toast.on{display:block;animation:fadeUp .2s ease}
 
-/* â”€â”€ Catalog cards â”€â”€ */
-.cat-grid{display:grid;grid-template-columns:1fr;gap:8px}
-@media(min-width:500px){.cat-grid{grid-template-columns:1fr 1fr}}
-@media(min-width:800px){.cat-grid{grid-template-columns:1fr 1fr 1fr}}
-.p-card{background:var(--bg);border:1px solid var(--bdr2);border-radius:var(--r10);overflow:hidden;display:flex;flex-direction:column}
-.p-card-img{width:100%;height:130px;object-fit:cover;border-bottom:1px solid var(--bdr);background:var(--s2);cursor:pointer}
-.p-card-body{padding:8px 10px 10px;flex:1}
-.p-card-brand{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text)}
-.p-card-model{font-size:11px;color:var(--t2);margin-top:1px}
-.p-card-meta{font-size:10px;color:var(--t4);margin-top:3px;line-height:1.5}
-.p-card-cat{display:inline-block;font-size:8px;background:var(--gold-dim);color:var(--gold);border-radius:4px;padding:2px 6px;font-weight:600;margin-top:5px;letter-spacing:.3px;text-transform:uppercase}
-.p-card-footer{display:flex;gap:6px;padding:0 10px 10px}
-.p-card-sold{opacity:.6;filter:saturate(0)}
-.p-card-sold .p-card-brand{color:var(--sold-lt)}
-.sold-tag{font-size:9px;color:var(--sold-lt);font-weight:600;letter-spacing:.5px}
-.search-bar{width:100%;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r6);padding:8px 10px;color:var(--text);font-size:12px;margin-bottom:10px}
-.search-bar:focus{border-color:var(--gold-glow)}
-.cat-tools{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.cat-tools .filter-pill{font-size:10px;padding:3px 9px;border-radius:20px;background:var(--s2);border:1px solid var(--bdr2);color:var(--t4);cursor:pointer;transition:all .2s}
-.cat-tools .filter-pill.on{background:var(--gold-dim);border-color:var(--gold-glow);color:var(--gold)}
-.cat-empty{padding:30px 16px;text-align:center;color:var(--t4);font-size:12px;line-height:1.6}
-
-/* â”€â”€ API Keys â”€â”€ */
-.key-row{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r8);padding:7px 9px;margin-bottom:5px}
-.key-row .key-label{font-size:8px;padding:2px 5px;border-radius:3px;font-weight:600;flex-shrink:0}
-.key-row .key-val{flex:1;font-size:11px;color:var(--t3);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.key-row .key-del{background:none;border:none;color:var(--t4);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0}
-.key-row .key-del:hover{color:var(--red-lt)}
-
-/* â”€â”€ Devices â”€â”€ */
-.dev-grid{display:flex;flex-direction:column;gap:6px}
-.dev-card{background:var(--bg);border:1px solid var(--bdr2);border-radius:var(--r10);padding:10px 12px;display:flex;align-items:center;gap:10px}
-.dev-card-info{flex:1;min-width:0}
-.dev-card-id{font-family:monospace;font-size:9px;color:var(--t4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dev-card-name{font-size:12px;color:var(--text);font-weight:600;margin-top:1px}
-.dev-card-meta{font-size:10px;color:var(--t4);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
-.dev-card-actions{display:flex;gap:4px;flex-shrink:0}
-.dev-table-wrap{overflow-x:auto;border-radius:var(--r8);border:1px solid var(--bdr2)}
-.dev-table-wrap table{font-size:11px}
-.dev-table-wrap td, .dev-table-wrap th{padding:6px 8px}
-
-/* â”€â”€ Scan log â”€â”€ */
-.log-entry{display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11px;color:var(--t2)}
-.log-entry:last-child{border-bottom:none}
-.log-time{color:var(--t4);flex-shrink:0;font-size:10px;width:65px}
-.log-device{flex-shrink:0;width:75px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t3)}
-.log-part{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2)}
-
-/* â”€â”€ Lightbox (embedded in modal catalog) â”€â”€ */
-#lightbox{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;padding:20px;cursor:pointer}
+/* ── LIGHTBOX ── */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(5,7,9,.96);z-index:800;align-items:center;justify-content:center;cursor:zoom-out}
 #lightbox.on{display:flex}
-#lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--r8)}
+#lb-img{max-width:94vw;max-height:88vh;border-radius:var(--r10);object-fit:contain}
+#lb-close{position:fixed;top:14px;right:14px;width:34px;height:34px;background:var(--s2);border:1px solid var(--bdr2);color:var(--t2);border-radius:50%;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 
-/* â”€â”€ Confirm / Diagnostics â”€â”€ */
-.diag-step{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r6);font-size:11px;color:var(--t3)}
-.diag-icon{width:14px;height:14px;border:2px solid var(--t5);border-radius:50%;flex-shrink:0}
-.diag-log{display:none;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r6);padding:8px;font-size:11px;color:var(--t3);font-family:monospace;white-space:pre-wrap;max-height:160px;overflow-y:auto;margin-bottom:10px}
+/* ── Manual photo ── */
+#manual-photo-preview{width:100%;height:140px;background:var(--s2);border:1px dashed var(--bdr2);border-radius:var(--r10);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;cursor:pointer;overflow:hidden;position:relative;margin-bottom:12px}
+#manual-file{display:none}
 
-/* â”€â”€ Responsive â”€â”€ */
-@media(max-width:600px){
-  .tb-row{height:auto;padding:6px 8px;flex-wrap:wrap;gap:4px}
-  .tb-brand span{font-size:11px}
-  .tb-actions{flex-wrap:wrap;margin-left:0;width:100%}
-  .tb-btn{padding:5px 8px;font-size:9px}
-  .modal-overlay{padding:8px}
-  .modal-frame{max-height:calc(100vh - 16px)}
-  .modal-top{padding:10px 12px}
-  .modal-body{padding:12px}
-  .dev-table-wrap{display:none}
-  .sec-card{padding:10px}
-  .fld-row{flex-direction:column;align-items:stretch;gap:4px}
-  .fld-row label{min-width:0;font-size:10px}
-  .cat-grid{grid-template-columns:1fr}
+/* ── FAB ── */
+#fab-export{display:none;position:fixed;bottom:20px;right:14px;background:var(--gold);color:#0D0F12;border-radius:var(--r10);padding:11px 16px;font-size:12px;font-weight:500;letter-spacing:.5px;box-shadow:0 4px 20px rgba(200,169,110,.3);z-index:200}
+#fab-export.on{display:flex;align-items:center;gap:7px}
+#fab-export svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+@media (min-width:900px){
+  #hdr{flex-direction:row;align-items:center;height:62px}
+  #hdr-row1{flex:1;padding:0 0 0 28px;height:62px}
+  #hdr-row2{padding:0 28px 0 0;flex-direction:row;align-items:center;gap:12px;border-top:none}
+  #main{max-width:1360px;padding:20px 24px 80px;display:grid;grid-template-columns:260px 1fr;grid-template-rows:auto auto auto 1fr;column-gap:20px;align-items:start}
+  #up-panel{grid-column:1;grid-row:1;position:sticky;top:66px;z-index:100;margin-bottom:0}
+  #prog-wrap{grid-column:1;grid-row:2;margin-bottom:0;margin-top:12px}
+  #queue-wrap{grid-column:1;grid-row:3;margin-bottom:0;margin-top:12px}
+  #folder-nav{grid-column:2;grid-row:1/span 4;top:66px;margin-bottom:0}
+  .prod-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px}
+  .pcard{flex-direction:column;align-items:stretch}
+  .pcard-img{width:100%;min-width:unset;height:130px}
+  .pcard-right{flex-direction:row;align-items:center;padding:8px 12px;gap:8px;border-top:1px solid var(--bdr)}
+  #fab-export{bottom:28px;right:28px;padding:13px 20px;font-size:13px;border-radius:var(--r12)}
+  .modal-bg{align-items:center;padding:20px}
+  .modal-sheet{border-radius:var(--r16);max-width:520px;width:100%;max-height:88vh;animation:fadeUp .18s ease}
+  @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  #toast{bottom:36px}
 }
-@media(min-width:601px){
-  .dev-grid{display:none}
+@media (min-width:1200px){
+  #main{grid-template-columns:280px 1fr;column-gap:24px;padding:24px 32px 80px}
+  .prod-list{grid-template-columns:repeat(3,1fr);gap:10px}
+  .pcard-img{height:150px}
 }
 </style>
 </head>
 <body>
 
-<!-- PASSWORD GATE -->
-<div id="pw-gate">
-  <div class="pw-box">
-    <div class="pw-icon">&#9881;</div>
-    <div class="pw-title">Panel de AdministraciÃ³n</div>
-    <div class="pw-sub">Ingresa la contraseÃ±a de administrador</div>
-    <input class="pw-input" id="pw-input" type="password" placeholder="ContraseÃ±a" autocomplete="off"/>
-    <button class="pw-btn" id="pw-btn">Acceder</button>
-    <div class="pw-error" id="pw-error"></div>
-  </div>
-</div>
-
-<!-- TOOLBAR -->
-<div id="toolbar" style="display:none">
-  <div class="tb-row">
-    <div class="tb-brand">
+<!-- LICENSE GATE -->
+<div id="lic-gate">
+  <div class="lic-box">
+    <div class="lic-logo-wrap">
       <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      <span>DesarmadurÃ­a Paola</span>
     </div>
-    <div class="tb-actions" id="tb-actions">
-      <button class="tb-btn" onclick="openModal('catalog')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>CatÃ¡logo<span class="cnt" id="c-catalog">0</span>
-      </button>
-      <button class="tb-btn" onclick="openModal('apikeys')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>API Keys
-      </button>
-      <button class="tb-btn" onclick="openModal('devices')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 1h6"/><path d="M9 23h6"/><path d="M12 21v-2"/></svg>Dispositivos<span class="cnt" id="c-devices">0</span>
-      </button>
-      <button class="tb-btn" onclick="openModal('scanlog')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Historial
-      </button>
-      <button class="tb-btn" onclick="openModal('messages')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Mensajes
-      </button>
-      <button class="tb-btn" onclick="openModal('maintenance')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Mantenimiento
-      </button>
-      <button class="tb-btn" onclick="openModal('license')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Licencias
-      </button>
-      <button class="tb-btn" onclick="openModal('diagnostics')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>DiagnÃ³stico
-      </button>
+    <div class="lic-title">Desarmaduria Paola</div>
+    <div class="lic-sub">Catálogo IA · Sistema Profesional</div>
+    <div class="lic-input-wrap">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <input id="lic-input" type="text" inputmode="text" placeholder="AP-XXXX-MMAA-XXXXXXXX" maxlength="22" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done"/>
+    </div>
+    <div class="lic-error" id="lic-error"></div>
+    <button class="lic-btn" id="lic-btn" onclick="activateLicense()">Activar Licencia</button>
+    <div class="lic-help">
+      <strong>¿No tienes código?</strong><br>
+      Contacta a tu proveedor para obtener<br>
+      tu código de acceso mensual.
     </div>
   </div>
 </div>
 
-<!-- HOME (landing after login) -->
-<div id="home" style="display:none">
-  <div class="hw">
-    <div class="hi">&#9881;</div>
-    <div class="ht">Panel de AdministraciÃ³n</div>
-    <div class="hs">SeleccionÃ¡ una secciÃ³n para comenzar. Todos los cambios se sincronizan automÃ¡ticamente con los dispositivos CAPv2.</div>
-    <div class="hg">
-      <button class="tb-btn" onclick="openModal('catalog')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>CatÃ¡logo</button>
-      <button class="tb-btn" onclick="openModal('apikeys')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>API Keys</button>
-      <button class="tb-btn" onclick="openModal('devices')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 1h6"/><path d="M9 23h6"/><path d="M12 21v-2"/></svg>Dispositivos</button>
-      <button class="tb-btn" onclick="openModal('scanlog')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Historial</button>
-      <button class="tb-btn" onclick="openModal('messages')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Mensajes</button>
-      <button class="tb-btn" onclick="openModal('maintenance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Mantenimiento</button>
-      <button class="tb-btn" onclick="openModal('license')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Licencias</button>
-      <button class="tb-btn" onclick="openModal('diagnostics')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>DiagnÃ³stico</button>
-    </div>
+<!-- MAINTENANCE OVERLAY -->
+<div id="maint-overlay">
+  <div class="maint-box">
+    <div class="maint-icon">🔧</div>
+    <div class="maint-title">Mantenimiento</div>
+    <div class="maint-msg" id="maint-msg">El sistema está en mantenimiento. Volvé más tarde.</div>
   </div>
 </div>
 
-<!-- CATALOG CONTENT -->
-<div id="content-catalog" style="display:none">
-  <div class="sec-title">CatÃ¡logo de partes</div>
-  <div class="sec-sub">Vista general de todas las partes escaneadas desde los dispositivos CAPv2.</div>
-  <input class="search-bar" id="cat-search" placeholder="Buscar por marca, modelo, aÃ±os..."/>
-  <div class="cat-tools">
-    <span class="filter-pill on" data-f="all" onclick="setCatFilter('all')">Todas</span>
-    <span class="filter-pill" data-f="avail" onclick="setCatFilter('avail')">Disponibles</span>
-    <span class="filter-pill" data-f="sold" onclick="setCatFilter('sold')">Vendidas</span>
-    <span style="flex:1"></span>
-    <button class="btn-ghost btn-sm" onclick="exportExcel()">Exportar Excel</button>
-  </div>
-  <div id="cat-stats" style="font-size:10px;color:var(--t4);margin-bottom:8px"></div>
-  <div class="cat-grid" id="cat-grid"></div>
-  <div class="cat-empty" id="cat-empty" style="display:none">No hay partes que coincidan.</div>
-</div>
+<!-- ADMIN BANNER -->
+<div id="admin-banner"></div>
 
-<!-- API KEYS CONTENT -->
-<div id="content-apikeys" style="display:none">
-  <div class="sec-title">API Keys</div>
-  <div class="sec-sub">Gestiona las claves de API para Groq y OpenRouter.</div>
-  <div class="sec-card">
-    <div id="keys-list"></div>
-    <div style="display:flex;gap:6px;margin-top:8px">
-      <div style="flex:1;position:relative">
-        <input id="api-key-in" type="password" placeholder="Ingresa nueva API key"
-          style="width:100%;background:var(--s2);border:1px solid var(--bdr2);color:var(--text);padding:8px 34px 8px 10px;border-radius:var(--r6);font-size:12px"/>
-        <button id="api-eye" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t4);cursor:pointer;display:flex;align-items:center;padding:0">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+<!-- IMAGE TEST MODAL (only diag kept) -->
+<div class="modal-bg" id="diag-test-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">Probar IA con foto real</div>
+    <div class="modal-sub">Subí una foto y verás cada paso de lo que hace la IA en tiempo real.</div>
+    <div id="diag-img-zone" onclick="document.getElementById('diag-file-in').click()">
+      <div style="color:var(--t4);margin-bottom:4px;display:flex;align-items:center;justify-content:center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
       </div>
-      <button class="btn-primary btn-sm" id="api-add">+ Agregar</button>
+      <div style="font-size:11px;color:var(--t4);letter-spacing:.3px">Toca para seleccionar una foto</div>
     </div>
-    <div id="api-status" style="font-size:11px;margin-top:5px;min-height:14px;color:var(--t4)"></div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr2)">
-      <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px">Modelo Groq</label>
-      <select id="or-model-sel" style="width:100%;background:var(--s2);border:1px solid var(--bdr2);color:var(--text);padding:7px;border-radius:var(--r6);font-size:12px">
-        <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17B (recomendado)</option>
-        <option value="meta-llama/llama-4-maverick-17b-128e-instruct">Llama 4 Maverick 17B</option>
-        <option value="llama-3.2-90b-vision-preview">Llama 3.2 90B Vision</option>
+    <input type="file" id="diag-file-in" accept="image/*" style="display:none"/>
+    <div id="diag-real-wrap" style="display:none">
+      <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
+        <img id="diag-real-preview" src="" alt=""/>
+        <div id="diag-real-meta"></div>
+      </div>
+      <div id="diag-real-steps"></div>
+      <div id="diag-real-log"></div>
+      <button class="btn-primary" id="diag-real-run" style="width:100%">Probar con esta foto</button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-ghost-sm" style="flex:1" onclick="closeModal('diag-test-modal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANUAL ENTRY MODAL -->
+<div class="modal-bg" id="manual-modal">
+  <div class="modal-sheet">
+    <div class="modal-title" id="manual-title">Agregar parte</div>
+    <div class="modal-sub">Ingresá los datos manualmente. La foto es opcional.</div>
+    <div id="manual-photo-preview" onclick="document.getElementById('manual-file').click()">
+      <span style="color:var(--t4);font-size:10px">Toca para agregar foto</span>
+      <img id="manual-preview-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>
+    </div>
+    <input type="file" id="manual-file" accept="image/*"/>
+    <div class="fld-row">
+      <div class="fld"><div class="fld-label">Marca</div><input class="fld-input" id="m-marca" placeholder="Toyota"/></div>
+      <div class="fld"><div class="fld-label">Modelo</div><input class="fld-input" id="m-modelo" placeholder="Corolla"/></div>
+    </div>
+    <div style="margin-bottom:12px"></div>
+    <div class="fld-row">
+      <div class="fld"><div class="fld-label">Años</div><input class="fld-input" id="m-años" placeholder="2018-2022"/></div>
+      <div class="fld"><div class="fld-label">Posición</div><input class="fld-input" id="m-pos" placeholder="Delantero"/></div>
+    </div>
+    <div class="fld"><div class="fld-label">Descripción</div><input class="fld-input" id="m-desc" placeholder="Descripción breve"/></div>
+    <div class="fld"><div class="fld-label">Categoría</div>
+      <select class="fld-input" id="m-cat">
+        <option value="parachoques">Parachoques</option>
+        <option value="opticos">Ópticos</option>
+        <option value="focos">Focos</option>
+        <option value="guardabarros">Guardabarros</option>
+        <option value="capots">Capots</option>
+        <option value="varios">Varios</option>
       </select>
     </div>
-  </div>
-</div>
-
-<!-- DEVICES CONTENT -->
-<div id="content-devices" style="display:none">
-  <div class="sec-title">Dispositivos conectados</div>
-  <div class="sec-sub">Monitorea los dispositivos que ejecutan CAPv2. PodÃ©s bloquear o eliminar dispositivos.</div>
-  <div class="dev-table-wrap">
-    <table>
-      <thead><tr><th>Dispositivo</th><th>Nombre</th><th>Ãšltima conexiÃ³n</th><th>Escaneos</th><th>Estado</th><th>AcciÃ³n</th></tr></thead>
-      <tbody id="dev-tbody"></tbody>
-    </table>
-  </div>
-  <div class="dev-grid" id="dev-grid"></div>
-  <div id="dev-empty" style="display:none;padding:24px;text-align:center;color:var(--t4);font-size:12px">Sin dispositivos registrados aÃºn.</div>
-</div>
-
-<!-- SCAN LOG CONTENT -->
-<div id="content-scanlog" style="display:none">
-  <div class="sec-title">Historial de escaneos</div>
-  <div class="sec-sub">Registro de todas las piezas escaneadas desde los dispositivos.</div>
-  <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-    <input class="fld-in" id="sl-search" placeholder="Buscar por ID de parte o dispositivo" style="flex:1;min-width:140px"/>
-    <select class="fld-in" id="sl-filter" style="width:auto;min-width:90px">
-      <option value="all">Todos</option>
-      <option value="success">Exitosos</option>
-      <option value="error">Con error</option>
-    </select>
-    <button class="btn-ghost btn-sm" id="sl-refresh">Refrescar</button>
-  </div>
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr><th>Hora</th><th>Dispositivo</th><th>Parte ID</th><th>CategorÃ­a</th><th>Resultado</th><th>Latencia</th></tr></thead>
-      <tbody id="sl-tbody"></tbody>
-    </table>
-  </div>
-  <div id="sl-empty" style="display:none;padding:24px;text-align:center;color:var(--t4);font-size:12px">Sin escaneos registrados aÃºn.</div>
-  <div style="text-align:center;margin-top:10px">
-    <button class="btn-ghost btn-sm" id="sl-load-more">Cargar mÃ¡s</button>
-  </div>
-</div>
-
-<!-- MESSAGES CONTENT -->
-<div id="content-messages" style="display:none">
-  <div class="sec-title">Mensaje administrador</div>
-  <div class="sec-sub">EnvÃ­a un mensaje que aparecerÃ¡ como banner en todos los dispositivos CAPv2.</div>
-  <div class="sec-card">
-    <div class="fld-group">
-      <div class="fld-row">
-        <label>Mensaje</label>
-        <input class="fld-in" id="msg-text" placeholder="Ej: Nueva actualizaciÃ³n disponible" maxlength="200"/>
-      </div>
-      <div class="fld-row">
-        <label>Tipo</label>
-        <select class="fld-in" id="msg-type" style="width:auto">
-          <option value="info">Info (azul)</option>
-          <option value="warning">Advertencia (amarillo)</option>
-          <option value="critical">CrÃ­tico (rojo)</option>
-        </select>
-      </div>
-      <div class="fld-row">
-        <label></label>
-        <div style="display:flex;gap:6px">
-          <button class="btn-primary btn-sm" id="msg-send">Enviar mensaje</button>
-          <button class="btn-ghost btn-sm" id="msg-clear">Limpiar mensaje</button>
-        </div>
-      </div>
-      <div id="msg-preview" style="background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r6);padding:8px 12px;font-size:12px;color:var(--t4);display:none;line-height:1.5;margin-top:4px"></div>
+    <div class="modal-btns">
+      <button class="btn-primary" id="manual-save">Agregar parte</button>
+      <button class="btn-ghost-sm" onclick="closeModal('manual-modal')">Cancelar</button>
     </div>
   </div>
 </div>
 
-<!-- MAINTENANCE CONTENT -->
-<div id="content-maintenance" style="display:none">
-  <div class="sec-title">Modo mantenimiento</div>
-  <div class="sec-sub">Activa el modo mantenimiento para bloquear temporalmente todos los dispositivos CAPv2.</div>
-  <div class="sec-card">
-    <div class="fld-row" style="margin-bottom:12px">
-      <div class="toggle-wrap">
-        <div class="toggle-track" id="maint-toggle">
-          <div class="toggle-knob"></div>
-        </div>
-        <span style="font-size:12px;color:var(--t2)" id="maint-label">Mantenimiento desactivado</span>
-      </div>
-    </div>
-    <div class="fld-group">
-      <div class="fld-row">
-        <label>Mensaje</label>
-        <input class="fld-in" id="maint-msg" placeholder="Ej: Sistema en mantenimiento programado" maxlength="200"/>
-      </div>
-      <div class="fld-row">
-        <label></label>
-        <button class="btn-primary btn-sm" id="maint-save">Guardar configuraciÃ³n</button>
-      </div>
+<!-- CONFIRM -->
+<div id="confirm-bg">
+  <div id="confirm-box">
+    <h3 id="conf-title">Confirmar</h3>
+    <p id="conf-msg"></p>
+    <div class="confirm-btns">
+      <button id="conf-ok">Confirmar</button>
+      <button id="conf-cancel">Cancelar</button>
     </div>
   </div>
 </div>
 
-<!-- LICENSE CONTENT -->
-<div id="content-license" style="display:none">
-  <div class="sec-title">ConfiguraciÃ³n de IA</div>
-  <div class="sec-sub">Configura el proveedor y modelo de IA que usarÃ¡n los dispositivos CAPv2.</div>
-  <div class="sec-card">
-    <div class="fld-group">
-      <div class="fld-row">
-        <label>Proveedor IA</label>
-        <select class="fld-in" id="lic-provider" style="width:auto">
-          <option value="groq">Groq</option>
-          <option value="openrouter">OpenRouter</option>
-        </select>
+<!-- HEADER -->
+<div id="hdr">
+  <div id="hdr-row1">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </div>
-      <div class="fld-row">
-        <label>Modelo IA</label>
-        <input class="fld-in" id="lic-model" placeholder="meta-llama/llama-4-scout-17b-16e-instruct"/>
+      <div class="logo-text">
+        <div class="logo-name">Desarmaduria Paola</div>
+        <div class="logo-sub">Catálogo</div>
       </div>
-      <div class="fld-row">
-        <label></label>
-        <button class="btn-primary btn-sm" id="lic-save">Guardar configuraciÃ³n</button>
-      </div>
+    </div>
+    <div id="hdr-actions">
+      <button class="ico-btn" id="btn-test-ai" title="Probar IA">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </button>
+      <button class="ico-btn" id="btn-resync" title="Sincronizar fotos a la nube" onclick="resyncMissingPhotos()">
+        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+      </button>
+      <button class="ico-btn" id="btn-clear-all" title="Limpiar catálogo">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
     </div>
   </div>
-  <div class="sec-title" style="margin-top:20px">License Secret</div>
-  <div class="sec-sub">El secret se usa para validar los cÃ³digos de acceso en los dispositivos CAPv2.</div>
-  <div class="sec-card">
-    <div class="fld-group">
-      <div class="fld-row">
-        <label>Secret actual</label>
-        <input class="fld-in" id="lic-secret" type="password" placeholder="License secret"/>
-      </div>
-      <div class="fld-row">
-        <label>Nuevo secret</label>
-        <input class="fld-in" id="lic-new-secret" type="password" placeholder="Nuevo valor (opcional)"/>
-      </div>
-      <div class="fld-row">
-        <label></label>
-        <button class="btn-primary btn-sm" id="lic-secret-save">Guardar secret</button>
-      </div>
+  <div id="hdr-row2">
+    <div id="hdr-stats">
+      <div class="hdr-stat"><div class="hdr-stat-n n-avail" id="stat-avail">0</div><div class="hdr-stat-l">Disp.</div></div>
+      <div class="hdr-stat"><div class="hdr-stat-n n-sold" id="stat-sold">0</div><div class="hdr-stat-l">Vend.</div></div>
     </div>
-  </div>
-  <div class="sec-title" style="margin-top:20px">Generar cÃ³digo de acceso</div>
-  <div class="sec-sub">GenerÃ¡ un cÃ³digo con formato <strong>AP-XXXX-MMAA-XXXXXXXX</strong> para cada usuario de CAPv2.</div>
-  <div class="sec-card">
-    <div class="fld-group">
-      <div class="fld-row">
-        <label>Cliente</label>
-        <input class="fld-in" id="lic-gen-client" placeholder="Ej: C001" maxlength="10"/>
-      </div>
-      <div class="fld-row">
-        <label>Mes</label>
-        <select class="fld-in" id="lic-gen-month" style="width:auto">
-          <option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option>
-          <option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
-        </select>
-      </div>
-      <div class="fld-row">
-        <label>AÃ±o</label>
-        <select class="fld-in" id="lic-gen-year" style="width:auto">
-          <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option>
-        </select>
-      </div>
-      <div class="fld-row">
-        <label></label>
-        <button class="btn-primary btn-sm" id="lic-gen-btn">Generar cÃ³digo</button>
-      </div>
-      <div class="fld-row" id="lic-gen-result" style="display:none">
-        <label style="color:var(--green-lt)">CÃ³digo</label>
-        <div style="flex:1;display:flex;gap:6px;align-items:center">
-          <input class="fld-in" id="lic-gen-output" readonly style="font-family:monospace;letter-spacing:1px;color:var(--gold);font-weight:600"/>
-          <button class="btn-ghost btn-sm" id="lic-gen-copy" title="Copiar">Copiar</button>
-        </div>
-      </div>
-    </div>
+    <div id="lic-pill" onclick="showLicenseInfo()"><span class="lic-dot"></span><span id="lic-pill-txt">Licencia</span></div>
+    <div id="proc-pill"><div class="spin"></div><span id="proc-txt">0/0</span></div>
   </div>
 </div>
 
-<!-- DIAGNOSTICS CONTENT -->
-<div id="content-diagnostics" style="display:none">
-  <div class="sec-title">DiagnÃ³stico del sistema</div>
-  <div class="sec-sub">Verifica la conectividad y el estado de cada componente.</div>
-  <div class="sec-card">
-    <div id="diag-steps" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
-    <div class="diag-log" id="diag-log"></div>
-    <button class="btn-primary" id="diag-run">Ejecutar diagnÃ³stico completo</button>
-  </div>
-</div>
-
-<!-- MODAL OVERLAY -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
-  <div class="modal-frame" id="modal-frame" onclick="event.stopPropagation()">
-    <div class="modal-top">
-      <span class="modal-title" id="modal-title"></span>
-      <button class="modal-close" onclick="closeModal()">&times;</button>
-    </div>
-    <div class="modal-body" id="modal-body"></div>
-  </div>
-</div>
-
-<!-- CONFIRM DIALOG -->
-<div id="confirm-bg" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:16px">
-  <div id="confirm-box" style="background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r12);padding:20px;max-width:320px;width:100%;text-align:center;animation:fadeUp .2s ease">
-    <h3 id="conf-title" style="font-family:var(--font-display);font-weight:700;font-size:14px;margin-bottom:6px;color:var(--text)">Confirmar</h3>
-    <p id="conf-msg" style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.5"></p>
-    <div style="display:flex;gap:6px;justify-content:center">
-      <button id="conf-ok" class="btn-primary">Confirmar</button>
-      <button id="conf-cancel" class="btn-ghost">Cancelar</button>
+<div id="main">
+  <div id="up-panel">
+    <button id="up-toggle">
+      <span class="up-toggle-label">
+        <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        Agregar partes
+      </span>
+      <span id="up-toggle-arrow" class="open"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+    </button>
+    <div id="up-body" class="open">
+      <div class="up-grid" id="up-grid"></div>
+      <div class="up-hint">Seleccioná la categoría → elegí las fotos → la IA detecta marca, modelo y años</div>
     </div>
   </div>
-</div>
-
-<!-- LIGHTBOX -->
-<div id="lightbox" onclick="closeLightbox()">
-  <img id="lb-img" src="" alt=""/>
+  <div id="prog-wrap"><div id="prog-track"><div id="prog-fill"></div></div><div id="prog-label">Iniciando…</div></div>
+  <div id="queue-wrap">
+    <div id="queue-hdr"><div id="queue-title">En proceso</div><div id="queue-prog"></div></div>
+    <div class="q-row" id="queue-row"></div>
+  </div>
+  <div id="folder-nav">
+    <div class="tabs-scroll" id="tabs-scroll"></div>
+    <div class="ftab-content" id="folder-content"></div>
+  </div>
 </div>
 
 <!-- TOAST -->
 <div id="toast"></div>
 
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()">
+  <img id="lb-img" src="" alt=""/>
+  <div id="lb-close" onclick="closeLightbox()">✕</div>
+</div>
+
+<button id="fab-export" onclick="exportExcel()">
+  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  Excel
+</button>
+
 <script>
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// SUPABASE CONFIG
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════
+// CONFIG — leída desde Supabase admin_config
+// ════════════════════════════════════════════
 const SB_URL = "https://xkguzluwbbxsbustlcxo.supabase.co";
-const SB_KEY = "sb_publishable_1Asg-FYNLYby-n-upo5NAg_z6ZJ4TTx";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrZ3V6bHV3YmJ4c2J1c3RsY3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNzQwOTUsImV4cCI6MjA5NTc1MDA5NX0.N6oatsQFuRPdlpKcwWnqNSvagtg1dGqjSNg2dzU9Tl0";
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// PASSWORD GATE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-const PW_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; // SHA-256 of "admin"
-let authed = false;
+// Device ID — persistente para tracking
+let deviceId = localStorage.getItem("ap_device_id");
+if (!deviceId) { deviceId = "dev_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8); localStorage.setItem("ap_device_id", deviceId); }
 
-function authedOnly() { if (!authed) { window.location.reload(); return false; } return true; }
+// Config cache
+let configCache = null;
 
-async function checkSavedSession() {
+async function sbFetch(path, method="GET", body=null) {
+  const opts = { method, headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" } };
+  if (body) opts.body = JSON.stringify(body);
   try {
-    const saved = localStorage.getItem("ap_session");
-    if (saved) {
-      const s = JSON.parse(saved);
-      if (s && s.exp > Date.now()) { authed = true; return true; }
+    const r = await fetch(SB_URL + path, opts);
+    if (!r.ok) {
+      if (r.status === 409) return null; // conflict — silently ignore
+      const txt = await r.text().catch(() => "");
+      console.error("sbFetch error:", method, path, r.status, txt.slice(0,100));
+      return null;
     }
-  } catch(_) {}
-  return false;
+    if (method === "DELETE" || r.status === 204) return true;
+    return r.headers.get("content-type")?.includes("json") ? await r.json() : true;
+  } catch(e) {
+    console.error("sbFetch error:", e.message);
+    return null;
+  }
 }
 
+// Read config from Supabase
+async function readConfig() {
+  try {
+    let rows = await sbFetch("/rest/v1/admin_config?select=*&limit=1");
+    if (!rows || !rows.length) {
+      const created = await sbFetch("/rest/v1/admin_config", "POST", { id: "global", api_keys: [] });
+      if (created) rows = await sbFetch("/rest/v1/admin_config?select=*&limit=1");
+    }
+    if (!rows || !rows.length) return null;
+    const cfg = rows[0];
+    // api_keys may be stored as JSON string
+    if (typeof cfg.api_keys === "string") {
+      try { cfg.api_keys = JSON.parse(cfg.api_keys); } catch(_) { cfg.api_keys = []; }
+    }
+    if (!Array.isArray(cfg.api_keys)) cfg.api_keys = [];
+    configCache = cfg;
+    return configCache;
+  } catch(e) { return null; }
+}
+
+// ── API KEYS from Supabase config ──
+// The panel controls these remotely
+let apiKeys = [];
+let aiProvider = "gemini";
+let aiModel = "gemini-2.0-flash";
+
+async function loadConfig() {
+  const cfg = await readConfig();
+  if (cfg) {
+    apiKeys = cfg.api_keys || [];
+    aiProvider = cfg.ai_provider || "gemini";
+    aiModel = cfg.ai_model || "gemini-2.0-flash";
+    if (cfg.license_secret) LICENSE_SECRET = cfg.license_secret;
+  }
+  return !!cfg;
+}
+
+// ── DEVICE TRACKING ──
+async function registerDevice() {
+  const ua = navigator.userAgent || "";
+  const data = { id: deviceId, user_agent: ua.slice(0,500), last_seen: new Date().toISOString() };
+  // Use upsert to avoid 409 conflict if device already exists
+  try {
+    const opts = {
+      method: "POST",
+      headers: {
+        "apikey": SB_KEY,
+        "Authorization": `Bearer ${SB_KEY}`,
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates"
+      },
+      body: JSON.stringify(data)
+    };
+    await fetch(SB_URL + "/rest/v1/devices", opts);
+  } catch(e) { console.warn("registerDevice:", e); }
+}
+async function heartbeatDevice() {
+  const data = { last_seen: new Date().toISOString() };
+  await sbFetch(`/rest/v1/devices?id=eq.${encodeURIComponent(deviceId)}`, "PATCH", data);
+}
+async function logScan(partId, categoria, resultado, latenciaMs) {
+  const id = "scan_" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  await sbFetch("/rest/v1/scan_log", "POST", {
+    id, device_id: deviceId, part_id: partId, categoria, timestamp: new Date().toISOString(),
+    resultado, latencia_ms: latenciaMs || 0
+  });
+  // Increment device scan count
+  const dev = await sbFetch(`/rest/v1/devices?id=eq.${deviceId}&select=total_scans`);
+  const current = (dev && dev[0]?.total_scans) || 0;
+  await sbFetch(`/rest/v1/devices?id=eq.${deviceId}`, "PATCH", { total_scans: current + 1 });
+}
+
+// ── SUPABASE CATALOG SYNC ──
+// ── UPLOAD PHOTO TO SUPABASE STORAGE (PUBLIC BUCKET) ──
+async function sbUploadPhoto(partId, dataUrl) {
+  try {
+    if (!dataUrl || !dataUrl.startsWith("data:")) return null;
+    const mime = dataUrl.split(";")[0].split(":")[1];
+    const ext  = mime.includes("png") ? "png" : "jpg";
+    const b64  = dataUrl.split(",")[1];
+    const bin  = atob(b64);
+    const arr  = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    const blob = new Blob([arr], { type: mime });
+    // ✅ CORREGIDO: subir directamente al bucket público
+    const path = `${partId}.${ext}`;
+    // POST to /object/ (without /public/) to upload
+    const r = await fetch(`${SB_URL}/storage/v1/object/Fotos/${path}`, {
+      method: "POST",
+      headers: {
+        "apikey": SB_KEY,
+        "Authorization": `Bearer ${SB_KEY}`,
+        "Content-Type": mime,
+        "x-upsert": "true"
+      },
+      body: blob
+    });
+    if (!r.ok) {
+      const txt = await r.text();
+      console.warn("Storage upload failed:", r.status, txt);
+      return null;
+    }
+    // Public read URL uses /object/public/
+    return `${SB_URL}/storage/v1/object/public/Fotos/${path}`;
+  } catch(e) {
+    console.warn("sbUploadPhoto error:", e);
+    return null;
+  }
+}
+
+async function loadPartsFromSupabase() {
+  const data = await sbFetch("/rest/v1/partes?select=id,data,created_at&order=created_at.desc");
+  if (!data || !Array.isArray(data)) return;
+  parts = data.map(d => {
+    const p = { id: d.id, ...(d.data || {}), created_at: d.created_at };
+    // Prefer Supabase Storage URL (visible on all devices) over base64 blob
+    if (p.photoUrl) {
+      p.preview     = p.photoUrl;
+      p.previewFull = p.photoUrl;
+    } else {
+      if (p.preview && !p.previewFull) p.previewFull = p.preview;
+      if (!p.preview && p.previewFull) p.preview = p.previewFull;
+    }
+    return p;
+  });
+}
+
+async function savePartToSupabase(part) {
+  const { fileDataUrl, file, ...rest } = part;
+
+  // Upload full photo to Storage if not already uploaded
+  if (!rest.photoUrl) {
+    const fullDataUrl = fileDataUrl || part.previewFull || part.preview || null;
+    if (fullDataUrl && fullDataUrl.startsWith("data:")) {
+      const url = await sbUploadPhoto(part.id, fullDataUrl);
+      if (url) {
+        rest.photoUrl    = url;
+        rest.preview     = url;
+        rest.previewFull = url;
+        // Update local part too so this device also shows the URL
+        const idx = parts.findIndex(p => p.id === part.id);
+        if (idx > -1) {
+          parts[idx].photoUrl    = url;
+          parts[idx].preview     = url;
+          parts[idx].previewFull = url;
+          saveParts();
+        }
+      }
+    }
+  }
+
+  const body = { data: rest };
+  const existing = await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(part.id)}&select=id`);
+  if (existing && existing.length > 0) {
+    await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(part.id)}`, "PATCH", body);
+  } else {
+    await sbFetch("/rest/v1/partes", "POST", { id: part.id, data: rest });
+  }
+}
+
+async function deletePartFromSupabase(partId) {
+  await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(partId)}`, "DELETE");
+}
+
+// ── CHECK MAINTENANCE & ADMIN MESSAGES ──
+async function checkMaintenance() {
+  const cfg = await readConfig();
+  if (!cfg) return;
+  const overlay = document.getElementById("maint-overlay");
+  if (cfg.maintenance_mode) {
+    document.getElementById("maint-msg").textContent = cfg.maintenance_message || "El sistema está en mantenimiento. Volvé más tarde.";
+    overlay.classList.add("on");
+  } else {
+    overlay.classList.remove("on");
+  }
+  // Admin banner
+  const banner = document.getElementById("admin-banner");
+  if (cfg.admin_message) {
+    banner.textContent = cfg.admin_message;
+    banner.className = "on " + (cfg.admin_message_type || "info");
+  } else {
+    banner.className = "";
+    banner.textContent = "";
+  }
+}
+
+// ── CONSTANTS ──
+const CAT_SVGS = {
+  parachoques:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M5 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>`,
+  opticos:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>`,
+  focos:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>`,
+  guardabarros:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  capots:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`,
+  varios:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`,
+};
+const CATS = {
+  parachoques:{label:"Parachoques",icon:CAT_SVGS.parachoques},
+  opticos:{label:"Ópticos",icon:CAT_SVGS.opticos},
+  focos:{label:"Focos",icon:CAT_SVGS.focos},
+  guardabarros:{label:"Guardabarros",icon:CAT_SVGS.guardabarros},
+  capots:{label:"Capots",icon:CAT_SVGS.capots},
+  varios:{label:"Varios",icon:CAT_SVGS.varios},
+};
+const ALL_FOLDERS = ["all", ...Object.keys(CATS)];
+const PROMPT = `Analiza esta autoparte. Devolvé SOLO este JSON sin texto extra ni backticks:
+{"marca":"marca compatible (ej: Toyota) o No determinado","modelo":"modelo (ej: Corolla) o No determinado","años":"rango (ej: 2010-2015) o No determinado","categoria":"parachoques|opticos|guardabarros|capots|varios","descripcion":"descripción breve max 60 chars","posicion":"Delantero|Trasero|Izquierdo|Derecho|Central","confianza":"Alta|Media|Baja"}
+Leé el texto visible primero. Si no hay texto, identificá por forma visual.`;
+
+const RETRY_WAITS = [15000, 30000, 45000, 60000, 90000];
+const RETRY_MAX = RETRY_WAITS.length;
+const MIN_INTERVAL = 4500;
+const MIN_INTERVAL_GROQ = 1800;
+
+let parts = [];
+let queue = [];
+let activeFolder = "all";
+let folderSearch = {};
+let folderStatus = {};
+let processing = false;
+let editId = null;
+let editBuf = {};
+let confirmCb = null;
+let manualPreviewDataUrl = null;
+let manualPreviewFile = null;
+let doneBatch = 0;
+let totalBatch = 0;
+let _keyIdx = 0;
+const _keyLastReq = {};
+
+ALL_FOLDERS.forEach(f => { folderSearch[f] = ""; folderStatus[f] = "all"; });
+
+const $ = id => document.getElementById(id);
+const procPill = $("proc-pill");
+const procTxt = $("proc-txt");
+const progWrap = $("prog-wrap");
+const progFill = $("prog-fill");
+const progLabel = $("prog-label");
+const queueWrap = $("queue-wrap");
+const queueRow = $("queue-row");
+const folderContent = $("folder-content");
+const tabsScroll = $("tabs-scroll");
+const fabExport = $("fab-export");
+
+// ════════════════════════════════════════════
+// LICENSE SYSTEM
+// ════════════════════════════════════════════
+let LICENSE_SECRET = "PaolaDesarm_2026_X9k7mQr4";
+
+// Pure JS SHA-256 fallback para file:// (crypto.subtle solo disponible en HTTPS)
 function sha256(str) {
   const chrsz = 8;
   function safe_add(x, y) { const lsw = (x & 0xFFFF) + (y & 0xFFFF); return (x >>> 16) + (y >>> 16) + (lsw >>> 16) << 16 | lsw & 0xFFFF; }
@@ -605,541 +800,8 @@ function sha256(str) {
   return H.map(x => ("0123456789abcdef").split("").reduce((s, _, i) => s + "0123456789abcdef"[(x >>> (7 - i) * 4) & 15], "")).join("");
 }
 
-async function doLogin() {
-  const pw = document.getElementById("pw-input").value;
-  const errEl = document.getElementById("pw-error");
-  let hash;
-  try {
-    if (crypto.subtle) {
-      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pw));
-      hash = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,"0")).join("");
-    } else { throw 1; }
-  } catch(e) { hash = sha256(pw); }
-  if (hash !== PW_HASH) {
-    errEl.textContent = "ContraseÃ±a incorrecta";
-    document.getElementById("pw-input").value = "";
-    return;
-  }
-  authed = true;
-  errEl.textContent = "";
-  localStorage.setItem("ap_session", JSON.stringify({ exp: Date.now() + 86400000 }));
-  document.getElementById("pw-gate").classList.add("gone");
-  document.getElementById("toolbar").style.display = "block";
-  document.getElementById("home").style.display = "flex";
-  loadAllData();
-}
-
-document.getElementById("pw-btn").onclick = doLogin;
-document.getElementById("pw-input").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// STATE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-let parts = [];
-let devices = [];
-let scanLogs = [];
-let adminConfig = null;
-let allLoaded = false;
-
-let catFilter = "all";
-let catSearch = "";
-let slSearch = "";
-let slFilter = "all";
-let slPage = 0;
-const SL_PAGE_SIZE = 50;
-
-let confirmCb = null;
-const $ = id => document.getElementById(id);
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// MODAL SYSTEM
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-const modalNames = { catalog:"CatÃ¡logo", apikeys:"API Keys", devices:"Dispositivos", scanlog:"Historial", messages:"Mensajes", maintenance:"Mantenimiento", license:"Licencias", diagnostics:"DiagnÃ³stico" };
-const modalIcons = { catalog:"ðŸ“¦", apikeys:"ðŸ”‘", devices:"ðŸ“±", scanlog:"ðŸ“‹", messages:"ðŸ’¬", maintenance:"ðŸ”§", license:"ðŸ”’", diagnostics:"ðŸ“Š" };
-
-function openModal(name) {
-  const overlay = $("modal-overlay");
-  const frame = $("modal-frame");
-  const title = $("modal-title");
-  const body = $("modal-body");
-  const content = $(`content-${name}`);
-  if (!content) return;
-  title.textContent = modalIcons[name] + " " + modalNames[name];
-  body.innerHTML = content.innerHTML;
-  // Re-bind event handlers for dynamic content
-  rebindModalHandlers(name);
-  overlay.classList.add("on");
-  // Refresh data when opening relevant modals
-  if (name === "devices") renderDevicesInModal();
-  if (name === "catalog") { catSearch = ""; const cs = body.querySelector("#cat-search"); if(cs) cs.value = ""; renderCatalogInModal(); }
-  if (name === "scanlog") renderScanLogInModal();
-  if (name === "apikeys" && adminConfig) renderKeysInModal();
-}
-
-function closeModal(e) {
-  if (e && e.target !== $("modal-overlay") && e.target.closest(".modal-frame")) return;
-  $("modal-overlay").classList.remove("on");
-}
-
-document.addEventListener("keydown", e => { if (e.key === "Escape") $("modal-overlay").classList.remove("on"); });
-
-function rebindModalHandlers(name) {
-  if (name === "catalog") {
-    const body = $("modal-body");
-    const search = body.querySelector("#cat-search");
-    if (search) search.oninput = () => { catSearch = search.value.toLowerCase(); renderCatalogInModal(); };
-    // Catalog filter pills are already inline onclick
-  }
-  if (name === "scanlog") {
-    const body = $("modal-body");
-    const s = body.querySelector("#sl-search"); const f = body.querySelector("#sl-filter");
-    const r = body.querySelector("#sl-refresh"); const m = body.querySelector("#sl-load-more");
-    if (s) s.oninput = () => { slSearch = s.value.toLowerCase(); renderScanLogInModal(); };
-    if (f) f.onchange = () => { slFilter = f.value; renderScanLogInModal(); };
-    if (r) r.onclick = () => { slPage = 0; loadScanLogs(false); };
-    if (m) m.onclick = () => { loadScanLogs(true); };
-  }
-  if (name === "apikeys") {
-    const body = $("modal-body");
-    const addBtn = body.querySelector("#api-add");
-    const eyeBtn = body.querySelector("#api-eye");
-    const sel = body.querySelector("#or-model-sel");
-    if (addBtn) addBtn.onclick = addKeyHandler;
-    if (eyeBtn) eyeBtn.onclick = () => { const inp = body.querySelector("#api-key-in"); if(inp) inp.type = inp.type === "password" ? "text" : "password"; };
-    if (sel) sel.onchange = async () => { if (!authedOnly()) return; await updateAdminConfig({ ai_model: sel.value }); toast("Modelo actualizado"); };
-  }
-  if (name === "messages") {
-    const body = $("modal-body");
-    const txt = body.querySelector("#msg-text");
-    const typ = body.querySelector("#msg-type");
-    const snd = body.querySelector("#msg-send");
-    const clr = body.querySelector("#msg-clear");
-    const prev = body.querySelector("#msg-preview");
-    if (txt && typ && prev) {
-      const upd = () => { const t = txt.value.trim(); const tp = typ.value; if (!t) { prev.style.display = "none"; return; } prev.style.display = "block"; const c = {info:"var(--t2)",warning:"var(--amber-lt)",critical:"var(--red-lt)"}; const b = {info:"var(--bdr2)",warning:"var(--amber-lt)",critical:"var(--red-lt)"}; prev.style.borderColor = b[tp]; prev.style.color = c[tp]; prev.textContent = t; };
-      txt.oninput = upd; typ.onchange = upd;
-    }
-    if (snd) snd.onclick = async () => { if (!authedOnly()) return; const t = (body.querySelector("#msg-text")?.value||"").trim(); if (!t) { toast("Escribe un mensaje"); return; } await updateAdminConfig({ admin_message: t, admin_message_type: body.querySelector("#msg-type")?.value || "info" }); toast("Mensaje enviado"); };
-    if (clr) clr.onclick = async () => { if (!authedOnly()) return; const t = body.querySelector("#msg-text"); const tp = body.querySelector("#msg-type"); if(t) t.value = ""; if(tp) tp.value = "info"; const p = body.querySelector("#msg-preview"); if(p) p.style.display = "none"; await updateAdminConfig({ admin_message: "", admin_message_type: "info" }); toast("Mensaje eliminado"); };
-  }
-  if (name === "maintenance") {
-    const body = $("modal-body");
-    const tog = body.querySelector("#maint-toggle");
-    const lbl = body.querySelector("#maint-label");
-    const msg = body.querySelector("#maint-msg");
-    const sav = body.querySelector("#maint-save");
-    if (tog && lbl) tog.onclick = () => { tog.classList.toggle("on"); lbl.textContent = tog.classList.contains("on") ? "Mantenimiento activado" : "Mantenimiento desactivado"; };
-    if (sav) sav.onclick = async () => { if (!authedOnly()) return; await updateAdminConfig({ maintenance_mode: tog?.classList.contains("on") || false, maintenance_message: msg?.value.trim() || "" }); toast("ConfiguraciÃ³n guardada"); };
-    // Restore state
-    if (adminConfig) {
-      if (adminConfig.maintenance_mode && tog) { tog.classList.add("on"); if(lbl) lbl.textContent = "Mantenimiento activado"; }
-      if (msg) msg.value = adminConfig.maintenance_message || "";
-    }
-  }
-  if (name === "license") {
-    const body = $("modal-body");
-    const prov = body.querySelector("#lic-provider"); const mod = body.querySelector("#lic-model");
-    const sav = body.querySelector("#lic-save");
-    const sec = body.querySelector("#lic-secret"); const nsec = body.querySelector("#lic-new-secret"); const secsav = body.querySelector("#lic-secret-save");
-    const gcl = body.querySelector("#lic-gen-client"); const gmo = body.querySelector("#lic-gen-month"); const gyr = body.querySelector("#lic-gen-year");
-    const gbtn = body.querySelector("#lic-gen-btn"); const gres = body.querySelector("#lic-gen-result"); const gout = body.querySelector("#lic-gen-output"); const gcpy = body.querySelector("#lic-gen-copy");
-    if (adminConfig) {
-      if (mod) mod.value = adminConfig.ai_model || "meta-llama/llama-4-scout-17b-16e-instruct";
-      if (prov) prov.value = adminConfig.ai_provider || "groq";
-      if (sec) sec.value = adminConfig.license_secret || "";
-    }
-    if (sav) sav.onclick = async () => { if (!authedOnly()) return; await updateAdminConfig({ ai_provider: prov?.value||"groq", ai_model: (mod?.value||"").trim()||"meta-llama/llama-4-scout-17b-16e-instruct" }); toast("ConfiguraciÃ³n de IA guardada"); };
-    if (secsav) secsav.onclick = async () => { if (!authedOnly()) return; const v = sec?.value.trim(); const nv = nsec?.value.trim(); const u = {}; if (v) u.license_secret = v; if (nv) u.license_secret = nv; await updateAdminConfig(u); if(nsec) nsec.value = ""; toast("Secret guardado"); };
-    if (gbtn) gbtn.onclick = licGenHandler;
-    if (gcpy) gcpy.onclick = () => { if(gout) { gout.select(); navigator.clipboard?.writeText(gout.value); toast("Copiado"); } };
-  }
-  if (name === "diagnostics") {
-    const body = $("modal-body");
-    const run = body.querySelector("#diag-run");
-    if (run) run.onclick = diagRunHandler;
-  }
-}
-
-function isModalOpen(key) {
-  if (!$("modal-overlay").classList.contains("on")) return false;
-  if (!$("modal-title")) return false;
-  if (!key) return true;
-  const disp = modalNames[key];
-  return disp ? $("modal-title").textContent.includes(disp) : false;
-}
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// SUPABASE HELPERS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-async function sbFetch(path, method="GET", body=null) {
-  const opts = { method, headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" } };
-  if (body) opts.body = JSON.stringify(body);
-  try {
-    const res = await fetch(SB_URL + path, opts);
-    if (!res.ok) { const t = await res.text(); throw new Error(`HTTP ${res.status}: ${t.slice(0,100)}`); }
-    if (method === "DELETE" || method === "PATCH") return null;
-    const ct = res.headers.get("content-type") || "";
-    if (ct.includes("json")) return res.json();
-    return null;
-  } catch(e) { console.error("sbFetch error:", e); throw e; }
-}
-
-async function sbFetchAll(path) {
-  let all = [], page = 0, pageSize = 1000;
-  while (true) {
-    const offset = page * pageSize;
-    const url = `${path}&offset=${offset}&limit=${pageSize}`;
-    const data = await sbFetch(url, "GET");
-    if (!data || data.length === 0) break;
-    all = all.concat(data);
-    if (data.length < pageSize) break;
-    page++;
-  }
-  return all;
-}
-
-async function loadAdminConfig() {
-  try {
-    const data = await sbFetch("/rest/v1/admin_config?select=*&limit=1", "GET");
-    if (data && data.length > 0) {
-      adminConfig = data[0];
-      if (typeof adminConfig.api_keys === "string") {
-        try { adminConfig.api_keys = JSON.parse(adminConfig.api_keys); } catch(_) { adminConfig.api_keys = []; }
-      }
-      if (!Array.isArray(adminConfig.api_keys)) adminConfig.api_keys = [];
-    } else { adminConfig = null; }
-  } catch(e) { console.warn("loadAdminConfig:", e); adminConfig = null; }
-  return adminConfig;
-}
-
-async function upsertAdminConfig(payload) {
-  payload.id = "global";
-  const opts = {
-    method: "POST",
-    headers: {
-      "apikey": SB_KEY,
-      "Authorization": `Bearer ${SB_KEY}`,
-      "Content-Type": "application/json",
-      "Prefer": "resolution=merge-duplicates"
-    },
-    body: JSON.stringify(payload)
-  };
-  const res = await fetch(SB_URL + "/rest/v1/admin_config", opts);
-  if (!res.ok) { const t = await res.text(); throw new Error(`HTTP ${res.status}: ${t.slice(0,100)}`); }
-}
-
-async function updateAdminConfig(updates) {
-  if (!allLoaded) return;
-  try {
-    const payload = { ...updates, updated_at: new Date().toISOString() };
-    await upsertAdminConfig(payload);
-  } catch(e) { console.warn("updateAdminConfig:", e); toast("Error al guardar"); }
-  await loadAdminConfig();
-}
-
-async function loadParts() {
-  try {
-    const data = await sbFetchAll("/rest/v1/partes?select=id,data,created_at&order=created_at.desc");
-    parts = data.map(d => {
-      const p = { id: d.id, ...(d.data || {}), created_at: d.created_at };
-      if (p.photoUrl) { p.preview = p.photoUrl; p.previewFull = p.photoUrl; }
-      return p;
-    });
-    updateCatalogCount();
-    if (isModalOpen("catalog")) renderCatalogInModal();
-  } catch(e) { console.error("loadParts:", e); toast("Error al cargar catÃ¡logo"); }
-}
-
-async function loadDevices() {
-  try {
-    const data = await sbFetchAll("/rest/v1/devices?select=*&order=last_seen.desc");
-    devices = data || [];
-    updateDeviceCount();
-    if (isModalOpen("devices")) renderDevicesInModal();
-  } catch(e) { console.error("loadDevices:", e); toast("Error al cargar dispositivos"); }
-}
-
-async function loadScanLogs(append) {
-  try {
-    const offset = append ? slPage * SL_PAGE_SIZE : 0;
-    const params = `/rest/v1/scan_log?select=*&order=timestamp.desc&limit=${SL_PAGE_SIZE}&offset=${offset}`;
-    const data = await sbFetch(params, "GET");
-    if (!append) { scanLogs = data || []; } else { scanLogs = scanLogs.concat(data || []); }
-    slPage = append ? slPage + 1 : 1;
-    if (isModalOpen("scanlog")) renderScanLogInModal();
-  } catch(e) { console.error("loadScanLogs:", e); toast("Error al cargar historial"); }
-}
-
-async function updateDeviceStatus(deviceId, status) {
-  try {
-    await sbFetch(`/rest/v1/devices?id=eq.${encodeURIComponent(deviceId)}`, "PATCH", { status });
-    await loadDevices();
-    toast(`Dispositivo ${status === "active" ? "activado" : "bloqueado"}`);
-  } catch(e) { toast("Error al actualizar dispositivo"); }
-}
-
-async function deleteDevice(deviceId) {
-  try {
-    await sbFetch(`/rest/v1/devices?id=eq.${encodeURIComponent(deviceId)}`, "DELETE");
-    await loadDevices();
-    toast("Dispositivo eliminado");
-  } catch(e) { toast("Error al eliminar dispositivo"); }
-}
-
-async function deletePart(partId) {
-  try {
-    await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(partId)}`, "DELETE");
-    parts = parts.filter(p => p.id !== partId);
-    updateCatalogCount();
-    if (isModalOpen("catalog")) renderCatalogInModal();
-    toast("Parte eliminada");
-  } catch(e) { toast("Error al eliminar"); }
-}
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// COUNTERS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function updateCatalogCount() { const el = document.getElementById("c-catalog"); if (el) el.textContent = parts.length; }
-function updateDeviceCount() { const el = document.getElementById("c-devices"); if (el) el.textContent = devices.length; }
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// LOAD ALL DATA
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-async function loadAllData() {
-  await loadAdminConfig();
-  allLoaded = true;
-  loadParts();
-  loadDevices();
-  loadScanLogs(false);
-}
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// CATALOG (inside modal)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function setCatFilter(f) {
-  catFilter = f;
-  const pills = document.querySelectorAll("#modal-body .filter-pill");
-  pills.forEach(p => p.classList.toggle("on", p.dataset.f === f));
-  renderCatalogInModal();
-}
-
-function renderCatalogInModal() {
-  const body = $("modal-body");
-  if (!body) return;
-  let filtered = [...parts];
-  if (catSearch) {
-    const q = catSearch;
-    filtered = filtered.filter(p =>
-      (p.marca || "").toLowerCase().includes(q) ||
-      (p.modelo || "").toLowerCase().includes(q) ||
-      (p.aÃ±os || "").includes(q) ||
-      (p.descripcion || "").toLowerCase().includes(q) ||
-      (p.posicion || "").toLowerCase().includes(q)
-    );
-  }
-  if (catFilter === "avail") filtered = filtered.filter(p => !p.sold);
-  if (catFilter === "sold") filtered = filtered.filter(p => p.sold);
-
-  const grid = body.querySelector("#cat-grid");
-  const empty = body.querySelector("#cat-empty");
-  const stats = body.querySelector("#cat-stats");
-  if (!grid) return;
-  const totalAvail = parts.filter(p => !p.sold).length;
-  const totalSold = parts.filter(p => p.sold).length;
-  if (stats) stats.textContent = `${parts.length} totales Â· ${totalAvail} disponibles Â· ${totalSold} vendidas`;
-
-  if (filtered.length === 0) { grid.innerHTML = ""; if (empty) empty.style.display = "block"; return; }
-  if (empty) empty.style.display = "none";
-
-  grid.innerHTML = filtered.map(p => {
-    const imgSrc = p.preview || p.previewFull || "";
-    const soldClass = p.sold ? "p-card-sold" : "";
-    const catLabel = { parachoques:"Parachoques", opticos:"Ã“pticos", focos:"Focos", guardabarros:"Guardabarros", capots:"Capots", varios:"Varios" }[p.categoria] || p.categoria || "";
-    const confianza = p.confianza || "";
-    return `<div class="p-card ${soldClass}">
-      ${imgSrc ? `<img class="p-card-img" src="${escH(imgSrc)}" onclick="openLightbox('${escH(imgSrc)}')" alt=""/>` : `<div class="p-card-img" style="display:flex;align-items:center;justify-content:center;color:var(--t5);font-size:10px">Sin foto</div>`}
-      <div class="p-card-body">
-        <div class="p-card-brand">${escH(p.marca || "No determinado")}</div>
-        <div class="p-card-model">${escH(p.modelo || "No determinado")}</div>
-        <div class="p-card-meta">${escH(p.aÃ±os || "")}${p.posicion ? " Â· " + escH(p.posicion) : ""}</div>
-        <div class="p-card-meta">${escH((p.descripcion || "").slice(0, 80))}</div>
-        <div style="display:flex;gap:6px;align-items:center;margin-top:5px">
-          ${catLabel ? `<span class="p-card-cat">${catLabel}</span>` : ""}
-          ${confianza ? `<span style="font-size:8px;color:var(--t4)">${confianza}</span>` : ""}
-          ${p.sold ? `<span class="sold-tag">VENDIDA</span>` : ""}
-        </div>
-      </div>
-      <div class="p-card-footer">
-        <button class="btn-ghost btn-sm" onclick="showConfirm('Eliminar parte','Â¿Eliminar esta parte del catÃ¡logo?',function(){ deletePart('${escH(p.id)}'); },true)">Eliminar</button>
-      </div>
-    </div>`;
-  }).join("");
-}
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// API KEYS (inside modal)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function renderKeysInModal() {
-  const body = $("modal-body");
-  const el = body?.querySelector("#keys-list"); if (!el) return;
-  let keys = adminConfig?.api_keys || [];
-  if (typeof keys === 'string') { try { keys = JSON.parse(keys); } catch(_) { keys = []; } }
-  el.innerHTML = "";
-  if (keys.length === 0) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--t4);text-align:center;padding:6px">Sin API keys configuradas</div>';
-    return;
-  }
-  keys.forEach((k, i) => {
-    const isOR   = k.startsWith("sk-or-");
-    const label  = isOR ? "OpenRouter" : "Groq";
-    const color  = isOR ? "var(--amber-lt)" : "var(--green-lt)";
-    const row = document.createElement("div");
-    row.className = "key-row";
-    row.innerHTML = `
-      <span class="key-label" style="background:${color}22;color:${color}">${label}</span>
-      <span class="key-val">â€¦${k.slice(-12)}</span>
-      <button class="key-del" onclick="removeKey(${i})">Ã—</button>`;
-    el.appendChild(row);
-  });
-}
-
-window.removeKey = async function(i) {
-  if (!authedOnly()) return;
-  const keys = adminConfig?.api_keys || [];
-  keys.splice(i, 1);
-  await updateAdminConfig({ api_keys: keys });
-  renderKeysInModal();
-  toast("Key eliminada");
-};
-
-async function addKeyHandler() {
-  if (!authedOnly()) return;
-  const body = $("modal-body");
-  const inp = body?.querySelector("#api-key-in");
-  const st = body?.querySelector("#api-status");
-  if (!inp) return;
-  const k = inp.value.trim();
-  if (!k) return;
-  const isOR   = k.startsWith("sk-or-");
-  const isGroq = k.startsWith("gsk_");
-  if (!isOR && !isGroq) {
-    if (st) { st.textContent = "Clave invÃ¡lida â€” verifica que sea correcta"; st.style.color = "var(--red-lt)"; }
-    return;
-  }
-  const keys = adminConfig?.api_keys || [];
-  if (keys.includes(k)) { if (st) { st.textContent = "Esta key ya estÃ¡ guardada"; st.style.color = "var(--amber-lt)"; } return; }
-  keys.push(k);
-  await updateAdminConfig({ api_keys: keys });
-  inp.value = "";
-  if (st) { st.textContent = `Key ${keys.length} agregada`; st.style.color = "var(--green-lt)"; }
-  renderKeysInModal();
-  setTimeout(() => { if (st) st.textContent = ""; }, 2000);
-}
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// DEVICES (inside modal, dual view)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function renderDevicesInModal() {
-  const body = $("modal-body");
-  if (!body) return;
-  const tbody = body.querySelector("#dev-tbody");
-  const grid = body.querySelector("#dev-grid");
-  const empty = body.querySelector("#dev-empty");
-  if (!tbody && !grid) return;
-  updateDeviceCount();
-  if (devices.length === 0) { if (tbody) tbody.innerHTML = ""; if (grid) grid.innerHTML = ""; if (empty) empty.style.display = "block"; return; }
-  if (empty) empty.style.display = "none";
-
-  // Table (desktop)
-  if (tbody) {
-    tbody.innerHTML = devices.map(d => {
-      const lastSeen = d.last_seen ? new Date(d.last_seen + "Z").toLocaleString("es-CL") : "â€”";
-      const isActive = d.status === "active";
-      const isOnline = d.last_seen && (Date.now() - new Date(d.last_seen + "Z").getTime() < 300000);
-      const statusClass = d.status === "blocked" ? "badge-blocked" : isOnline ? "badge-active" : "badge-away";
-      const statusLabel = d.status === "blocked" ? "Bloqueado" : isOnline ? "Activo" : "Ausente";
-      return `<tr>
-        <td style="font-family:monospace;font-size:10px">${escH(d.id)}</td>
-        <td>${escH(d.nombre || "â€”")}</td>
-        <td style="font-size:10px;color:var(--t4)">${lastSeen}</td>
-        <td>${d.total_scans || 0}</td>
-        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
-        <td style="display:flex;gap:4px;flex-wrap:wrap">
-          ${isActive
-            ? `<button class="btn-ghost btn-sm" onclick="showConfirm('Bloquear','Â¿Bloquear este dispositivo?',function(){ updateDeviceStatus('${d.id}','blocked'); },true)">Bloquear</button>`
-            : `<button class="btn-ghost btn-sm" onclick="updateDeviceStatus('${d.id}','active')">Activar</button>`}
-          <button class="btn-danger btn-sm" onclick="showConfirm('Eliminar dispositivo','Â¿Eliminar este dispositivo permanentemente?',function(){ deleteDevice('${d.id}'); },true)">Eliminar</button>
-        </td>
-      </tr>`;
-    }).join("");
-  }
-
-  // Cards (mobile)
-  if (grid) {
-    grid.innerHTML = devices.map(d => {
-      const lastSeen = d.last_seen ? new Date(d.last_seen + "Z").toLocaleString("es-CL") : "â€”";
-      const isActive = d.status === "active";
-      const isOnline = d.last_seen && (Date.now() - new Date(d.last_seen + "Z").getTime() < 300000);
-      const statusClass = d.status === "blocked" ? "badge-blocked" : isOnline ? "badge-active" : "badge-away";
-      const statusLabel = d.status === "blocked" ? "Bloqueado" : isOnline ? "Activo" : "Ausente";
-      return `<div class="dev-card">
-        <div class="dev-card-info">
-          <div class="dev-card-id">${escH(d.id)}</div>
-          <div class="dev-card-name">${escH(d.nombre || "â€”")}</div>
-          <div class="dev-card-meta">
-            <span>${lastSeen}</span>
-            <span>${d.total_scans || 0} escaneos</span>
-            <span class="badge ${statusClass}">${statusLabel}</span>
-          </div>
-        </div>
-        <div class="dev-card-actions">
-          ${isActive
-            ? `<button class="btn-ghost btn-sm" onclick="showConfirm('Bloquear','Â¿Bloquear este dispositivo?',function(){ updateDeviceStatus('${d.id}','blocked'); },true)">Bloquear</button>`
-            : `<button class="btn-ghost btn-sm" onclick="updateDeviceStatus('${d.id}','active')">Activar</button>`}
-          <button class="btn-danger btn-sm" onclick="showConfirm('Eliminar','Â¿Eliminar este dispositivo permanentemente?',function(){ deleteDevice('${d.id}'); },true)">Eliminar</button>
-        </div>
-      </div>`;
-    }).join("");
-  }
-}
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// SCAN LOG (inside modal)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function renderScanLogInModal() {
-  const body = $("modal-body");
-  if (!body) return;
-  const tbody = body.querySelector("#sl-tbody");
-  const empty = body.querySelector("#sl-empty");
-  if (!tbody) return;
-  let filtered = [...scanLogs];
-  if (slSearch) {
-    const q = slSearch;
-    filtered = filtered.filter(l => l.part_id?.includes(q) || l.device_id?.includes(q));
-  }
-  if (slFilter !== "all") filtered = filtered.filter(l => l.resultado === slFilter);
-
-  if (filtered.length === 0 && slPage <= 1) { tbody.innerHTML = ""; if (empty) empty.style.display = "block"; return; }
-  if (empty) empty.style.display = "none";
-  tbody.innerHTML = filtered.map(l => {
-    const ts = l.timestamp ? new Date(l.timestamp + "Z").toLocaleString("es-CL") : "â€”";
-    const resClass = l.resultado === "success" ? "badge-success" : "badge-error";
-    return `<tr>
-      <td style="font-size:10px;color:var(--t4);white-space:nowrap">${ts}</td>
-      <td style="font-family:monospace;font-size:10px">${escH((l.device_id || "").slice(0, 12))}</td>
-      <td style="font-family:monospace;font-size:10px">${escH(l.part_id || "")}</td>
-      <td>${escH(l.categoria || "")}</td>
-      <td><span class="badge ${resClass}">${l.resultado || "â€”"}</span></td>
-      <td style="color:var(--t4)">${l.latencia_ms != null ? l.latencia_ms + "ms" : "â€”"}</td>
-    </tr>`;
-  }).join("");
-}
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// LICENSE GENERATOR
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-async function licHash(secret, clientId, month, year2d) {
-  const raw = `${secret}|${clientId}|${String(month).padStart(2,'0')}|${String(year2d).padStart(2,'0')}`;
+async function licHash(clientId, month, year2d) {
+  const raw = `${LICENSE_SECRET}|${clientId}|${String(month).padStart(2,'0')}|${String(year2d).padStart(2,'0')}`;
   try {
     if (crypto.subtle) {
       const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
@@ -1149,168 +811,838 @@ async function licHash(secret, clientId, month, year2d) {
   return sha256(raw).toUpperCase().slice(0, 8);
 }
 
-async function licGenHandler() {
-  if (!authedOnly()) return;
-  const body = $("modal-body");
-  const client = body?.querySelector("#lic-gen-client")?.value.trim().toUpperCase();
-  if (!client) { toast("Ingresa un ID de cliente"); return; }
-  const month = parseInt(body?.querySelector("#lic-gen-month")?.value || "1");
-  const year2d = parseInt(body?.querySelector("#lic-gen-year")?.value || "26");
-  const resultEl = body?.querySelector("#lic-gen-result");
-  const outputEl = body?.querySelector("#lic-gen-output");
-  let secret = adminConfig?.license_secret || "";
-  if (!secret) {
-    try {
-      const cfg = await sbFetch("/rest/v1/admin_config?select=license_secret&limit=1");
-      secret = (cfg && cfg[0]?.license_secret) || "PaolaDesarm_2026_X9k7mQr4";
-    } catch(e) { secret = "PaolaDesarm_2026_X9k7mQr4"; }
-  }
-  const hash = await licHash(secret, client, month, year2d);
-  const code = `AP-${client}-${String(month).padStart(2,'0')}${String(year2d).padStart(2,'0')}-${hash}`;
-  if (outputEl) outputEl.value = code;
-  if (resultEl) resultEl.style.display = "flex";
-  toast("CÃ³digo generado");
+async function validateLicense(code) {
+  const p = String(code||'').trim().toUpperCase().replace(/\s/g, '').split('-');
+  if (p.length !== 4 || p[0] !== 'AP')
+    return { ok:false, error:'Formato inválido. Ejemplo: AP-C001-0526-XXXXXXXX' };
+  const clientId = p[1];
+  const mmyy = p[2], hash = p[3];
+  if (mmyy.length !== 4 || hash.length !== 8)
+    return { ok:false, error:'Longitud incorrecta en el código' };
+  const mm = parseInt(mmyy.slice(0,2)), yy = parseInt(mmyy.slice(2,4));
+  if (isNaN(mm) || mm < 1 || mm > 12)
+    return { ok:false, error:'Mes inválido en el código' };
+  const fullYear = 2000 + yy;
+  const now = new Date();
+  const codeVal = fullYear * 12 + mm;
+  const currVal = now.getFullYear() * 12 + (now.getMonth() + 1);
+  if (codeVal < currVal)
+    return { ok:false, expired:true, error:`Licencia vencida — solicita el código de ${now.toLocaleString('es-CL',{month:'long'})} a tu proveedor` };
+  const expected = await licHash(clientId, mm, yy);
+  if (expected !== hash)
+    return { ok:false, error:'Código incorrecto. Verifica que lo copiaste bien.' };
+  const expiry = new Date(fullYear, mm, 0);
+  const daysLeft = Math.ceil((expiry - now) / 864e5);
+  return { ok:true, clientId, month:mm, year:fullYear, daysLeft, expiry };
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// DIAGNOSTICS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-async function diagRunHandler() {
-  if (!authedOnly()) return;
-  const body = $("modal-body");
-  if (!body) return;
-  const stepsEl = body.querySelector("#diag-steps");
-  const logEl = body.querySelector("#diag-log");
-  if (!stepsEl) return;
-  if (logEl) { logEl.style.display = "none"; logEl.textContent = ""; }
+// ── Brute-force lockout ──
+const _LK_KEY = "ap_lk_v2";
+const MAX_TRIES = 3;
+const LOCK_MS = 24 * 60 * 60 * 1000;
+function getLockState() { try { return JSON.parse(localStorage.getItem(_LK_KEY)||"{}"); } catch(_){return {};} }
+function setLockState(s) { localStorage.setItem(_LK_KEY, JSON.stringify(s)); }
+function checkLockout() {
+  const s = getLockState();
+  if (!s.lockedAt) return null;
+  const rem = LOCK_MS - (Date.now() - s.lockedAt);
+  if (rem <= 0) { localStorage.removeItem(_LK_KEY); return null; }
+  return rem;
+}
+function registerFailedAttempt() {
+  const s = getLockState();
+  const tries = (s.tries||0) + 1;
+  if (tries >= MAX_TRIES) { setLockState({ tries, lockedAt: Date.now() }); return { locked:true, tries }; }
+  setLockState({ tries });
+  return { locked:false, tries, remaining: MAX_TRIES - tries };
+}
+function clearFailedAttempts() { localStorage.removeItem(_LK_KEY); }
 
-  const tests = [
-    { label: "ConexiÃ³n a Supabase REST", run: async () => { const r = await fetch(SB_URL + "/rest/v1/", { headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY } }); return { ok: r.ok, detail: r.status + " " + r.statusText }; } },
-    { label: "Tabla admin_config", run: async () => { const d = await sbFetch("/rest/v1/admin_config?select=id&limit=1", "GET"); return { ok: Array.isArray(d), detail: Array.isArray(d) ? "OK" : "No es un array" }; } },
-    { label: "Tabla dispositivos", run: async () => { const d = await sbFetch("/rest/v1/devices?select=id&limit=1", "GET"); return { ok: Array.isArray(d), detail: Array.isArray(d) ? "OK" : "No es un array" }; } },
-    { label: "Tabla scan_log", run: async () => { const d = await sbFetch("/rest/v1/scan_log?select=id&limit=1", "GET"); return { ok: Array.isArray(d), detail: Array.isArray(d) ? "OK" : "No es un array" }; } },
-    { label: "Tabla partes", run: async () => { const d = await sbFetch("/rest/v1/partes?select=id&limit=1", "GET"); return { ok: Array.isArray(d), detail: Array.isArray(d) ? "OK" : "No es un array" }; } },
-    { label: "Storage bucket Fotos", run: async () => { const r = await fetch(`${SB_URL}/storage/v1/object/list/Fotos`, { method: "POST", headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ limit: 1, offset: 0 }) }); const txt = await r.text(); let detail = r.status + " " + r.statusText; if (!r.ok) try { const j = JSON.parse(txt); detail = j.error || detail; } catch(e) {} return { ok: r.ok, detail }; } },
-    { label: "API Keys configuradas", run: async () => { const k = adminConfig?.api_keys || []; return { ok: k.length > 0, detail: k.length > 0 ? `${k.length} key(s)` : "Sin keys â€” agregÃ¡ al menos una" }; } },
-    { label: "Config de IA (modelo)", run: async () => { const m = adminConfig?.ai_model || ""; return { ok: !!m, detail: m || "Sin modelo configurado" }; } },
-  ];
-
-  stepsEl.innerHTML = "";
-  for (const t of tests) {
-    const row = document.createElement("div");
-    row.className = "diag-step";
-    row.innerHTML = `<div class="diag-icon"></div><span>${t.label}</span><span style="margin-left:auto;font-size:10px" class="diag-result">Probandoâ€¦</span>`;
-    stepsEl.appendChild(row);
-    try {
-      const res = await t.run();
-      row.querySelector(".diag-icon").style.cssText = `width:14px;height:14px;border-radius:50%;flex-shrink:0;background:${res.ok?"var(--green)":"var(--red)"}`;
-      row.querySelector(".diag-result").textContent = res.ok ? "OK" : "FALLO";
-      row.querySelector(".diag-result").style.color = res.ok ? "var(--green-lt)" : "var(--red-lt)";
-      if (!res.ok) {
-        if (logEl) { logEl.style.display = "block"; logEl.textContent += `[FALLO] ${t.label}: ${res.detail || "â€”"}\n`; }
-      } else if (res.detail && res.detail !== "OK") {
-        row.querySelector(".diag-result").textContent = res.detail;
+async function activateLicense() {
+  const code = (document.getElementById('lic-input').value || '').trim().toUpperCase();
+  const errEl = document.getElementById('lic-error');
+  const btn = document.getElementById('lic-btn');
+  errEl.textContent = '';
+  const remaining = checkLockout();
+  if (remaining) {
+    const hrs = Math.floor(remaining / 36e5);
+    const mins = Math.ceil((remaining % 36e5) / 60000);
+    errEl.textContent = `Demasiados intentos. Bloqueado por ${hrs > 0 ? hrs+'h ' : ''}${mins} min más.`;
+    return;
+  }
+  if (!code) { errEl.textContent = 'Ingresa tu código de licencia'; return; }
+  btn.disabled = true; btn.textContent = 'Verificando…';
+  try {
+    const result = await validateLicense(code);
+    if (!result.ok) {
+      const lock = registerFailedAttempt();
+      if (lock.locked) {
+        errEl.textContent = 'Código incorrecto. Demasiados intentos — bloqueado por 24 horas.';
+      } else {
+        errEl.textContent = `Código incorrecto (${lock.remaining} intento${lock.remaining!==1?'s':''} restante${lock.remaining!==1?'s':''})`;
       }
-    } catch(e) {
-      row.querySelector(".diag-icon").style.cssText = `width:14px;height:14px;border-radius:50%;flex-shrink:0;background:var(--red)`;
-      row.querySelector(".diag-result").textContent = "ERROR";
-      row.querySelector(".diag-result").style.color = "var(--red-lt)";
-      if (logEl) { logEl.style.display = "block"; logEl.textContent += `[ERROR] ${t.label}: ${e.message}\n`; }
+      btn.disabled = false; btn.textContent = 'Activar Licencia';
+      const box = document.querySelector('.lic-box');
+      if (box) { box.style.animation = 'none'; void box.offsetHeight; box.style.animation = 'shake .4s ease'; }
+      return;
+    }
+    clearFailedAttempts();
+    try { localStorage.setItem('ap_license_v2', JSON.stringify({ code, clientId:result.clientId, month:result.month, year:result.year, savedAt:Date.now() })); }
+    catch(se) { console.warn('localStorage write failed:', se); }
+    const gate = document.getElementById('lic-gate');
+    gate.classList.add('hiding');
+    setTimeout(async () => {
+      gate.classList.add('gone');
+      try { updateLicPill(result); } catch(_) {}
+      try { await initApp(); } catch(ie) { console.error('initApp error:', ie); }
+    }, 320);
+    btn.disabled = false; btn.textContent = 'Activar Licencia';
+  } catch(err) {
+    console.error('activateLicense error:', err);
+    errEl.textContent = 'Error al verificar: ' + (err.message || String(err)).slice(0, 60);
+    btn.disabled = false; btn.textContent = 'Activar Licencia';
+  }
+}
+
+async function checkSavedLicense() {
+  try {
+    const rem = checkLockout();
+    if (rem) {
+      const hrs = Math.floor(rem / 36e5);
+      const mins = Math.ceil((rem % 36e5) / 60000);
+      const e = document.getElementById('lic-error');
+      const b = document.getElementById('lic-btn');
+      if (e) e.textContent = `Bloqueado por ${hrs > 0 ? hrs+'h ' : ''}${mins} min.`;
+      if (b) b.disabled = true;
+    }
+    const raw = localStorage.getItem('ap_license_v2');
+    if (!raw) return false;
+    const saved = JSON.parse(raw);
+    const result = await validateLicense(saved.code);
+    if (result.ok) { updateLicPill(result); return true; }
+    return false;
+  } catch(_) { return false; }
+}
+
+function updateLicPill(result) {
+  const pill = document.getElementById('lic-pill');
+  const txt = document.getElementById('lic-pill-txt');
+  if (!pill || !result) return;
+  pill.classList.add('on');
+  if (result.daysLeft <= 7) {
+    pill.className = 'warn on';
+    txt.textContent = result.daysLeft <= 1 ? '¡Vence hoy!' : `Vence en ${result.daysLeft}d`;
+  } else {
+    pill.className = 'ok on';
+    txt.textContent = `Lic. ${String(result.month).padStart(2,'0')}/${result.year}`;
+  }
+}
+
+async function showLicenseInfo() {
+  try {
+    const raw = localStorage.getItem('ap_license_v2');
+    if (!raw) { toast('Sin licencia activa'); return; }
+    const saved = JSON.parse(raw);
+    const r = await validateLicense(saved.code);
+    if (!r.ok) { toast(r.error||'Licencia inválida'); updateLicPill(null); return; }
+    const ex = r.expiry || new Date(r.year, r.month, 0);
+    const dd = String(ex.getDate()).padStart(2,'0');
+    const mm = String(ex.getMonth()+1).padStart(2,'0');
+    const yy = ex.getFullYear();
+    toast(`Licencia ${r.clientId} — válida hasta ${dd}/${mm}/${yy} (${r.daysLeft} días)`);
+  } catch(_) { toast('Error al leer licencia'); }
+}
+
+// ── Anti-devtools: closes license if devtools open (desktop only) ──
+(function() {
+  // Skip entirely on mobile/touch devices — outerWidth difference is unreliable
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
+  if (isMobile) return;
+  let _open = false;
+  setInterval(() => {
+    const dw = window.outerWidth - window.innerWidth;
+    const dh = window.outerHeight - window.innerHeight;
+    // Use 300px threshold on desktop to avoid false positives
+    if (dw > 300 || dh > 300) {
+      if (!_open) {
+        _open = true;
+        localStorage.removeItem("ap_license_v2");
+        const g = document.getElementById("lic-gate");
+        if (g) { g.classList.remove("gone","hiding"); }
+        const e = document.getElementById("lic-error");
+        if (e) e.textContent = "Sesión cerrada por seguridad.";
+      }
+    } else { _open = false; }
+  }, 1200);
+})();
+
+// ── Keydown handler for license input ──
+document.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('lic-input');
+  if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') activateLicense(); });
+});
+
+// ════════════════════════════════════════════
+// APP INIT — runs only after license validated
+// ════════════════════════════════════════════
+let _inited = false;
+
+async function initApp() {
+  if (_inited) return;
+  _inited = true;
+
+  // Load config from Supabase (api keys, maintenance, messages)
+  const cfgOk = await loadConfig();
+  if (!cfgOk) {
+    toast("No se pudo conectar con el servidor de configuración");
+  }
+
+  // Check maintenance mode
+  await checkMaintenance();
+
+  // Register this device
+  await registerDevice();
+  // Heartbeat every 5 minutes
+  setInterval(heartbeatDevice, 300000);
+  setInterval(checkMaintenance, 60000);
+
+  // Load parts from Supabase and merge with localStorage
+  await loadPartsFromSupabase();
+  // Also load any local-only parts from localStorage
+  try {
+    const saved = localStorage.getItem("ap_parts_v2");
+    if (saved) {
+      const local = JSON.parse(saved);
+      // Merge: keep parts that exist in local but not in supabase
+      const supabaseIds = new Set(parts.map(p => p.id));
+      local.forEach(p => { if (!supabaseIds.has(p.id)) parts.push(p); });
+    }
+  } catch(e) {}
+
+  buildUploadGrid();
+  renderAll();
+}
+
+// ════════════════════════════════════════════
+// BUILD UPLOAD
+// ════════════════════════════════════════════
+function buildUploadGrid() {
+  const grid = $("up-grid");
+  grid.innerHTML = "";
+  Object.keys(CATS).forEach(key => { const o = $(`fi-${key}`); if (o) o.remove(); });
+  Object.entries(CATS).forEach(([key, cat]) => {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.multiple = true; inp.accept = "image/*";
+    inp.style.display = "none"; inp.id = `fi-${key}`;
+    inp.onchange = e => { handleFiles(e.target.files, key); inp.value = ""; };
+    document.body.appendChild(inp);
+    const btn = document.createElement("button");
+    btn.className = "up-cat-btn"; btn.id = `ucb-${key}`;
+    btn.innerHTML = `<span class="up-cat-count" id="ucc-${key}">0</span><span class="up-cat-icon">${cat.icon}</span><span class="up-cat-label">${cat.label}</span>`;
+    btn.onclick = () => $(`fi-${key}`).click();
+    grid.appendChild(btn);
+  });
+}
+
+$("up-toggle").onclick = () => {
+  $("up-body").classList.toggle("open");
+  $("up-toggle-arrow").classList.toggle("open");
+};
+
+// ════════════════════════════════════════════
+// FILES
+// ════════════════════════════════════════════
+async function handleFiles(files, presetCat) {
+  const imgs = Array.from(files).filter(f => f.type.startsWith("image/") || /\.(jpg|jpeg|png|webp|heic)$/i.test(f.name));
+  if (!imgs.length) { toast("Sin imágenes encontradas"); return; }
+  const existing = new Set(parts.map(p => `${p.fileName}|${p.fileSize||0}`));
+  const fresh = imgs.filter(f => !existing.has(`${f.name}|${f.size}`));
+  if (fresh.length === 0) { toast("Todas las imágenes ya están catalogadas"); return; }
+  const items = await Promise.all(fresh.map(async file => {
+    let preview = "", fileDataUrl = "";
+    try {
+      const r = await new Promise(res => {
+        const rr = new FileReader();
+        rr.onload = e => {
+          const raw = e.target.result || "";
+          if (!raw) { res({thumb:"",raw:""}); return; }
+          const img = new Image();
+          img.onload = () => {
+            let w=img.width, h=img.height;
+            const max=800;
+            if (w>max||h>max) { if (w>=h) {h=Math.round(h*max/w);w=max;} else {w=Math.round(w*max/h);h=max;} }
+            const c=document.createElement("canvas");c.width=w;c.height=h;
+            c.getContext("2d").drawImage(img,0,0,w,h);
+            res({thumb:c.toDataURL("image/jpeg",0.88),raw});
+          };
+          img.onerror = () => res({thumb:"",raw});
+          img.src = raw;
+        };
+        r.onerror = () => res({thumb:"",raw:""});
+        r.readAsDataURL(file);
+      });
+      preview = r.thumb; fileDataUrl = r.raw;
+    } catch(_) {}
+    return { file, id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, preview, fileDataUrl, status:"waiting", fileSize: file.size, presetCat };
+  }));
+  queue = [...queue, ...items];
+  totalBatch += items.length;
+  renderQueue();
+  if (!processing) processQueue();
+}
+
+// ════════════════════════════════════════════
+// ANALYZE — reads API keys from Supabase config
+// ════════════════════════════════════════════
+function getNextKey() {
+  if (!apiKeys.length) return "";
+  // Rotate: pick the one that rested longest
+  const now = Date.now();
+  const interval = k => k.startsWith("gsk_") ? MIN_INTERVAL_GROQ : MIN_INTERVAL;
+  const readyIn = k => Math.max(0, interval(k) - (now - (_keyLastReq[k]||0)));
+  const sorted = [...apiKeys].sort((a, b) => {
+    const ra=readyIn(a), rb=readyIn(b);
+    if (ra===0&&rb===0) return (_keyLastReq[a]||0)-(_keyLastReq[b]||0);
+    return ra-rb;
+  });
+  return sorted[0];
+}
+
+async function waitForKeyRateLimit(key) {
+  const interval = key.startsWith("gsk_") ? MIN_INTERVAL_GROQ : MIN_INTERVAL;
+  const wait = Math.max(0, interval - (Date.now() - (_keyLastReq[key]||0)));
+  if (wait > 0) {
+    for (let s = Math.ceil(wait/1000); s > 0; s--) {
+      procTxt.textContent = `${s}s — key en espera`;
+      await new Promise(r => setTimeout(r, Math.min(1000, wait)));
     }
   }
-  toast("DiagnÃ³stico completado");
+  _keyLastReq[key] = Date.now();
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// EXPORT EXCEL
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function exportExcel() {
-  if (!parts.length) { toast("CatÃ¡logo vacÃ­o"); return; }
-  const catOrder = ["parachoques","opticos","focos","guardabarros","capots","varios"];
-  const catLabels = { parachoques:"Parachoques", opticos:"Ã“pticos", focos:"Focos", guardabarros:"Guardabarros", capots:"Capots", varios:"Varios" };
-  const wb = XLSX.utils.book_new();
-  let hasData = false;
-  catOrder.forEach(key => {
-    const items = parts.filter(p => p.categoria === key);
-    if (!items.length) return;
-    const rows = items.map((p, i) => ({
-      "#": i + 1, "Archivo": p.fileName || p.id || "", "Marca": p.marca || "", "Modelo": p.modelo || "",
-      "AÃ±os": p.aÃ±os || "", "PosiciÃ³n": p.posicion || "", "DescripciÃ³n": p.descripcion || "",
-      "Confianza": p.confianza || "", "Disponible": p.sold ? "Vendido" : "Disponible", "Fecha": p.created_at ? new Date(p.created_at).toLocaleDateString("es-CL") : ""
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, catLabels[key]);
-    hasData = true;
+const MAX_DIM = 640;
+const MAX_B64_KB = 900;
+
+function resizeFile(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const dataUrl = e.target.result;
+      if (!dataUrl) { resolve(null); return; }
+      resizeFromDataUrl(dataUrl).then(resolve).catch(() => resolve(null));
+    };
+    reader.onerror = () => resolve(null);
+    try { reader.readAsDataURL(file); } catch(e) { resolve(null); }
   });
-  if (!hasData) { toast("Sin datos para exportar"); return; }
-  XLSX.writeFile(wb, `catalogo-${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function resizeFromDataUrl(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let w=img.width, h=img.height;
+        if (w===0||h===0) { reject(new Error("sin dimensiones")); return; }
+        if (w>MAX_DIM||h>MAX_DIM) { if (w>=h) {h=Math.round(h*MAX_DIM/w);w=MAX_DIM;} else {w=Math.round(w*MAX_DIM/h);h=MAX_DIM;} }
+        const tryEnc = (W,H,q) => { const c=document.createElement("canvas");c.width=W;c.height=H;c.getContext("2d").drawImage(img,0,0,W,H); return c.toDataURL("image/jpeg",q).split(",")[1]; };
+        let b64=tryEnc(w,h,0.82);
+        let kb=Math.round(b64.length*.75/1024);
+        if (kb>MAX_B64_KB) { b64=tryEnc(w,h,0.65); kb=Math.round(b64.length*.75/1024); }
+        if (kb>MAX_B64_KB) { w=Math.round(w*.7); h=Math.round(h*.7); b64=tryEnc(w,h,0.75); }
+        if (!b64) { reject(new Error("canvas vacío")); return; }
+        resolve({b64,mime:"image/jpeg",size:kb});
+      } catch(err) { reject(err); }
+    };
+    img.onerror = () => reject(new Error("img.onerror"));
+    img.src = dataUrl;
+  });
+}
+
+async function analyzeImage(item) {
+  const fallback = (msg, isRate=false) => ({ marca:"No determinado", modelo:"No determinado", años:"No determinado",
+    descripcion:msg.slice(0,65), posicion:"No determinado", confianza:"Baja", _ok:false, _isRateLimit:isRate });
+  try {
+    if (!apiKeys.length) return fallback("Sin API Keys disponibles - esperá a que el administrador las configure");
+    let img = null;
+    if (item.fileDataUrl) img = await resizeFromDataUrl(item.fileDataUrl).catch(() => null);
+    if (!img) img = await resizeFile(item.file).catch(() => null);
+    if (!img) return fallback("No se pudo leer la imagen");
+    const key = getNextKey();
+    if (!key) return fallback("Sin API Key disponible");
+    await waitForKeyRateLimit(key);
+    const provider = key.startsWith("sk-or-") ? "openrouter" : key.startsWith("gsk_") ? "groq" : "gemini";
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    let resp;
+    const GROQ_MODELS = ["meta-llama/llama-4-scout-17b-16e-instruct","meta-llama/llama-4-maverick-17b-128e-instruct","llama-3.2-90b-vision-preview"];
+    if (provider === "groq") {
+      resp = await fetch("https://api.groq.com/openai/v1/chat/completions", { method:"POST", signal:controller.signal,
+        headers:{"Content-Type":"application/json","Authorization":`Bearer ${key}`},
+        body:JSON.stringify({model:GROQ_MODELS[0],max_tokens:150,temperature:0,
+          messages:[{role:"user",content:[{type:"image_url",image_url:{url:`data:${img.mime};base64,${img.b64}`,detail:"low"}},{type:"text",text:PROMPT}]}]}) });
+    } else if (provider === "openrouter") {
+      resp = await fetch("https://openrouter.ai/api/v1/chat/completions", { method:"POST", signal:controller.signal,
+        headers:{"Content-Type":"application/json","Authorization":`Bearer ${key}`,"HTTP-Referer":"https://autoparts-catalogo.app","X-Title":"AutoParts Catálogo"},
+        body:JSON.stringify({model:"google/gemma-3-27b-it:free",max_tokens:150,temperature:0,
+          messages:[{role:"user",content:[{type:"image_url",image_url:{url:`data:${img.mime};base64,${img.b64}`}},{type:"text",text:PROMPT}]}]}) });
+    } else {
+      resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+        { method:"POST", signal:controller.signal, headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:img.mime,data:img.b64}},{text:PROMPT}]}],
+            generationConfig:{maxOutputTokens:200,temperature:0,responseMimeType:"application/json"}}) });
+    }
+    clearTimeout(timer);
+    const raw = await resp.text();
+    let data; try { data = JSON.parse(raw); } catch(_) { return fallback("Respuesta inválida"); }
+    const isRate = resp.status===429 || (data.error?.code===429) || (data.error?.message||"").toLowerCase().includes("quota") || (data.error?.message||"").toLowerCase().includes("exhausted") || (data.error?.message||"").toLowerCase().includes("rate");
+    if (isRate) {
+      _keyLastReq[key] = Date.now() + 62000;
+      const now = Date.now();
+      const available = apiKeys.filter(k => (now-(_keyLastReq[k]||0)) >= MIN_INTERVAL_GROQ);
+      if (available.length > 0) return fallback("", true);
+      const nextReady = apiKeys.reduce((min,k) => { const r=_keyLastReq[k]||0; return r<min?r:min; }, Infinity);
+      const waitMs = Math.max(0, nextReady - now);
+      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`⏳ ${s}s — keys en pausa`; await new Promise(r=>setTimeout(r,1000)); }
+      return fallback("", true);
+    }
+    if (data.error) return fallback(`Error API: ${(data.error.message||"").slice(0,55)}`);
+    let text = "";
+    if (provider==="groq"||provider==="openrouter") text=(data.choices?.[0]?.message?.content||"").trim();
+    else text=(data.candidates?.[0]?.content?.parts?.[0]?.text||"").trim();
+    if (!text) return fallback("Respuesta vacía de la IA");
+    const s=text.indexOf("{"), e=text.lastIndexOf("}");
+    if (s===-1||e===-1) return fallback("No se pudo parsear la respuesta");
+    const parsed = JSON.parse(text.slice(s,e+1));
+    if (!CATS[parsed.categoria]) parsed.categoria = "varios";
+    parsed._ok = true;
+    return parsed;
+  } catch(err) {
+    if (err.name==="AbortError") return fallback("Timeout — reintentando", true);
+    return fallback(err.message?.slice(0,55)||"Error desconocido");
+  }
+}
+
+// ════════════════════════════════════════════
+// QUEUE PROCESSING
+// ════════════════════════════════════════════
+async function processQueue() {
+  if (processing) return;
+  processing = true; doneBatch = 0; totalBatch = queue.length;
+  procPill.classList.add("on"); progWrap.classList.add("on");
+  updateProg();
+
+  async function doOne(item) {
+    const t0 = Date.now();
+    item.status = "analyzing"; renderQueue(); addLoadingCard(item);
+    const result = await analyzeImageWithRetry(item);
+    const ms = Date.now() - t0;
+    item.status = result._ok ? "done" : "error"; renderQueue();
+    const part = {
+      id:item.id, preview:item.preview, previewFull:item.fileDataUrl||item.preview,
+      fileName:item.file.name, fileSize:item.file.size, sold:false,
+      categoria:item.presetCat||result.categoria||"varios",
+      marca:result.marca, modelo:result.modelo, años:result.años,
+      descripcion:result.descripcion, posicion:result.posicion,
+      confianza:result.confianza, _ok:result._ok,
+      addedAt:new Date().toLocaleString("es-CL")
+    };
+    parts.push(part);
+    savePartToSupabase(part);
+    saveParts();
+    replaceLoadingCard(item.id, part);
+    queue = queue.filter(q => q.id !== item.id);
+    doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
+    // Log scan
+    logScan(part.id, part.categoria, result._ok?"success":"error", ms);
+  }
+
+  while (queue.length > 0) {
+    await doOne(queue[0]);
+  }
+
+  processing = false;
+  procPill.classList.remove("on"); progWrap.classList.remove("on");
+  progFill.style.width = "0%"; totalBatch = 0; doneBatch = 0;
+  renderQueue(); renderFolderTabs(); renderFolderContent();
+  toast(`${parts.length} parte${parts.length!==1?"s":""} en catálogo`);
+}
+
+async function analyzeImageWithRetry(item) {
+  for (let attempt = 0; attempt <= RETRY_MAX; attempt++) {
+    const result = await analyzeImage(item);
+    if (result._ok) return result;
+    if (result._isRateLimit && attempt < RETRY_MAX) continue;
+    if (!result._isRateLimit && attempt < RETRY_MAX) {
+      const waitMs = RETRY_WAITS[Math.min(attempt, RETRY_WAITS.length-1)];
+      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`🔄 ${s}s (reintento ${attempt+1})`; await new Promise(r=>setTimeout(r,1000)); }
+      continue;
+    }
+    return result;
+  }
+  return { marca:"No det.", modelo:"No det.", años:"No det.", descripcion:"Sin respuesta tras varios intentos", posicion:"No det.", confianza:"Baja", _ok:false };
+}
+
+function updateProg() {
+  const pct = totalBatch > 0 ? Math.round(doneBatch/totalBatch*100) : 0;
+  progFill.style.width = pct+"%";
+  progLabel.textContent = `Analizando ${doneBatch} de ${totalBatch} (${pct}%)`;
+  procTxt.textContent = `${doneBatch}/${totalBatch}`;
+}
+
+function saveParts() {
+  try { localStorage.setItem("ap_parts_v2", JSON.stringify(parts.map(({fileDataUrl,file,...p})=>p))); } catch(e) { console.warn("localStorage save failed:", e); }
+}
+
+// ════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════
+function renderAll() {
+  updateHeaderStats(); updateUploadCounts();
+  renderFolderTabs(); renderFolderContent();
+  fabExport.classList.toggle("on", parts.length > 0);
+}
+function updateHeaderStats() {
+  $("stat-avail").textContent = parts.filter(p=>!p.sold).length;
+  $("stat-sold").textContent = parts.filter(p=>p.sold).length;
+}
+function updateUploadCounts() {
+  Object.keys(CATS).forEach(k => {
+    const el = $(`ucc-${k}`);
+    if (!el) return;
+    const n = parts.filter(p=>p.categoria===k).length;
+    el.textContent = n;
+    $(`ucb-${k}`)?.classList.toggle("has-items", n > 0);
+  });
+}
+function renderFolderTabs() {
+  tabsScroll.innerHTML = "";
+  const tabs = [{ key:"all", label:"Todos", icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`, count:parts.length },
+    ...Object.entries(CATS).map(([k,c])=>({key:k,label:c.label,icon:c.icon,count:parts.filter(p=>p.categoria===k).length})) ];
+  tabs.forEach(t => {
+    if (t.key!=="all" && t.count===0) return;
+    const btn = document.createElement("button");
+    btn.className=`ftab${activeFolder===t.key?" on":""}`;
+    btn.innerHTML=`<span style="display:inline-flex;align-items:center;opacity:.7">${t.icon}</span>${t.label} <span class="ftab-badge">${t.count}</span>`;
+    btn.onclick = () => { activeFolder=t.key; renderFolderTabs(); renderFolderContent(); };
+    tabsScroll.appendChild(btn);
+  });
+}
+function renderFolderContent() {
+  const el = folderContent;
+  const s = (folderSearch[activeFolder]||"").toLowerCase();
+  const sf = folderStatus[activeFolder]||"all";
+  let filtered = parts.filter(p => {
+    if (activeFolder!=="all" && p.categoria!==activeFolder) return false;
+    if (sf==="avail" && p.sold) return false;
+    if (sf==="sold" && !p.sold) return false;
+    if (s && !(p.marca+p.modelo+p.años+p.descripcion+p.posicion).toLowerCase().includes(s)) return false;
+    return true;
+  }).slice().reverse();
+  const avail = parts.filter(p=>(activeFolder==="all"||p.categoria===activeFolder)&&!p.sold).length;
+  const sold = parts.filter(p=>(activeFolder==="all"||p.categoria===activeFolder)&&p.sold).length;
+  el.innerHTML = `<div class="fhdr">
+    <div class="fhdr-row1">
+      <div class="fhdr-stats"><span class="fstat-avail">● ${avail} disponibles</span><span class="fstat-sold">● ${sold} vendidos</span></div>
+      <button class="add-manual-btn" id="add-manual-btn" onclick="openManual(activeFolder !== 'all' ? activeFolder : null)">＋</button>
+    </div>
+    <div class="fhdr-row2">
+      <div class="search-wrap"><input type="text" placeholder="Buscar por marca o modelo…" value="${escH(folderSearch[activeFolder]||"")}"/>
+      </div>
+      <div class="sfil">
+        <button class="sfil-btn${sf==="all"?" on":""}" data-sf="all">Todos</button>
+        <button class="sfil-btn${sf==="avail"?" on":""}" data-sf="avail">Disp.</button>
+        <button class="sfil-btn${sf==="sold"?" on":""}" data-sf="sold">Vend.</button>
+      </div>
+    </div>
+  </div>`;
+  el.querySelector(".search-wrap input").oninput = e => { folderSearch[activeFolder]=e.target.value; renderFolderContent(); };
+  el.querySelectorAll(".sfil-btn").forEach(b => { b.onclick = () => { folderStatus[activeFolder]=b.dataset.sf; renderFolderContent(); }; });
+  const list = document.createElement("div"); list.className = "prod-list";
+  if (filtered.length===0) {
+    list.innerHTML = `<div class="folder-empty" style="text-align:center;padding:44px 20px;color:var(--t4)">
+      <div style="font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--t5);margin-bottom:5px">
+        ${s?"Sin resultados":sf!=="all"?"Sin partes en este estado":"Carpeta vacía"}</div>
+      <div style="font-size:11px;color:var(--t4);line-height:1.6">
+        ${s?"Probá con otro término":"Subí imágenes usando los botones de categoría"}</div></div>`;
+  } else {
+    filtered.forEach(p => {
+      if (editId===p.id) list.appendChild(buildEditCard(p));
+      else list.appendChild(buildPartCard(p));
+    });
+  }
+  el.appendChild(list);
+}
+
+function buildPartCard(part) {
+  const cat = CATS[part.categoria]||CATS.varios;
+  const imgSrc = part.preview||part.previewFull||"";
+  const el = document.createElement("div");
+  el.className="pcard"; el.id=`card-${part.id}`;
+  el.innerHTML = (imgSrc?`<img class="pcard-img" src="${imgSrc}" onclick="openLightbox('${imgSrc}')">`
+    :`<div class="pcard-img no-img">${cat.icon}</div>`)+
+    `<div class="pcard-body">
+      <div class="pcard-title">${escH(part.marca)} ${escH(part.modelo)}</div>
+      <div class="pcard-meta">${escH(part.años)} · ${escH(part.posicion)}</div>
+      <div class="pcard-desc">${escH(part.descripcion)}</div>
+      <div class="pcard-tags"><span class="ptag ptag-cat">${cat.label}</span></div>
+    </div>
+    <div class="pcard-right">
+      <button class="sold-btn ${part.sold?'sold':'avail'}" data-id="${part.id}"><span class="sold-dot"></span>${part.sold?'Vendido':'Disponible'}</button>
+      <div class="pcard-actions">
+        <button class="pact" data-edit="${part.id}" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="pact del" data-del="${part.id}" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
+    </div>`;
+  el.querySelector("[data-edit]").onclick = () => { editId=part.id; editBuf={...part}; renderFolderContent(); };
+  el.querySelector("[data-del]").onclick = () => showConfirm("Eliminar parte",`"${part.marca} ${part.modelo}" será eliminada.`,()=>{ parts=parts.filter(p=>p.id!==part.id); deletePartFromSupabase(part.id); saveParts(); renderAll(); toast("Parte eliminada"); },true);
+  el.querySelector(".sold-btn").onclick = () => {
+    const isSold = part.sold;
+    showConfirm(isSold?"¿Marcar como disponible?":"¿Marcar como vendido?",isSold?`"${part.marca} ${part.modelo}" volverá a disponibles.`:`"${part.marca} ${part.modelo}" se marcará como vendida.`,
+      () => { const p=parts.find(p=>p.id===part.id); if(!p) return; p.sold=!p.sold; savePartToSupabase(p); saveParts(); updateHeaderStats(); renderFolderContent(); }, false);
+  };
+  return el;
+}
+
+function buildEditCard(part) {
+  const cat = CATS[part.categoria]||CATS.varios;
+  const el = document.createElement("div");
+  el.className="pcard"; el.id=`card-${part.id}`; el.style.flexDirection="column";
+  const imgSrc = part.preview||part.previewFull||"";
+  el.innerHTML = (imgSrc?`<img src="${imgSrc}" style="width:100%;height:180px;object-fit:cover;cursor:zoom-in" onclick="openLightbox('${imgSrc}')">`:`<div style="width:100%;height:60px;display:flex;align-items:center;justify-content:center;background:var(--s3);color:var(--t4)">${cat.icon}</div>`)+
+    `<div style="padding:12px;display:flex;flex-direction:column;gap:9px">
+      <div class="fld-row"><div style="flex:1"><div class="fld-label">Marca</div><input class="fld-input" data-f="marca" value="${escH(editBuf.marca||"")}"/></div>
+        <div style="flex:1"><div class="fld-label">Modelo</div><input class="fld-input" data-f="modelo" value="${escH(editBuf.modelo||"")}"/></div></div>
+      <div class="fld-row"><div style="flex:1"><div class="fld-label">Años</div><input class="fld-input" data-f="años" value="${escH(editBuf.años||"")}"/></div>
+        <div style="flex:1"><div class="fld-label">Posición</div><input class="fld-input" data-f="posicion" value="${escH(editBuf.posicion||"")}"/></div></div>
+      <div><div class="fld-label">Descripción</div><input class="fld-input" data-f="descripcion" value="${escH(editBuf.descripcion||"")}"/></div>
+      <div><div class="fld-label">Categoría</div><select class="fld-input" data-f="categoria">${Object.entries(CATS).map(([k,c])=>`<option value="${k}"${editBuf.categoria===k?" selected":""}>${c.label}</option>`).join("")}</select></div>
+      <div style="display:flex;gap:8px"><button class="btn-primary" id="sv-${part.id}">Guardar</button><button class="btn-ghost-sm" id="cn-${part.id}">Cancelar</button></div>
+    </div>`;
+  el.querySelectorAll(".fld-input").forEach(i => { i.oninput = i.onchange = e => editBuf[e.target.dataset.f]=e.target.value; });
+  el.querySelector(`#sv-${part.id}`).onclick = () => { const updated={...part,...editBuf}; parts=parts.map(p=>p.id===part.id?updated:p); editId=null; savePartToSupabase(updated); saveParts(); renderAll(); toast("Cambios guardados"); };
+  el.querySelector(`#cn-${part.id}`).onclick = () => { editId=null; renderFolderContent(); };
+  return el;
+}
+
+function addLoadingCard(item) {
+  const el = document.createElement("div");
+  el.className="pcard loading"; el.id=`card-${item.id}`;
+  el.innerHTML=`<div class="pcard-img"></div><div class="pcard-body" style="padding:10px"><div class="skel" style="height:9px;background:var(--s3);border-radius:3px;margin-bottom:5px;width:70%"></div><div class="skel" style="height:9px;background:var(--s3);border-radius:3px;margin-bottom:5px;width:50%"></div><div class="skel" style="height:9px;background:var(--s3);border-radius:3px;width:85%"></div></div>`;
+  const list = folderContent.querySelector(".prod-list");
+  if (list) list.insertBefore(el, list.firstChild);
+}
+function replaceLoadingCard(id, part) {
+  const old = document.getElementById(`card-${id}`);
+  if (old) old.replaceWith(buildPartCard(part));
+}
+
+function renderQueue() {
+  if (queue.length===0) { queueWrap.classList.remove("on"); return; }
+  queueWrap.classList.add("on");
+  $("queue-prog").textContent = `${queue.length} imagen${queue.length!==1?"es":""} en cola`;
+  queueRow.innerHTML = "";
+  queue.slice(0,18).forEach(item => {
+    const d = document.createElement("div");
+    d.className=`q-th ${item.status}`;
+    const spin = item.status==="analyzing"?`<div class="spin" style="width:14px;height:14px;border-color:var(--amber-lt)"></div>`:item.status==="done"?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`:"";
+    d.innerHTML=`<img src="${item.preview}" alt=""/><div class="q-ov">${spin}</div>`;
+    queueRow.appendChild(d);
+  });
+  if (queue.length>18) {
+    const more=document.createElement("div"); more.style.cssText="font-size:11px;color:var(--t4);display:flex;align-items:center";
+    more.textContent=`+${queue.length-18}`; queueRow.appendChild(more);
+  }
+}
+
+// ════════════════════════════════════════════
+// MANUAL ENTRY
+// ════════════════════════════════════════════
+function openManual(presetCat) {
+  ["m-marca","m-modelo","m-años","m-pos","m-desc"].forEach(id=>{$(id).value="";});
+  if (presetCat&&CATS[presetCat]) $("m-cat").value=presetCat;
+  $("manual-title").textContent=presetCat&&CATS[presetCat]?`Agregar en ${CATS[presetCat].label}`:"Agregar parte";
+  $("manual-preview-img").src=""; $("manual-preview-img").style.display="none";
+  $("manual-file").value=""; manualPreviewDataUrl=null; manualPreviewFile=null;
+  $("manual-modal").classList.add("on");
+}
+$("manual-photo-preview").onclick=()=>$("manual-file").click();
+$("manual-file").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const raw=ev.target.result; if(!raw) return;
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width, h=img.height; const max=800;
+      if(w>max||h>max){if(w>=h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}
+      const c=document.createElement("canvas");c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      manualPreviewDataUrl=c.toDataURL("image/jpeg",0.88);
+      manualPreviewFile=f;
+      $("manual-preview-img").src=manualPreviewDataUrl;
+      $("manual-preview-img").style.display="block";
+    };
+    img.onerror=()=>{manualPreviewDataUrl=raw;manualPreviewFile=f;$("manual-preview-img").src=raw;$("manual-preview-img").style.display="block";};
+    img.src=raw;
+  };
+  reader.readAsDataURL(f);
+};
+$("manual-save").onclick=()=>{
+  const marca=$("m-marca").value.trim()||"Sin marca";
+  const modelo=$("m-modelo").value.trim()||"Sin modelo";
+  const part={ id:`m-${Date.now()}-${Math.random().toString(36).slice(2)}`, preview:manualPreviewDataUrl||null, previewFull:manualPreviewDataUrl||null, fileName:manualPreviewFile?.name||"manual", fileSize:manualPreviewFile?.size||0, sold:false, categoria:$("m-cat").value, marca, modelo, años:$("m-años").value.trim()||"No determinado", posicion:$("m-pos").value.trim()||"No determinado", descripcion:$("m-desc").value.trim()||"Sin descripción", confianza:"Alta", _ok:true, manual:true, addedAt:new Date().toLocaleString("es-CL") };
+  parts.push(part); savePartToSupabase(part); saveParts(); renderAll(); closeModal("manual-modal"); toast(`Agregado: ${marca} ${modelo}`);
+};
+
+// ════════════════════════════════════════════
+// IMAGE TEST (kept from diag)
+// ════════════════════════════════════════════
+$("btn-test-ai").onclick = () => {
+  $("diag-file-in").value=""; $("diag-real-wrap").style.display="none";
+  $("diag-real-steps").innerHTML=""; $("diag-real-log").style.display="none";
+  $("diag-real-log").textContent="";
+  $("diag-test-modal").classList.add("on");
+};
+$("diag-file-in").onchange = async e => {
+  const file = e.target.files[0]; if(!file) return;
+  $("diag-file-in").value="";
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const dataUrl = ev.target.result;
+    $("diag-real-preview").src = dataUrl;
+    $("diag-real-meta").innerHTML = `<b>${file.name}</b><br>${(file.size/1024).toFixed(0)} KB`;
+    $("diag-real-wrap").style.display = "block";
+    $("diag-real-steps").innerHTML = "";
+    $("diag-real-log").style.display = "none"; $("diag-real-log").textContent = "";
+    $("diag-real-run")._file = file; $("diag-real-run")._dataUrl = dataUrl;
+  };
+  reader.readAsDataURL(file);
+};
+$("diag-real-run").onclick = async () => {
+  const file = $("diag-real-run")._file; if(!file) return;
+  const stepsEl = $("diag-real-steps"); const logEl = $("diag-real-log");
+  stepsEl.innerHTML = ""; logEl.style.display = "block"; logEl.textContent = "";
+  $("diag-real-run").disabled = true; $("diag-real-run").textContent = "Procesando…";
+  const log = t => { logEl.textContent+=t+"\n"; logEl.scrollTop=logEl.scrollHeight; };
+  const addStep = (icon, label, status, detail="") => {
+    const colors={ok:"var(--green-lt)",err:"var(--red-lt)",warn:"var(--amber-lt)",run:"var(--t2)"};
+    const dots={ok:"var(--green-lt)",err:"var(--red-lt)",warn:"var(--amber-lt)",run:"var(--t4)"};
+    const d=document.createElement("div");
+    d.style.cssText="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:var(--bg);border-radius:var(--r8);border:1px solid var(--bdr2)";
+    d.innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:${dots[status]||"var(--t4)"};flex-shrink:0;margin-top:4px;display:block"></span>
+      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:${colors[status]||"var(--text)"};line-height:1.4">${label}</div>
+      ${detail?`<div style="font-size:10px;color:var(--t4);margin-top:2px;word-break:break-all">${detail}</div>`:""}</div>`;
+    stepsEl.appendChild(d); return d;
+  };
+  const savedDataUrl = $("diag-real-run")._dataUrl||"";
+  let img = null;
+  if (savedDataUrl) img = await resizeFromDataUrl(savedDataUrl).catch(()=>null);
+  if (!img) img = await resizeFile(file).catch(()=>null);
+  if (!img) { addStep("err","No se pudo procesar la imagen","err"); $("diag-real-run").disabled=false; $("diag-real-run").textContent="Probar con esta foto"; return; }
+  addStep("ok",`Imagen comprimida: ${img.size}KB`,"ok");
+  log(`[1] Comprimida: ${img.size}KB`);
+  const key = getNextKey();
+  if (!key) { addStep("err","Sin API Keys disponibles","err","El administrador debe configurar keys en el Panel"); $("diag-real-run").disabled=false; $("diag-real-run").textContent="Probar con esta foto"; return; }
+  const provider = key.startsWith("sk-or-")?"openrouter":key.startsWith("gsk_")?"groq":"gemini";
+  addStep("run",`Enviando a ${provider}…`,"run");
+  log(`[2] Provider: ${provider}`);
+  const t0 = Date.now();
+  const fakeItem = { file, id:"diag-test", preview:"", fileDataUrl: savedDataUrl };
+  const result = await analyzeImage(fakeItem);
+  const ms = Date.now() - t0;
+  if (!result._ok) { addStep("err",`Error: ${result.descripcion}`,"err",`${ms}ms`); log(`[2] Error: ${result.descripcion}`); $("diag-real-run").disabled=false; $("diag-real-run").textContent="Repetir prueba"; return; }
+  addStep("ok",`IA respondió en ${ms}ms`,"ok",`${result.marca} ${result.modelo} · ${result.años} · Confianza: ${result.confianza}`);
+  addStep("ok","JSON parseado correctamente","ok",`Marca: ${result.marca} | Modelo: ${result.modelo} | Categoría: ${result.categoria}`);
+  log(`[2] Resultado: ${JSON.stringify(result)}`);
+  $("diag-real-run").disabled=false; $("diag-real-run").textContent="Repetir prueba";
+};
+
+// ════════════════════════════════════════════
+// CONFIRM / TOAST / LIGHTBOX
+// ════════════════════════════════════════════
+function showConfirm(title, msg, cb, danger=false) {
+  $("conf-title").textContent=title; $("conf-msg").textContent=msg;
+  $("conf-ok").className=danger?"danger":"";
+  confirmCb=cb; $("confirm-bg").classList.add("on");
+}
+$("conf-ok").onclick = () => { $("confirm-bg").classList.remove("on"); if(confirmCb) confirmCb(); confirmCb=null; };
+$("conf-cancel").onclick = () => { $("confirm-bg").classList.remove("on"); confirmCb=null; };
+let toastTimer;
+function toast(msg, dur=2600) {
+  const el = $("toast");
+  if (!el) { console.log("toast:", msg); return; }
+  el.textContent=msg; el.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("on"), dur);
+}
+function openLightbox(src) { $("lb-img").src=src; $("lightbox").classList.add("on"); }
+function closeLightbox() { $("lightbox").classList.remove("on"); }
+function closeModal(id) { $(id).classList.remove("on"); }
+function escH(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+// ── CLEAR ALL ──
+$("btn-clear-all").onclick = () => {
+  if (!parts.length) { toast("Catálogo vacío"); return; }
+  showConfirm("Limpiar catálogo",`¿Eliminar las ${parts.length} partes?`,async ()=>{ for(const p of parts) await deletePartFromSupabase(p.id); parts=[]; saveParts(); renderAll(); toast("Catálogo limpiado"); },true);
+};
+
+// ── RESYNC MISSING PHOTOS ──
+async function resyncMissingPhotos() {
+  const missing = parts.filter(p =>
+    !p.photoUrl &&
+    (p.preview?.startsWith("data:") || p.previewFull?.startsWith("data:"))
+  );
+  if (!missing.length) { toast("✓ Todas las fotos ya están en la nube"); return; }
+  toast(`Subiendo ${missing.length} fotos...`);
+  let uploaded = 0, failed = 0;
+  for (const part of missing) {
+    const dataUrl = part.previewFull || part.preview;
+    if (!dataUrl?.startsWith("data:")) continue;
+    const url = await sbUploadPhoto(part.id, dataUrl);
+    if (url) {
+      const idx = parts.findIndex(p => p.id === part.id);
+      if (idx > -1) {
+        parts[idx].photoUrl    = url;
+        parts[idx].preview     = url;
+        parts[idx].previewFull = url;
+      }
+      const { fileDataUrl, file, ...rest } = parts[idx] || part;
+      rest.photoUrl = url; rest.preview = url; rest.previewFull = url;
+      await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(part.id)}`, "PATCH", { data: rest });
+      uploaded++;
+    } else { failed++; }
+  }
+  saveParts();
+  renderAll();
+  toast(`✓ ${uploaded} fotos subidas${failed ? ` · ${failed} fallaron` : ""}`);
+}
+
+// ── EXPORT ──
+function exportExcel() {
+  if (!parts.length) return;
+  const wb = XLSX.utils.book_new();
+  const hdrs = ["#","Archivo","Marca","Modelo","Años","Posición","Descripción","Confianza","Estado","Fecha","Dispositivo"];
+  Object.entries(CATS).forEach(([k,c]) => {
+    const rows = parts.filter(p=>p.categoria===k);
+    if (!rows.length) return;
+    const data = [hdrs, ...rows.map((p,i)=>[i+1,p.fileName,p.marca,p.modelo,p.años,p.posicion,p.descripcion,p.manual?"Manual":p.confianza,p.sold?"Vendido":"Disponible",p.addedAt||"",deviceId])];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws["!cols"]=[{wch:4},{wch:22},{wch:14},{wch:14},{wch:16},{wch:14},{wch:30},{wch:10},{wch:12},{wch:18},{wch:20}];
+    XLSX.utils.book_append_sheet(wb, ws, c.label);
+  });
+  XLSX.writeFile(wb, `autopartes-${new Date().toISOString().slice(0,10)}.xlsx`);
   toast("Excel descargado");
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// CONFIRM DIALOG
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function showConfirm(title, msg, cb, danger) {
-  $("conf-title").textContent = title;
-  $("conf-msg").textContent = msg;
-  $("conf-ok").className = danger ? "btn-danger" : "btn-primary";
-  confirmCb = cb;
-  $("confirm-bg").style.display = "flex";
-}
-$("conf-ok").onclick = () => {
-  $("confirm-bg").style.display = "none";
-  if (confirmCb) { const fn = confirmCb; confirmCb = null; fn(); }
-};
-$("conf-cancel").onclick = () => { $("confirm-bg").style.display = "none"; confirmCb = null; };
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// TOAST
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-let _toastTimer = null;
-function toast(msg, dur) {
-  const el = $("toast");
-  el.textContent = msg;
-  el.classList.add("on");
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => el.classList.remove("on"), dur || 2500);
-}
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// LIGHTBOX
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function openLightbox(src) { $("lb-img").src = src; $("lightbox").classList.add("on"); }
-function closeLightbox() { $("lightbox").classList.remove("on"); $("lb-img").src = ""; }
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// UTILS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function escH(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// REFRESH ALL
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function refreshAll() {
-  if (!authedOnly()) return;
-  loadParts();
-  loadDevices();
-  slPage = 0;
-  loadScanLogs(false);
-  toast("Datos actualizados");
-}
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// INIT
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ── INIT ──
 window.addEventListener("load", async () => {
-  const valid = await checkSavedSession();
-  if (valid) {
-    authed = true;
-    document.getElementById("pw-gate").classList.add("gone");
-    document.getElementById("toolbar").style.display = "block";
-    document.getElementById("home").style.display = "flex";
-    loadAllData();
+  // Load config first so LICENSe_SECRET comes from Supabase before validating saved license
+  await loadConfig();
+  const licValid = await checkSavedLicense();
+  if (licValid) {
+    document.getElementById('lic-gate').classList.add('gone');
+    await initApp();
   }
-  $("pw-input").focus();
+  // If not valid: gate stays visible, activateLicense() calls initApp() on success
 });
 </script>
 </body>
