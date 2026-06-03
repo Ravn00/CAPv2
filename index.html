@@ -1565,7 +1565,7 @@ function showConfirm(title, msg, cb, danger=false) {
   $("conf-ok").className=danger?"danger":"";
   confirmCb=cb; $("confirm-bg").classList.add("on");
 }
-$("conf-ok").onclick = () => { $("confirm-bg").classList.remove("on"); if(confirmCb) confirmCb(); confirmCb=null; };
+$("conf-ok").onclick = async () => { $("confirm-bg").classList.remove("on"); if(confirmCb) { const fn=confirmCb; confirmCb=null; await fn(); } };
 $("conf-cancel").onclick = () => { $("confirm-bg").classList.remove("on"); confirmCb=null; };
 let toastTimer;
 function toast(msg, dur=2600) {
