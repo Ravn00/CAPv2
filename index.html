@@ -51,6 +51,8 @@ a{color:var(--gold)}
 #admin-banner.on{display:block;animation:fadeUp .2s ease}
 #admin-banner.warning{border-color:var(--amber-lt);color:var(--amber-lt)}
 #admin-banner.critical{border-color:var(--red-lt);color:var(--red-lt)}
+#net-banner{display:none;background:#b91c1c;padding:6px 14px;text-align:center;font-size:11px;color:#fff;position:sticky;top:0;z-index:399;font-weight:600;letter-spacing:.4px}
+#net-banner.on{display:block}
 
 /* --- */
 #lic-gate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(13,15,18,.97);backdrop-filter:blur(20px);padding:20px;transition:opacity .3s}
@@ -261,8 +263,10 @@ a{color:var(--gold)}
 #conf-cancel{background:var(--s2);border:1px solid var(--bdr2);color:var(--t3)}
 
 /* --- */
-#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--bdr3);border-radius:var(--r8);padding:9px 16px;font-size:11px;color:var(--t2);z-index:700;display:none;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.5);letter-spacing:.3px}
-#toast.on{display:block;animation:fadeUp .2s ease}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--bdr3);border-radius:var(--r8);padding:9px 16px;font-size:11px;color:var(--t2);z-index:700;display:none;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.5);letter-spacing:.3px;gap:10px;align-items:center}
+#toast.on{display:flex;animation:fadeUp .2s ease}
+#toast button{background:var(--s3);border:1px solid var(--bdr3);border-radius:var(--r6);padding:3px 10px;font-size:10px;color:var(--t1);cursor:pointer;letter-spacing:.3px}
+#toast button:hover{background:var(--s4)}
 
 /* --- */
 #lightbox{display:none;position:fixed;inset:0;background:rgba(5,7,9,.96);z-index:800;align-items:center;justify-content:center;cursor:zoom-out}
@@ -340,6 +344,9 @@ a{color:var(--gold)}
 
 <!-- ADMIN BANNER -->
 <div id="admin-banner"></div>
+
+<!-- NETWORK BANNER -->
+<div id="net-banner">Sin conexión — los cambios se guardarán cuando vuelvas a estar online</div>
 
 <!-- IMAGE TEST MODAL (only diag kept) -->
 <div class="modal-bg" id="diag-test-modal">
@@ -477,7 +484,7 @@ a{color:var(--gold)}
 </div>
 
 <!-- TOAST -->
-<div id="toast"></div>
+<div id="toast"><span id="toast-msg"></span><button id="toast-undo" style="display:none">Deshacer</button></div>
 
 <!-- LIGHTBOX -->
 <div id="lightbox" onclick="closeLightbox()">
@@ -769,7 +776,7 @@ const fabExport = $("fab-export");
 // ---
 // LICENSE SYSTEM
 // ---
-let LICENSE_SECRET = "PaolaDesarm_2026_X9k7mQr4";
+let LICENSE_SECRET = "";
 
 // Pure JS SHA-256 fallback para file:// (crypto.subtle solo disponible en HTTPS)
 function sha256(str) {
@@ -815,12 +822,15 @@ async function validateLicense(code) {
   const p = String(code||'').trim().toUpperCase().replace(/\s/g, '').split('-');
   if (p.length !== 4 || p[0] !== 'AP')
     return { ok:false, error:'Formato inválido. Ejemplo: AP-C001-0526-XXXXXXXX' };
-  const clientId = p[1];
-  const mmyy = p[2], hash = p[3];
-  if (mmyy.length !== 4 || hash.length !== 8)
-    return { ok:false, error:'Longitud incorrecta en el código' };
+  const clientId = p[1], mmyy = p[2], hash = p[3];
+  if (clientId.length !== 4 || !/^[A-Z0-9]{4}$/.test(clientId))
+    return { ok:false, error:'ID de cliente inválido (debe ser 4 caracteres alfanuméricos)' };
+  if (mmyy.length !== 4 || !/^\d{4}$/.test(mmyy))
+    return { ok:false, error:'Fecha inválida (debe ser MMAA, ej: 0526)' };
+  if (hash.length !== 8 || !/^[A-F0-9]{8}$/.test(hash))
+    return { ok:false, error:'Hash inválido (debe ser 8 caracteres hexadecimales)' };
   const mm = parseInt(mmyy.slice(0,2)), yy = parseInt(mmyy.slice(2,4));
-  if (isNaN(mm) || mm < 1 || mm > 12)
+  if (mm < 1 || mm > 12)
     return { ok:false, error:'Mes inválido en el código' };
   const fullYear = 2000 + yy;
   const now = new Date();
@@ -996,6 +1006,13 @@ async function initApp() {
   if (!cfgOk) {
     toast("No se pudo conectar con el servidor de configuración");
   }
+
+  // Network status indicator
+  const nb = document.getElementById("net-banner");
+  function updateNet() { nb.classList.toggle("on", !navigator.onLine); }
+  window.addEventListener("online", updateNet);
+  window.addEventListener("offline", updateNet);
+  updateNet();
 
   // Check maintenance mode
   await checkMaintenance();
@@ -1395,10 +1412,25 @@ function buildPartCard(part) {
   el.querySelector("[data-edit]").onclick = () => { editId=part.id; editBuf={...part}; renderFolderContent(); };
   el.querySelector("[data-del]").onclick = () => showConfirm("Eliminar parte",`"${part.marca} ${part.modelo}" será eliminada.`,()=>{ parts=parts.filter(p=>p.id!==part.id); deletePartFromSupabase(part.id); saveParts(); renderAll(); toast("Parte eliminada"); },true);
   el.querySelector(".sold-btn").onclick = () => {
-    const isSold = part.sold;
-    showConfirm(isSold?"¿Marcar como disponible?":"¿Marcar como vendido?",isSold?`"${part.marca} ${part.modelo}" volverá a disponibles.`:`"${part.marca} ${part.modelo}" se marcará como vendida.`,
-      () => { const p=parts.find(p=>p.id===part.id); if(!p) return; p.sold=!p.sold; savePartToSupabase(p); saveParts(); updateHeaderStats(); renderFolderContent(); }, false);
-  // Note: savePartToSupabase is fire-and-forget in toggle to keep UI responsive
+    const wasSold = part.sold;
+    const p = parts.find(p => p.id === part.id);
+    if (!p) return;
+    p.sold = !p.sold;
+    savePartToSupabase(p);
+    saveParts();
+    updateHeaderStats();
+    renderFolderContent();
+    const label = p.sold ? "vendido" : "disponible";
+    toastWithUndo(`Marcado como ${label}`, () => {
+      const pp = parts.find(pp => pp.id === part.id);
+      if (!pp) return;
+      pp.sold = wasSold;
+      savePartToSupabase(pp);
+      saveParts();
+      updateHeaderStats();
+      renderFolderContent();
+      toast(`Deshecho: vuelto a ${wasSold ? "vendido" : "disponible"}`);
+    });
   };
   return el;
 }
@@ -1567,13 +1599,28 @@ function showConfirm(title, msg, cb, danger=false) {
 }
 $("conf-ok").onclick = async () => { $("confirm-bg").classList.remove("on"); if(confirmCb) { const fn=confirmCb; confirmCb=null; await fn(); } };
 $("conf-cancel").onclick = () => { $("confirm-bg").classList.remove("on"); confirmCb=null; };
-let toastTimer;
+let toastTimer, undoAction = null;
 function toast(msg, dur=2600) {
-  const el = $("toast");
+  const el = $("toast"), btn = $("toast-undo");
   if (!el) { console.log("toast:", msg); return; }
-  el.textContent=msg; el.classList.add("on");
+  $("toast-msg").textContent=msg;
+  btn.style.display="none";
+  undoAction=null;
+  el.classList.add("on");
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("on"), dur);
 }
+function toastWithUndo(msg, onUndo) {
+  const el = $("toast"), btn = $("toast-undo");
+  if (!el) { console.log("toast:", msg); return; }
+  $("toast-msg").textContent=msg;
+  btn.style.display="";
+  undoAction=onUndo;
+  el.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.classList.remove("on"); undoAction=null; }, 5000);
+}
+$("toast-undo").onclick = () => {
+  if (undoAction) { const fn = undoAction; undoAction=null; $("toast").classList.remove("on"); $("toast-undo").style.display="none"; fn(); }
+};
 function openLightbox(src) { $("lb-img").src=src; $("lightbox").classList.add("on"); }
 function closeLightbox() { $("lightbox").classList.remove("on"); }
 function closeModal(id) { $(id).classList.remove("on"); }
