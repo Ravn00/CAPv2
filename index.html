@@ -174,6 +174,8 @@ a{color:var(--gold)}
 .q-th{position:relative;width:44px;height:44px;border-radius:var(--r6);overflow:hidden;border:1.5px solid var(--bdr2);flex-shrink:0;transition:border-color .2s}
 .q-th img{width:100%;height:100%;object-fit:cover}
 .q-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.q-cancel{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--red);border:1.5px solid var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;opacity:0;transition:opacity .15s}
+.q-th:hover .q-cancel{opacity:1}
 
 /* --- */
 #folder-nav{margin-bottom:0;position:sticky;top:88px;z-index:200;background:var(--bg);padding-bottom:0}
@@ -474,7 +476,7 @@ a{color:var(--gold)}
   </div>
   <div id="prog-wrap"><div id="prog-track"><div id="prog-fill"></div></div><div id="prog-label">Iniciando???</div></div>
   <div id="queue-wrap">
-    <div id="queue-hdr"><div id="queue-title">En proceso</div><div id="queue-prog"></div></div>
+    <div id="queue-hdr"><div id="queue-title">En proceso</div><div id="queue-prog"></div><button id="queue-pause" style="background:none;border:1px solid var(--bdr3);border-radius:var(--r6);padding:3px 8px;font-size:10px;color:var(--t2);cursor:pointer;margin-left:auto">Pausar</button></div>
     <div class="q-row" id="queue-row"></div>
   </div>
   <div id="folder-nav">
@@ -753,6 +755,8 @@ let activeFolder = "all";
 let folderSearch = {};
 let folderStatus = {};
 let processing = false;
+let queuePaused = false;
+let cancelledItems = new Set();
 let editId = null;
 let editBuf = {};
 let confirmCb = null;
@@ -1092,30 +1096,38 @@ async function handleFiles(files, presetCat) {
   const existing = new Set(parts.map(p => `${p.fileName}|${p.fileSize||0}`));
   const fresh = imgs.filter(f => !existing.has(`${f.name}|${f.size}`));
   if (fresh.length === 0) { toast("Todas las imágenes ya están catalogadas"); return; }
+  const large = fresh.filter(f => f.size > 5e6);
+  if (large.length > 0) { toast(`${large.length} foto${large.length>1?"s":""} pesa${large.length>1?"n":""} >5MB — puede tardar`, 4000); }
   const items = await Promise.all(fresh.map(async file => {
     let preview = "", fileDataUrl = "";
     try {
-      const r = await new Promise(res => {
+      const raw = await new Promise(res => {
         const rr = new FileReader();
-        rr.onload = e => {
-          const raw = e.target.result || "";
-          if (!raw) { res({thumb:"",raw:""}); return; }
-          const img = new Image();
-          img.onload = () => {
-            let w=img.width, h=img.height;
-            const max=800;
-            if (w>max||h>max) { if (w>=h) {h=Math.round(h*max/w);w=max;} else {w=Math.round(w*max/h);h=max;} }
-            const c=document.createElement("canvas");c.width=w;c.height=h;
-            c.getContext("2d").drawImage(img,0,0,w,h);
-            res({thumb:c.toDataURL("image/jpeg",0.88),raw});
-          };
-          img.onerror = () => res({thumb:"",raw});
-          img.src = raw;
-        };
-        r.onerror = () => res({thumb:"",raw:""});
-        r.readAsDataURL(file);
+        rr.onload = e => res(e.target.result || "");
+        rr.onerror = () => res("");
+        rr.readAsDataURL(file);
       });
-      preview = r.thumb; fileDataUrl = r.raw;
+      if (!raw) { return { file, id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, preview, fileDataUrl, status:"waiting", fileSize: file.size, presetCat }; }
+      let img;
+      if (window.createImageBitmap) {
+        const blob = await fetch(raw).then(r => r.blob()).catch(() => null);
+        if (blob) {
+          try { img = await createImageBitmap(blob, { resizeWidth: Math.min(file.width || 800, 800), resizeHeight: Math.min(file.height || 800, 800), resizeQuality: "medium" }); } catch(_) {}
+        }
+      }
+      if (!img) {
+        img = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = raw; });
+      }
+      if (img) {
+        let w = img.width, h = img.height;
+        const max = 800;
+        if (w > max || h > max) { if (w >= h) { h = Math.round(h * max / w); w = max; } else { w = Math.round(w * max / h); h = max; } }
+        const c = document.createElement("canvas"); c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        preview = c.toDataURL("image/jpeg", 0.88);
+        fileDataUrl = raw;
+        if (img.close) img.close();
+      }
     } catch(_) {}
     return { file, id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, preview, fileDataUrl, status:"waiting", fileSize: file.size, presetCat };
   }));
@@ -1261,11 +1273,13 @@ async function analyzeImage(item) {
 // ---
 async function processQueue() {
   if (processing) return;
-  processing = true; doneBatch = 0; totalBatch = queue.length;
+  processing = true; queuePaused = false; doneBatch = 0; totalBatch = queue.length;
+  $("queue-pause").textContent = "Pausar";
   procPill.classList.add("on"); progWrap.classList.add("on");
   updateProg();
 
   async function doOne(item) {
+    if (cancelledItems.has(item.id)) { cancelledItems.delete(item.id); return true; }
     const t0 = Date.now();
     item.status = "analyzing"; renderQueue(); addLoadingCard(item);
     const result = await analyzeImageWithRetry(item);
@@ -1287,18 +1301,28 @@ async function processQueue() {
     queue = queue.filter(q => q.id !== item.id);
     doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
     await logScan(part.id, part.categoria, result._ok?"success":"error", ms);
+    return false;
   }
 
   while (queue.length > 0) {
-    await doOne(queue[0]);
+    while (queuePaused && queue.length > 0) { await new Promise(r => setTimeout(r, 500)); }
+    if (queue.length === 0) break;
+    const skipped = await doOne(queue[0]);
+    if (skipped) queue = queue.filter(q => q.id !== queue[0]?.id);
   }
 
-  processing = false;
+  processing = false; queuePaused = false;
   procPill.classList.remove("on"); progWrap.classList.remove("on");
   progFill.style.width = "0%"; totalBatch = 0; doneBatch = 0;
   renderQueue(); renderFolderTabs(); renderFolderContent();
   toast(`${parts.length} parte${parts.length!==1?"s":""} en catálogo`);
 }
+
+$("queue-pause").onclick = () => {
+  queuePaused = !queuePaused;
+  $("queue-pause").textContent = queuePaused ? "Reanudar" : "Pausar";
+  if (queuePaused) toast("Cola pausada");
+};
 
 async function analyzeImageWithRetry(item) {
   for (let attempt = 0; attempt <= RETRY_MAX; attempt++) {
@@ -1501,7 +1525,7 @@ function replaceLoadingCard(id, part) {
 }
 
 function renderQueue() {
-  if (queue.length===0) { queueWrap.classList.remove("on"); return; }
+  if (queue.length===0) { queueWrap.classList.remove("on"); $("queue-pause").textContent = "Pausar"; return; }
   queueWrap.classList.add("on");
   $("queue-prog").textContent = `${queue.length} imagen${queue.length!==1?"es":""} en cola`;
   queueRow.innerHTML = "";
@@ -1510,6 +1534,14 @@ function renderQueue() {
     d.className=`q-th ${item.status}`;
     const spin = item.status==="analyzing"?`<div class="spin" style="width:14px;height:14px;border-color:var(--amber-lt)"></div>`:item.status==="done"?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`:"";
     d.innerHTML=`<img src="${item.preview}" alt=""/><div class="q-ov">${spin}</div>`;
+    if (item.status !== "analyzing") {
+      const cancelBtn = document.createElement("div");
+      cancelBtn.className = "q-cancel";
+      cancelBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      cancelBtn.title = "Cancelar";
+      cancelBtn.onclick = (e) => { e.stopPropagation(); cancelledItems.add(item.id); queue = queue.filter(q => q.id !== item.id); renderQueue(); };
+      d.appendChild(cancelBtn);
+    }
     queueRow.appendChild(d);
   });
   if (queue.length>18) {
