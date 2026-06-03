@@ -464,7 +464,7 @@ a{color:var(--gold)}
 
 <div id="main">
   <div id="up-panel">
-    <button id="up-toggle">
+    <button id="up-toggle" title="Abrir o cerrar el panel de carga de fotos">
       <span class="up-toggle-label">
         <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
         Agregar partes
@@ -478,7 +478,7 @@ a{color:var(--gold)}
   </div>
   <div id="prog-wrap"><div id="prog-track"><div id="prog-fill"></div></div><div id="prog-label">Iniciando…</div></div>
   <div id="queue-wrap">
-    <div id="queue-hdr"><div id="queue-title">En proceso</div><div id="queue-prog"></div><button id="queue-pause" style="background:none;border:1px solid var(--bdr3);border-radius:var(--r6);padding:3px 8px;font-size:10px;color:var(--t2);cursor:pointer;margin-left:auto">Pausar</button></div>
+    <div id="queue-hdr"><div id="queue-title">En proceso</div><div id="queue-prog"></div><button id="queue-pause" title="Pausar o reanudar la cola de procesamiento" style="background:none;border:1px solid var(--bdr3);border-radius:var(--r6);padding:3px 8px;font-size:10px;color:var(--t2);cursor:pointer;margin-left:auto">Pausar</button></div>
     <div class="q-row" id="queue-row"></div>
   </div>
   <div id="folder-nav">
@@ -1444,7 +1444,7 @@ function renderFolderContent() {
   el.innerHTML = `<div class="fhdr">
     <div class="fhdr-row1">
       <div class="fhdr-stats"><span class="fstat-avail">&bull; ${avail} disponibles</span><span class="fstat-sold">&bull; ${sold} vendidos</span></div>
-      <button class="add-manual-btn" id="add-manual-btn" onclick="openManual(activeFolder !== 'all' ? activeFolder : null)">??</button>
+      <button class="add-manual-btn" id="add-manual-btn" title="Agregar una parte manualmente" onclick="openManual(activeFolder !== 'all' ? activeFolder : null)">+</button>
     </div>
     <div class="fhdr-row2">
       <div class="search-wrap"><input type="text" placeholder="Buscar por marca o modelo…" value="${escH(folderSearch[activeFolder]||"")}"/>
