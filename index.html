@@ -691,12 +691,27 @@ async function savePartToSupabase(part) {
   const existing = await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(part.id)}&select=id`);
   if (existing && existing.length > 0) {
     await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(part.id)}`, "PATCH", body);
+    await sbLogAudit(part.id, "update", { marca: part.marca, modelo: part.modelo, sold: part.sold });
   } else {
     await sbFetch("/rest/v1/partes", "POST", { id: part.id, data: rest });
+    await sbLogAudit(part.id, "create", { marca: part.marca, modelo: part.modelo });
   }
 }
 
+async function sbLogAudit(partId, action, changes) {
+  try {
+    await fetch(`${SB_URL}/rest/v1/partes_log`, {
+      method: "POST",
+      headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ part_id: partId, action, changes: JSON.stringify(changes || {}), device_id: deviceId, timestamp: new Date().toISOString() })
+    });
+  } catch(_) {}
+}
+
 async function deletePartFromSupabase(partId) {
+  const p = parts.find(x => x.id === partId);
+  const changes = p ? { marca: p.marca, modelo: p.modelo } : {};
+  await sbLogAudit(partId, "delete", changes);
   await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(partId)}`, "DELETE");
 }
 
@@ -1215,8 +1230,27 @@ async function analyzeImage(item) {
     if (!img) return fallback("No se pudo leer la imagen");
     const key = getNextKey();
     if (!key) return fallback("Sin API Key disponible");
-    await waitForKeyRateLimit(key);
     const provider = key.startsWith("sk-or-") ? "openrouter" : key.startsWith("gsk_") ? "groq" : "gemini";
+
+    // Try Edge Function proxy first
+    const efUrl = `${SB_URL}/functions/v1/analyze-part`;
+    let efResult = null;
+    try {
+      const efResp = await fetch(efUrl, {
+        method: "POST",
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ image: `data:${img.mime};base64,${img.b64}`, provider, model: provider === "groq" ? "meta-llama/llama-4-scout-17b-16e-instruct" : provider === "openrouter" ? "google/gemma-3-27b-it:free" : "gemini-2.0-flash", prompt: PROMPT }),
+        signal: AbortSignal.timeout(15000)
+      });
+      if (efResp.ok) efResult = await efResp.json();
+    } catch(_) { /* Edge Function not deployed — fall back to direct */ }
+
+    if (efResult && efResult._ok !== false) {
+      return { marca: efResult.marca || "No determinado", modelo: efResult.modelo || "No determinado", años: efResult.años || "No determinado", categoria: efResult.categoria || "varios", descripcion: (efResult.descripcion || "").slice(0, 65), posicion: efResult.posicion || "No determinado", confianza: efResult.confianza || "Baja", _ok: true };
+    }
+
+    // Fallback: direct API call
+    await waitForKeyRateLimit(key);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 12000);
     let resp;
