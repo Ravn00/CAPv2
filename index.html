@@ -505,8 +505,12 @@ const SB_URL = "https://xkguzluwbbxsbustlcxo.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrZ3V6bHV3YmJ4c2J1c3RsY3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNzQwOTUsImV4cCI6MjA5NTc1MDA5NX0.N6oatsQFuRPdlpKcwWnqNSvagtg1dGqjSNg2dzU9Tl0";
 
 // Device ID ??? persistente para tracking
-let deviceId = localStorage.getItem("ap_device_id");
-if (!deviceId) { deviceId = "dev_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8); localStorage.setItem("ap_device_id", deviceId); }
+let deviceId;
+  try { deviceId = localStorage.getItem("ap_device_id"); } catch(_) {}
+  if (!deviceId) {
+    deviceId = "dev_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+    try { localStorage.setItem("ap_device_id", deviceId); } catch(_) {}
+  }
 
 // Config cache
 let configCache = null;
@@ -965,25 +969,38 @@ async function showLicenseInfo() {
 
 // ---
 (function() {
-  // Skip entirely on mobile/touch devices ??? outerWidth difference is unreliable
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
   if (isMobile) return;
   let _open = false;
+  let _triggers = 0;
+  function lockout() {
+    if (_open) return;
+    _open = true;
+    localStorage.removeItem("ap_license_v2");
+    const g = document.getElementById("lic-gate");
+    if (g) { g.classList.remove("gone","hiding"); }
+    const e = document.getElementById("lic-error");
+    if (e) e.textContent = "Sesión cerrada por seguridad.";
+  }
+  // Resize-based: require 2 consecutive detections to avoid false positives
   setInterval(() => {
     const dw = window.outerWidth - window.innerWidth;
     const dh = window.outerHeight - window.innerHeight;
-    // Use 300px threshold on desktop to avoid false positives
-    if (dw > 300 || dh > 300) {
-      if (!_open) {
-        _open = true;
-        localStorage.removeItem("ap_license_v2");
-        const g = document.getElementById("lic-gate");
-        if (g) { g.classList.remove("gone","hiding"); }
-        const e = document.getElementById("lic-error");
-        if (e) e.textContent = "Sesión cerrada por seguridad.";
-      }
-    } else { _open = false; }
-  }, 1200);
+    if (dw > 200 || dh > 200) {
+      _triggers++;
+      if (_triggers >= 2) lockout();
+    } else { _triggers = 0; }
+  }, 1000);
+  // debugger trap
+  let _dbg = 0;
+  setInterval(() => {
+    _dbg++;
+    if (_dbg > 3) return;
+    const start = performance.now();
+    debugger;
+    const elapsed = performance.now() - start;
+    if (elapsed > 100) { _dbg = 0; lockout(); }
+  }, 5000);
 })();
 
 // ---
@@ -1306,7 +1323,15 @@ function updateProg() {
 }
 
 function saveParts() {
-  try { localStorage.setItem("ap_parts_v2", JSON.stringify(parts.map(({fileDataUrl,file,...p})=>p))); } catch(e) { console.warn("localStorage save failed:", e); }
+  try {
+    const data = JSON.stringify(parts.map(({fileDataUrl,file,...p})=>p));
+    // ~5MB limit; warn at 4MB
+    if (data.length > 4e6) { toast("Almacenamiento casi lleno — respaldá los datos pronto", 4000); }
+    localStorage.setItem("ap_parts_v2", data);
+  } catch(e) {
+    console.warn("localStorage save failed:", e);
+    toast("Error al guardar en caché local — el almacenamiento podría estar lleno", 5000);
+  }
 }
 
 // ---
@@ -1451,7 +1476,14 @@ function buildEditCard(part) {
       <div style="display:flex;gap:8px"><button class="btn-primary" id="sv-${part.id}">Guardar</button><button class="btn-ghost-sm" id="cn-${part.id}">Cancelar</button></div>
     </div>`;
   el.querySelectorAll(".fld-input").forEach(i => { i.oninput = i.onchange = e => editBuf[e.target.dataset.f]=e.target.value; });
-  el.querySelector(`#sv-${part.id}`).onclick = async () => { const updated={...part,...editBuf}; parts=parts.map(p=>p.id===part.id?updated:p); editId=null; await savePartToSupabase(updated); saveParts(); renderAll(); toast("Cambios guardados"); };
+  el.querySelector(`#sv-${part.id}`).onclick = async () => {
+    const años = (editBuf.años || "").trim();
+    if (años && !/^\d{4}\s*-\s*\d{4}$/.test(años) && !/^\d{4}$/.test(años) && años !== "No determinado") { toast("Años: usá formato '2010-2015' o '2020'"); return; }
+    const pos = (editBuf.posicion || "").trim().toLowerCase();
+    const validPos = ["delantero","trasero","izquierdo","derecho","central","no determinado",""];
+    if (pos && !validPos.includes(pos)) { toast("Posición: Delantero, Trasero, Izquierdo, Derecho o Central"); return; }
+    const updated={...part,...editBuf}; parts=parts.map(p=>p.id===part.id?updated:p); editId=null; await savePartToSupabase(updated); saveParts(); renderAll(); toast("Cambios guardados");
+  };
   el.querySelector(`#cn-${part.id}`).onclick = () => { editId=null; renderFolderContent(); };
   return el;
 }
