@@ -195,7 +195,7 @@ a{color:var(--gold)}
 .cat-section{margin-bottom:0}
 .cat-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .cat-toolbar h2{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:-.3px;margin-right:auto}
-#cat-select{padding:7px 30px 7px 12px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r8);color:var(--text);font-size:12px;font-family:var(--font-mono);-webkit-appearance:none;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23828899' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:12px;flex-shrink:0;max-width:180px}
+#cat-select{padding:7px 30px 7px 12px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r8);color:var(--text);font-size:12px;font-family:var(--font-mono);-webkit-appearance:none;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23828899' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:12px;flex-shrink:0;min-width:140px;max-width:240px}
 #cat-select:focus{border-color:var(--gold-glow)}
 .cat-search-wrap{flex:1;display:flex;align-items:center;gap:8px;min-width:140px}
 .cat-search-wrap input{flex:1;min-width:0;padding:7px 12px;background:var(--s2);border:1px solid var(--bdr2);border-radius:20px;color:var(--text);font-size:12px;font-family:var(--font-mono)}
@@ -210,18 +210,18 @@ a{color:var(--gold)}
 
 /* --- Product List --- */
 .prod-list{display:flex;flex-direction:column;gap:6px}
-.pcard{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r10);display:flex;align-items:stretch;overflow:hidden;transition:all .2s;animation:scaleIn .2s ease;box-shadow:var(--card-shadow)}
+.pcard{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r10);display:flex;flex-direction:column;overflow:hidden;transition:all .2s;animation:scaleIn .2s ease;box-shadow:var(--card-shadow)}
 .pcard:hover{border-color:var(--bdr3);box-shadow:var(--card-shadow-hover)}
-.pcard-img{width:80px;min-width:80px;height:80px;object-fit:cover;cursor:zoom-in;flex-shrink:0;background:var(--s3)}
-.pcard-img.no-img{display:flex;align-items:center;justify-content:center;color:var(--t5)}
-.pcard-body{flex:1;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
+.pcard-img{width:100%;height:100px;object-fit:cover;cursor:zoom-in;background:var(--s3);display:block}
+.pcard-img.no-img{height:80px;display:flex;align-items:center;justify-content:center;color:var(--t5)}
+.pcard-body{padding:10px 12px;display:flex;flex-direction:column;gap:2px}
 .pcard-title{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px;line-height:1.2}
 .pcard-meta{font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pcard-desc{font-size:10px;color:var(--t4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pcard-tags{display:flex;gap:4px;align-items:center;margin-top:4px;flex-wrap:wrap}
 .ptag{font-size:9px;font-weight:500;padding:2px 7px;border-radius:4px;white-space:nowrap}
 .ptag-cat{background:var(--gold-dim);color:var(--gold)}
-.pcard-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;padding:8px 10px;gap:6px;flex-shrink:0}
+.pcard-right{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px;border-top:1px solid var(--bdr);flex-shrink:0}
 .sold-btn{border-radius:20px;padding:4px 10px;font-size:10px;font-weight:500;display:flex;align-items:center;gap:4px;transition:all .2s;white-space:nowrap;letter-spacing:.3px}
 .sold-btn.avail{background:var(--green-dim);color:var(--green-lt);border:1px solid rgba(42,157,111,.25)}
 .sold-btn.sold{background:var(--s3);color:var(--sold-lt);border:1px solid var(--s4)}
@@ -297,9 +297,7 @@ a{color:var(--gold)}
   .up-grid{grid-template-columns:repeat(4,1fr)}
   .cat-toolbar{flex-wrap:nowrap}
   .prod-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .pcard{flex-direction:column}
-  .pcard-img{width:100%;min-width:unset;height:130px}
-  .pcard-right{flex-direction:row;align-items:center;padding:8px 12px;gap:8px;border-top:1px solid var(--bdr)}
+  .pcard-img{height:130px}
   .modal-bg{align-items:center;padding:20px}
   .modal-sheet{border-radius:var(--r16);max-width:520px;width:100%;max-height:88vh;animation:scaleIn .18s ease}
   .modal-sheet{animation-name:fadeUp}
@@ -308,10 +306,6 @@ a{color:var(--gold)}
   .prod-list{grid-template-columns:repeat(3,1fr);gap:10px}
   .pcard-img{height:150px}
   #fab-export{bottom:32px;right:32px;padding:14px 22px;font-size:13px}
-}
-
-  .prod-list{grid-template-columns:repeat(3,1fr);gap:10px}
-  .pcard-img{height:150px}
 }
 </style>
 </head>
@@ -505,8 +499,8 @@ a{color:var(--gold)}
 <!-- CATALOG SECTION -->
 <section class="cat-section">
   <div id="folder-nav">
-    <div class="tabs-scroll" id="tabs-scroll"></div>
-    <div class="ftab-content" id="folder-content"></div>
+
+    <div id="folder-content"></div>
   </div>
 </section>
 
@@ -1376,7 +1370,7 @@ async function processQueue() {
   processing = false; queuePaused = false;
   procPill.classList.remove("on"); progWrap.classList.remove("on");
   progFill.style.width = "0%"; totalBatch = 0; doneBatch = 0;
-  renderQueue(); renderFolderTabs(); renderFolderContent();
+  renderQueue(); renderFolderContent();
   toast(`${parts.length} parte${parts.length!==1?"s":""} en catálogo`);
 }
 
@@ -1425,7 +1419,7 @@ function saveParts() {
 // ---
 function renderAll() {
   updateHeaderStats(); updateUploadCounts();
-  renderFolderTabs(); renderFolderContent();
+  renderFolderContent();
   fabExport.classList.toggle("on", parts.length > 0);
 }
 function updateHeaderStats() {
@@ -1446,18 +1440,24 @@ function updateUploadCounts() {
     $(`ucb-${k}`)?.classList.toggle("has-items", n > 0);
   });
 }
-function renderFolderTabs() {
-  tabsScroll.innerHTML = "";
-  const tabs = [{ key:"all", label:"Todos", icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`, count:parts.length },
-    ...Object.entries(CATS).map(([k,c])=>({key:k,label:c.label,icon:c.icon,count:parts.filter(p=>p.categoria===k).length})) ];
-  tabs.forEach(t => {
-    if (t.key!=="all" && t.count===0) return;
-    const btn = document.createElement("button");
-    btn.className=`ftab${activeFolder===t.key?" on":""}`;
-    btn.innerHTML=`<span style="display:inline-flex;align-items:center;opacity:.7">${t.icon}</span>${t.label} <span class="ftab-badge">${t.count}</span>`;
-    btn.onclick = () => { activeFolder=t.key; renderFolderTabs(); renderFolderContent(); };
-    tabsScroll.appendChild(btn);
+function buildCategorySelect() {
+  const sel = document.createElement("select");
+  sel.id = "cat-select";
+  const allOpt = document.createElement("option");
+  allOpt.value = "all";
+  allOpt.textContent = `Todos (${parts.length})`;
+  sel.appendChild(allOpt);
+  Object.entries(CATS).forEach(([k, c]) => {
+    const count = parts.filter(p => p.categoria === k).length;
+    const opt = document.createElement("option");
+    opt.value = k;
+    opt.textContent = `${c.label} (${count})`;
+    if (activeFolder === k) opt.selected = true;
+    sel.appendChild(opt);
   });
+  sel.value = activeFolder;
+  sel.onchange = () => { activeFolder = sel.value; renderFolderContent(); };
+  return sel;
 }
 function renderFolderContent() {
   const el = folderContent;
@@ -1470,32 +1470,44 @@ function renderFolderContent() {
     if (s && !(p.marca+p.modelo+p.años+p.descripcion+p.posicion).toLowerCase().includes(s)) return false;
     return true;
   }).slice().reverse();
-  const avail = parts.filter(p=>(activeFolder==="all"||p.categoria===activeFolder)&&!p.sold).length;
-  const sold = parts.filter(p=>(activeFolder==="all"||p.categoria===activeFolder)&&p.sold).length;
-  el.innerHTML = `<div class="fhdr">
-    <div class="fhdr-row1">
-      <div class="fhdr-stats"><span class="fstat-avail">&bull; ${avail} disponibles</span><span class="fstat-sold">&bull; ${sold} vendidos</span></div>
-      <button class="add-manual-btn" id="add-manual-btn" title="Agregar una parte manualmente" onclick="openManual(activeFolder !== 'all' ? activeFolder : null)">+</button>
-    </div>
-    <div class="fhdr-row2">
-      <div class="search-wrap"><input type="text" placeholder="Buscar por marca o modelo…" value="${escH(folderSearch[activeFolder]||"")}"/>
-      </div>
-      <div class="sfil">
-        <button class="sfil-btn${sf==="all"?" on":""}" data-sf="all">Todos</button>
-        <button class="sfil-btn${sf==="avail"?" on":""}" data-sf="avail">Disp.</button>
-        <button class="sfil-btn${sf==="sold"?" on":""}" data-sf="sold">Vend.</button>
-      </div>
-    </div>
-  </div>`;
-  const searchInput = el.querySelector(".search-wrap input"); if (searchInput) searchInput.oninput = e => { folderSearch[activeFolder]=e.target.value; renderFolderContent(); };
-  el.querySelectorAll(".sfil-btn").forEach(b => { b.onclick = () => { folderStatus[activeFolder]=b.dataset.sf; renderFolderContent(); }; });
+  el.innerHTML = "";
+  const toolbar = document.createElement("div");
+  toolbar.className = "cat-toolbar";
+  toolbar.appendChild(buildCategorySelect());
+  const searchWrap = document.createElement("div");
+  searchWrap.className = "cat-search-wrap";
+  const searchInput = document.createElement("input");
+  searchInput.type = "text";
+  searchInput.placeholder = "Buscar por marca o modelo…";
+  searchInput.value = folderSearch[activeFolder] || "";
+  searchInput.oninput = e => { folderSearch[activeFolder] = e.target.value; renderFolderContent(); };
+  searchWrap.appendChild(searchInput);
+  toolbar.appendChild(searchWrap);
+  const filterGroup = document.createElement("div");
+  filterGroup.className = "cat-filter-group";
+  ["all","avail","sold"].forEach(v => {
+    const btn = document.createElement("button");
+    btn.className = `cat-filter-btn${sf === v ? " on" : ""}`;
+    btn.textContent = v === "all" ? "Todos" : v === "avail" ? "Disp." : "Vend.";
+    btn.onclick = () => { folderStatus[activeFolder] = v; renderFolderContent(); };
+    filterGroup.appendChild(btn);
+  });
+  toolbar.appendChild(filterGroup);
+  const actions = document.createElement("div");
+  actions.className = "cat-actions";
+  const addBtn = document.createElement("button");
+  addBtn.id = "add-manual-btn";
+  addBtn.textContent = "+";
+  addBtn.title = "Agregar una parte manualmente";
+  addBtn.onclick = () => openManual(activeFolder !== "all" ? activeFolder : null);
+  actions.appendChild(addBtn);
+  toolbar.appendChild(actions);
+  el.appendChild(toolbar);
   const list = document.createElement("div"); list.className = "prod-list";
   if (filtered.length===0) {
     list.innerHTML = `<div class="folder-empty" style="text-align:center;padding:44px 20px;color:var(--t4)">
-      <div style="font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--t5);margin-bottom:5px">
-        ${s?"Sin resultados":sf!=="all"?"Sin partes en este estado":"Carpeta vacía"}</div>
-      <div style="font-size:11px;color:var(--t4);line-height:1.6">
-        ${s?"Probá con otro término":"Subí imágenes usando los botones de categoría"}</div></div>`;
+      <div style="font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--t5);margin-bottom:5px">${s?"Sin resultados":sf!=="all"?"Sin partes en este estado":"Carpeta vacía"}</div>
+      <div style="font-size:11px;color:var(--t4);line-height:1.6">${s?"Probá con otro término":"Subí imágenes usando los botones de categoría"}</div></div>`;
   } else {
     filtered.forEach(p => {
       if (editId===p.id) list.appendChild(buildEditCard(p));
