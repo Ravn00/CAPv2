@@ -24,10 +24,6 @@ async function initApp() {
   window.addEventListener("offline", updateNet);
   updateNet();
 
-  // Restore auth session
-  const hadSession = await sbRestoreSession();
-  if (hadSession) updateAuthUI();
-
   // Check maintenance mode
   await checkMaintenance();
 
@@ -36,28 +32,6 @@ async function initApp() {
   // Heartbeat every 5 minutes
   setInterval(heartbeatDevice, 300000);
   setInterval(checkMaintenance, 60000);
-
-  // Load clientes from Supabase and merge with localStorage
-  await loadClientesFromSupabase();
-  try {
-    const saved = localStorage.getItem("ap_clientes_v2");
-    if (saved) {
-      const local = JSON.parse(saved);
-      const supabaseIds = new Set(clientes.map(c => c.id));
-      local.forEach(c => { if (!supabaseIds.has(c.id)) clientes.push(c); });
-    }
-  } catch(e) {}
-
-  // Load ventas from Supabase and merge with localStorage
-  await loadVentasFromSupabase();
-  try {
-    const saved = localStorage.getItem("ap_ventas_v2");
-    if (saved) {
-      const local = JSON.parse(saved);
-      const supabaseIds = new Set(ventas.map(v => v.id));
-      local.forEach(v => { if (!supabaseIds.has(v.id)) ventas.push(v); });
-    }
-  } catch(e) {}
 
   // Load parts from Supabase and merge with localStorage
   await loadPartsFromSupabase();
