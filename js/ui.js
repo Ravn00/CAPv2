@@ -227,7 +227,7 @@ function buildEditCard(part) {
   el.querySelectorAll(".fld-input").forEach(i => { i.oninput = i.onchange = e => { editBuf[e.target.dataset.f]=e.target.value; if(e.target.dataset.f==="precioCompra"||e.target.dataset.f==="precioVenta")calcMargenEdit(); }; });
   el.querySelector(`#sv-${part.id}`).onclick = async () => {
     const años = (editBuf.años || "").trim();
-    if (años && !/^\d{4}\s*-\s*\d{4}$/.test(años) && !/^\d{4}$/.test(años) && años !== "No determinado") { toast("Años: usá formato '2010-2015' o '2020'"); return; }
+    if (años && años !== "No determinado" && !/\b\d{4}\b/.test(años)) { toast("Años: debe contener un año de 4 dígitos (ej: 1997 o 1995-2005)"); return; }
     const pos = (editBuf.posicion || "").trim().toLowerCase();
     const validPos = ["delantero","trasero","izquierdo","derecho","central","no determinado",""];
     if (pos && !validPos.includes(pos)) { toast("Posición: Delantero, Trasero, Izquierdo, Derecho o Central"); return; }
