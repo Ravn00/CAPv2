@@ -17,7 +17,7 @@ const CATS = {
   varios:{label:"Varios",icon:CAT_SVGS.varios},
 };
 const ALL_FOLDERS = ["all", ...Object.keys(CATS)];
-const PROMPT = `Eres el motor de IA de "Desarmaduría Paola" — catálogo profesional de autopartes.
+const PROMPT = `Eres el motor de IA de "CAPv2" — catálogo profesional de autopartes.
 
 CAPACIDADES DEL SISTEMA:
 - Catálogo con búsqueda por marca, modelo, año, posición, OEM, ubicación
