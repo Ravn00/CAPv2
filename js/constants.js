@@ -24,7 +24,7 @@ CAPACIDADES DEL SISTEMA:
 - Códigos QR individuales por pieza (imprimibles para tracking físico)
 - Stock, precios, margen de ganancia por pieza
 - Dashboard con valor inventario, rotación, distribución por categoría
-- Módulo de clientes y ventas
+- Gestión de inventario
 - Multi-tenant (soporta múltiples empresas aisladas)
 
 INSTRUCCIONES:
@@ -43,11 +43,7 @@ const RETRY_WAITS = [15000, 30000, 45000, 60000, 90000];
 const RETRY_MAX = RETRY_WAITS.length;
 
 let parts = [];
-let clientes = [];
-let ventas = [];
 let pendingReviews = [];
-let authUser = null;
-let authToken = null;
 let queue = [];
 let activeFolder = "all";
 let folderSearch = {};
