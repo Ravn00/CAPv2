@@ -365,6 +365,8 @@ textarea.fld-input{font-family:inherit;font-size:12px;line-height:1.4}
 .ven-item-row .ven-item-name{flex:1;color:var(--text)}
 .ven-item-row .ven-item-qty{color:var(--t4);font-size:10px}
 .ven-item-row .ven-item-price{font-family:var(--font-display);font-weight:600;color:var(--gold);font-size:12px}
+.ven-item-price-input{width:90px;background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r4);color:var(--gold);font-family:var(--font-display);font-weight:600;font-size:11px;padding:2px 6px;text-align:right}
+.ven-item-subtotal{font-family:var(--font-display);font-weight:600;color:var(--t3);font-size:10px;min-width:60px;text-align:right}
 .ven-item-row .ven-item-del{background:none;border:none;color:var(--red-lt);cursor:pointer;font-size:14px;padding:0 2px;line-height:1}
 .ven-part-opt{padding:6px 8px;cursor:pointer;border-radius:var(--r6);font-size:11px;display:flex;justify-content:space-between;align-items:center;transition:background .1s}
 .ven-part-opt:hover{background:var(--s3)}

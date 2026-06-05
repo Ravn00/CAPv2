@@ -681,8 +681,13 @@ function renderVenItems() {
     const subtotal = (item.precio||0) * (item.cantidad||1);
     row.innerHTML = `<span class="ven-item-name">${escH(item.marca+" "+item.modelo)}</span>
       <span class="ven-item-qty">x${item.cantidad||1}</span>
-      <span class="ven-item-price">$${Math.round(subtotal).toLocaleString("es-CL")}</span>
+      <input class="ven-item-price-input" type="number" min="0" step="100" value="${item.precio||0}" data-idx="${i}" title="Precio de venta final"/>
+      <span class="ven-item-subtotal">$${Math.round(subtotal).toLocaleString("es-CL")}</span>
       <button class="ven-item-del" data-idx="${i}">&times;</button>`;
+    row.querySelector(".ven-item-price-input").oninput = (e) => {
+      _venItems[i].precio = parseFloat(e.target.value) || 0;
+      renderVenItems();
+    };
     row.querySelector(".ven-item-del").onclick = () => { _venItems.splice(i,1); renderVenItems(); };
     el.appendChild(row);
   });
