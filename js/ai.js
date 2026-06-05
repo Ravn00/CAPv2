@@ -92,16 +92,20 @@ async function processQueue() {
 
     // Handle based on confidence
     if (result._ok && result.confianza === "Alta") {
-      // Auto-save (existing behavior)
+      const extraPhotos = item.batchPhotos || [];
       const part = {
         id:item.id, preview:item.preview, previewFull:item.fileDataUrl||item.preview,
-        fileName:item.file.name, fileSize:item.file.size, sold:false,
+        fileName:item.file.name, fileSize:item.file.size,
         categoria:item.presetCat||result.categoria||"varios",
         marca:result.marca, modelo:result.modelo, años:result.años,
         descripcion:result.descripcion, posicion:result.posicion,
         confianza:result.confianza, _ok:result._ok,
-        addedAt:new Date().toLocaleString("es-CL")
+        addedAt:new Date().toLocaleString("es-CL"),
+        photos: extraPhotos.length ? [item.preview, ...extraPhotos.map(p => p.preview)] : undefined
       };
+      if (extraPhotos.length) {
+        part.batchFiles = extraPhotos.map(p => ({ preview: p.preview, fileDataUrl: p.fileDataUrl, fileName: p.fileName, fileSize: p.fileSize }));
+      }
       parts.push(part);
       await savePartToSupabase(part);
       saveParts();
@@ -110,7 +114,7 @@ async function processQueue() {
       doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
       await logScan(part.id, part.categoria, "success", ms);
     } else if (result._ok && result.confianza === "Media") {
-      // Add to pending reviews instead of auto-saving
+      const extraPhotos = item.batchPhotos || [];
       const review = {
         id:item.id, preview:item.preview, previewFull:item.fileDataUrl||item.preview,
         fileName:item.file.name, fileSize:item.file.size,
@@ -118,7 +122,9 @@ async function processQueue() {
         marca:result.marca, modelo:result.modelo, años:result.años,
         descripcion:result.descripcion, posicion:result.posicion,
         confianza:result.confianza, codigo_oem:result.codigo_oem||"",
-        addedAt:new Date().toLocaleString("es-CL")
+        addedAt:new Date().toLocaleString("es-CL"),
+        photos: extraPhotos.length ? [item.preview, ...extraPhotos.map(p => p.preview)] : undefined,
+        batchFiles: extraPhotos.map(p => ({ preview: p.preview, fileDataUrl: p.fileDataUrl, fileName: p.fileName, fileSize: p.fileSize }))
       };
       pendingReviews.push(review);
       savePendingReviews();
@@ -128,9 +134,28 @@ async function processQueue() {
       doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
       await logScan(review.id, review.categoria, "pending_review", ms);
     } else {
-      // Baja confidence or error: open manual entry with pre-filled data
-      replaceLoadingCard(item.id, null, "Manual");
-      openManualWithResult(result);
+      const extraPhotos = item.batchPhotos || [];
+      if (extraPhotos.length) {
+        const part = {
+          id:item.id, preview:item.preview, previewFull:item.fileDataUrl||item.preview,
+          fileName:item.file.name, fileSize:item.file.size,
+          categoria:item.presetCat||result.categoria||"varios",
+          marca:result.marca, modelo:result.modelo, años:result.años,
+          descripcion:result.descripcion, posicion:result.posicion,
+          confianza:result.confianza, _ok:result._ok,
+          addedAt:new Date().toLocaleString("es-CL"),
+          photos: [item.preview, ...extraPhotos.map(p => p.preview)],
+          batchFiles: extraPhotos.map(p => ({ preview: p.preview, fileDataUrl: p.fileDataUrl, fileName: p.fileName, fileSize: p.fileSize }))
+        };
+        parts.push(part);
+        await savePartToSupabase(part);
+        saveParts();
+        replaceLoadingCard(item.id, part);
+        await logScan(part.id, part.categoria, "manual_saved", Date.now()-t0);
+      } else {
+        replaceLoadingCard(item.id, null, "Manual");
+        openManualWithResult(result);
+      }
       const idx = queue.indexOf(item); if (idx >= 0) queue.splice(idx, 1);
       doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
       await logScan(item.id, result.categoria||item.presetCat||"varios", "manual_needed", ms);

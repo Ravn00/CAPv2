@@ -125,9 +125,10 @@ function buildPartCard(part) {
   const cat = CATS[part.categoria]||CATS.varios;
   const imgSrc = part.preview||part.previewFull||"";
   const estado = part.estado||(part.sold?"vendida":"disponible");
+  const photos = (part.photos && part.photos.length > 1) ? part.photos : null;
   const el = document.createElement("div");
   el.className="pcard"; el.id=`card-${part.id}`;
-  el.innerHTML = (imgSrc?`<img class="pcard-img" src="${escH(imgSrc)}" onclick="openLightbox('${escH(imgSrc)}')">`
+  el.innerHTML = (imgSrc?`<div class="pcard-img-wrap"><img class="pcard-img" src="${escH(imgSrc)}" onclick="openLightbox('${escH(imgSrc)}')">${photos?`<div class="pcard-gallery">${photos.map((s,i)=>`<img class="pcard-gallery-thumb${i===0?' on':''}" src="${escH(s)}" onclick="event.stopPropagation();const p=this.parentElement.parentElement;const m=p.querySelector('.pcard-img');const prev=m.src;m.src=this.src;this.src=prev;this.parentElement.querySelectorAll('.pcard-gallery-thumb').forEach(t=>t.classList.remove('on'));this.classList.add('on')">`).join('')}</div>`:''}</div>`
     :`<div class="pcard-img no-img">${cat.icon}</div>`)+
     `<div class="pcard-body">
       <div class="pcard-title">${escH(part.marca)} ${escH(part.modelo)}</div>
@@ -202,10 +203,11 @@ function buildEditCard(part) {
   const el = document.createElement("div");
   el.className="pcard"; el.id=`card-${part.id}`; el.style.flexDirection="column";
   const imgSrc = part.preview||part.previewFull||"";
+  const photos = (part.photos && part.photos.length > 1) ? part.photos : null;
   const margen= (editBuf.precioCompra>0&&editBuf.precioVenta>0) ? ((editBuf.precioVenta-editBuf.precioCompra)/editBuf.precioCompra*100) : null;
   const margenCls=margen!==null?(margen>=50?"ok":margen>=20?"warn":"bad"):"";
   const margenHtml=margen!==null?`<span class="margen-badge ${margenCls}" id="margen-edit-badge">${margen>=0?"+":""}${Math.round(margen)}%</span>`:`<span class="margen-badge" id="margen-edit-badge" style="display:none"></span>`;
-  el.innerHTML = (imgSrc?`<img src="${escH(imgSrc)}" style="width:100%;height:180px;object-fit:cover;cursor:zoom-in" onclick="openLightbox('${escH(imgSrc)}')">`:`<div style="width:100%;height:60px;display:flex;align-items:center;justify-content:center;background:var(--s3);color:var(--t4)">${cat.icon}</div>`)+
+  el.innerHTML = (imgSrc?`<div style="width:100%"><img src="${escH(imgSrc)}" style="width:100%;height:180px;object-fit:cover;cursor:zoom-in" onclick="openLightbox('${escH(imgSrc)}')">${photos?`<div style="display:flex;gap:3px;padding:4px;overflow-x:auto;background:var(--s2)">${photos.map((s,i)=>`<img src="${escH(s)}" style="width:36px;height:36px;object-fit:cover;border-radius:var(--r4);cursor:pointer;opacity:${i===0?1:.5};border:1.5px solid ${i===0?'var(--gold)':'transparent'};flex-shrink:0" onclick="event.stopPropagation();this.parentElement.previousElementSibling.src=this.src">`).join('')}</div>`:''}</div>`:`<div style="width:100%;height:60px;display:flex;align-items:center;justify-content:center;background:var(--s3);color:var(--t4)">${cat.icon}</div>`)+
     `<div style="padding:12px;display:flex;flex-direction:column;gap:9px">
       <div class="fld-row"><div style="flex:1"><div class="fld-label">Marca</div><input class="fld-input" data-f="marca" value="${escH(editBuf.marca||"")}"/></div>
         <div style="flex:1"><div class="fld-label">Modelo</div><input class="fld-input" data-f="modelo" value="${escH(editBuf.modelo||"")}"/></div></div>
@@ -794,7 +796,7 @@ function approveReview(i) {
     categoria: r.categoria, marca: r.marca, modelo: r.modelo,
     años: r.años, descripcion: r.descripcion, posicion: r.posicion,
     confianza: r.confianza, _ok: true,
-    codigoOem: r.codigo_oem,
+    codigoOem: r.codigo_oem, photos: r.photos, batchFiles: r.batchFiles,
     addedAt: r.addedAt
   };
   parts.push(part);
@@ -837,6 +839,7 @@ function editReview(i) {
       descripcion: $("m-desc").value.trim() || "Sin descripción",
       confianza: r.confianza, _ok: true, manual: true,
       codigoOem: $("m-oem").value.trim() || null,
+      photos: r.photos, batchFiles: r.batchFiles,
       estado, stock, addedAt: r.addedAt || new Date().toLocaleString("es-CL")
     };
     parts.push(part);

@@ -93,7 +93,6 @@ async function loadPartsFromSupabase() {
   if (!data || !Array.isArray(data)) return;
   parts = data.map(d => {
     const p = { id: d.id, ...(d.data || {}), created_at: d.created_at };
-    // Prefer Supabase Storage URL (visible on all devices) over base64 blob
     if (p.photoUrl) {
       p.preview     = p.photoUrl;
       p.previewFull = p.photoUrl;
@@ -101,12 +100,16 @@ async function loadPartsFromSupabase() {
       if (p.preview && !p.previewFull) p.previewFull = p.preview;
       if (!p.preview && p.previewFull) p.preview = p.previewFull;
     }
+    // Ensure photos array exists
+    if (!p.photos || !Array.isArray(p.photos)) {
+      p.photos = p.photoUrl ? [p.photoUrl] : (p.preview ? [p.preview] : []);
+    }
     return p;
   });
 }
 
 async function savePartToSupabase(part) {
-  const { fileDataUrl, file, ...rest } = part;
+  const { fileDataUrl, file, batchFiles, ...rest } = part;
 
   // Upload full photo to Storage if not already uploaded
   if (!rest.photoUrl) {
@@ -117,7 +120,6 @@ async function savePartToSupabase(part) {
         rest.photoUrl    = url;
         rest.preview     = url;
         rest.previewFull = url;
-        // Update local part too so this device also shows the URL
         const idx = parts.findIndex(p => p.id === part.id);
         if (idx > -1) {
           parts[idx].photoUrl    = url;
@@ -129,12 +131,32 @@ async function savePartToSupabase(part) {
     }
   }
 
+  // Upload additional batch photos
+  const photoUrls = [rest.photoUrl || rest.preview || ""];
+  if (batchFiles && batchFiles.length) {
+    for (let i = 0; i < batchFiles.length; i++) {
+      const bf = batchFiles[i];
+      const dataUrl = bf.fileDataUrl || bf.preview;
+      if (dataUrl && dataUrl.startsWith("data:")) {
+        const url = await sbUploadPhoto(`${part.id}-${i+1}`, dataUrl);
+        if (url) photoUrls.push(url);
+      }
+    }
+    rest.photos = photoUrls;
+    // Update local part
+    const idx = parts.findIndex(p => p.id === part.id);
+    if (idx > -1) {
+      parts[idx].photos = photoUrls;
+      saveParts();
+    }
+  }
+
   rest.company_id = companyId || null;
   const body = { data: rest };
   const existing = await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(part.id)}&select=id`);
   if (existing && existing.length > 0) {
     await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(part.id)}`, "PATCH", body);
-    await sbLogAudit(part.id, "update", { marca: part.marca, modelo: part.modelo, sold: part.sold });
+    await sbLogAudit(part.id, "update", { marca: part.marca, modelo: part.modelo });
   } else {
     await sbFetch("/rest/v1/partes", "POST", { id: part.id, data: rest });
     await sbLogAudit(part.id, "create", { marca: part.marca, modelo: part.modelo });
