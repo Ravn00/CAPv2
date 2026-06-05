@@ -71,7 +71,7 @@ const progLabel = $("prog-label");
 const queueWrap = $("queue-wrap");
 const queueRow = $("queue-row");
 const folderContent = $("folder-content");
-const tabsScroll = $("tabs-scroll");
+
 const fabExport = $("fab-export");
 
 // ---
