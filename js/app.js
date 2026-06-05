@@ -23,8 +23,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     const tab = document.getElementById('tab-'+btn.dataset.tab);
     if (tab) tab.classList.add('on');
     if (btn.dataset.tab === 'dashboard') renderDashboard();
-    if (btn.dataset.tab === 'clientes') renderClientes($("cli-search").value);
-    if (btn.dataset.tab === 'ventas') renderVentas($("ven-search").value);
+
   };
 });
 
@@ -40,101 +39,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   };
 })();
 
-// --- Clientes event handlers ---
-$("cli-add-btn").onclick = () => openClienteModal(null);
-$("cli-save").onclick = saveClienteFromModal;
-$("cli-cancel").onclick = closeClienteModal;
-$("cli-del-btn").onclick = () => { if (_editClienteId) { closeClienteModal(); deleteCliente(_editClienteId); } };
-$("cli-search").oninput = function() { renderClientes(this.value); };
 
-// --- Ventas event handlers ---
-$("ven-add-btn").onclick = openNuevaVenta;
-$("ven-save").onclick = saveVentaFromModal;
-$("ven-cancel").onclick = closeVentaModal;
-$("ven-search").oninput = function() { renderVentas(this.value); };
-// --- Auth event handlers ---
-$("btn-auth").onclick = () => {
-  if (authUser) {
-    $("auth-signin").style.display = "none";
-    $("auth-signup").style.display = "none";
-    $("auth-signout").style.display = "";
-    $("auth-title").textContent = "Sesión activa";
-    $("auth-sub").textContent = `Conectado como ${authUser.email || authUser.id}`;
-    $("auth-error").textContent = "";
-    $("auth-pass").style.display = "none";
-  } else {
-    $("auth-signin").style.display = "";
-    $("auth-signup").style.display = "";
-    $("auth-signout").style.display = "none";
-    $("auth-title").textContent = "Iniciar Sesión";
-    $("auth-sub").textContent = "Ingresá con tu email registrado";
-    $("auth-pass").style.display = "";
-    $("auth-email").value = "";
-    $("auth-pass").value = "";
-    $("auth-error").textContent = "";
-  }
-  $("auth-modal").classList.add("on");
-};
-$("auth-signin").onclick = async () => {
-  const email = $("auth-email").value.trim();
-  const pass = $("auth-pass").value;
-  if (!email || !pass) { $("auth-error").textContent = "Completá email y contraseña"; return; }
-  $("auth-error").textContent = "Ingresando...";
-  const res = await sbSignIn(email, pass);
-  if (res.error) { $("auth-error").textContent = res.error; return; }
-  $("auth-error").textContent = "";
-  closeModal("auth-modal");
-  updateAuthUI();
-  toast("Sesión iniciada");
-};
-$("auth-signup").onclick = async () => {
-  const email = $("auth-email").value.trim();
-  const pass = $("auth-pass").value;
-  if (!email || !pass) { $("auth-error").textContent = "Completá email y contraseña"; return; }
-  if (pass.length < 6) { $("auth-error").textContent = "Mínimo 6 caracteres"; return; }
-  $("auth-error").textContent = "Registrando...";
-  const res = await sbSignUp(email, pass);
-  if (res.error) { $("auth-error").textContent = res.error; return; }
-  $("auth-error").textContent = "Registro exitoso. Revisá tu email para confirmar (si requiere verificación) o iniciá sesión ahora.";
-  const signin = await sbSignIn(email, pass);
-  if (signin.ok) {
-    closeModal("auth-modal");
-    updateAuthUI();
-    toast("Sesión iniciada");
-  }
-};
-$("auth-signout").onclick = () => {
-  sbSignOut();
-  closeModal("auth-modal");
-  updateAuthUI();
-  toast("Sesión cerrada");
-};
-function updateAuthUI() {
-  const badge = $("auth-user-badge");
-  const icon = $("btn-auth").querySelector("svg");
-  if (authUser) {
-    badge.style.display = "";
-    badge.textContent = authUser.email || authUser.id;
-    if (icon) icon.innerHTML = `<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`;
-  } else {
-    badge.style.display = "none";
-    badge.textContent = "";
-    if (icon) icon.innerHTML = `<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>`;
-  }
-}
-
-$("ven-part-search").oninput = function() {
-  const q = this.value.trim().toLowerCase();
-  const el = $("ven-part-results"); el.innerHTML = "";
-  if (!q) return;
-  const matches = parts.filter(p => (p.marca||"").toLowerCase().includes(q) || (p.modelo||"").toLowerCase().includes(q) || (p.descripcion||"").toLowerCase().includes(q) || (p.codigoOem||"").toLowerCase().includes(q)).slice(0,15);
-  matches.forEach(p => {
-    const div = document.createElement("div"); div.className = "ven-part-opt";
-    div.innerHTML = `<span>${escH(p.marca+" "+p.modelo)}</span><span style="font-family:var(--font-display);font-weight:600;color:var(--gold);font-size:12px">$${Math.round(p.precioVenta||0).toLocaleString("es-CL")}</span>`;
-    div.onclick = () => addPartToVenta(p.id);
-    el.appendChild(div);
-  });
-};
 
 // --- QR ---
 let _qrPart = null;
