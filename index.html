@@ -52,6 +52,7 @@ input,select,textarea{font-family:var(--font-mono);transition:border-color .2s}
 a{color:var(--gold)}
 
 @keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:16px;height:16px;border:2px solid var(--t4);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes shimmer{0%{background-position:-300% 0}100%{background-position:300% 0}}
@@ -167,6 +168,7 @@ a{color:var(--gold)}
 .up-cat-icon{width:20px;height:20px;flex-shrink:0;color:var(--t3)}
 .up-cat-count{position:absolute;top:8px;right:8px;background:var(--s4);border-radius:6px;padding:1px 6px;font-size:9px;color:var(--t4);font-weight:500}
 .up-cat-label{font-size:10px;font-weight:500;color:var(--t3);letter-spacing:.8px;text-transform:uppercase}
+.cat-has-items{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .up-hint{font-size:10px;color:var(--t4);text-align:center;line-height:1.6;padding:0 8px}
 
 /* --- Queue --- */
@@ -398,7 +400,7 @@ a{color:var(--gold)}
     <div class="fld"><div class="fld-label">Categoría</div>
       <select class="fld-input" id="m-cat">
         <option value="parachoques">Parachoques</option>
-        <option value="opticos">??pticos</option>
+        <option value="opticos">Ópticos</option>
         <option value="focos">Focos</option>
         <option value="guardabarros">Guardabarros</option>
         <option value="capots">Capots</option>
@@ -770,7 +772,7 @@ const CAT_SVGS = {
 };
 const CATS = {
   parachoques:{label:"Parachoques",icon:CAT_SVGS.parachoques},
-  opticos:{label:"??pticos",icon:CAT_SVGS.opticos},
+  opticos:{label:"Ópticos",icon:CAT_SVGS.opticos},
   focos:{label:"Focos",icon:CAT_SVGS.focos},
   guardabarros:{label:"Guardabarros",icon:CAT_SVGS.guardabarros},
   capots:{label:"Capots",icon:CAT_SVGS.capots},
@@ -1146,15 +1148,7 @@ async function handleFiles(files, presetCat) {
       });
       if (!raw) { return { file, id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, preview, fileDataUrl, status:"waiting", fileSize: file.size, presetCat }; }
       let img;
-      if (window.createImageBitmap) {
-        const blob = await fetch(raw).then(r => r.blob()).catch(() => null);
-        if (blob) {
-          try { img = await createImageBitmap(blob, { resizeWidth: Math.min(file.width || 800, 800), resizeHeight: Math.min(file.height || 800, 800), resizeQuality: "medium" }); } catch(_) {}
-        }
-      }
-      if (!img) {
-        img = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = raw; });
-      }
+      img = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = raw; });
       if (img) {
         let w = img.width, h = img.height;
         const max = 800;
@@ -1354,17 +1348,18 @@ async function processQueue() {
     await savePartToSupabase(part);
     saveParts();
     replaceLoadingCard(item.id, part);
-    queue = queue.filter(q => q.id !== item.id);
+    const idx = queue.indexOf(item); if (idx >= 0) queue.splice(idx, 1);
     doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
     await logScan(part.id, part.categoria, result._ok?"success":"error", ms);
     return false;
   }
 
-  while (queue.length > 0) {
+    while (queue.length > 0) {
     while (queuePaused && queue.length > 0) { await new Promise(r => setTimeout(r, 500)); }
     if (queue.length === 0) break;
-    const skipped = await doOne(queue[0]);
-    if (skipped) queue = queue.filter(q => q.id !== queue[0]?.id);
+    const item = queue[0];
+    const skipped = await doOne(item);
+    if (skipped) { const idx = queue.indexOf(item); if (idx >= 0) queue.splice(idx, 1); }
   }
 
   processing = false; queuePaused = false;
@@ -1437,7 +1432,7 @@ function updateUploadCounts() {
     if (!el) return;
     const n = parts.filter(p=>p.categoria===k).length;
     el.textContent = n;
-    $(`ucb-${k}`)?.classList.toggle("has-items", n > 0);
+    $(`ucb-${k}`)?.classList.toggle("cat-has-items", n > 0);
   });
 }
 function buildCategorySelect() {
@@ -1480,7 +1475,7 @@ function renderFolderContent() {
   searchInput.type = "text";
   searchInput.placeholder = "Buscar por marca o modelo…";
   searchInput.value = folderSearch[activeFolder] || "";
-  searchInput.oninput = e => { folderSearch[activeFolder] = e.target.value; renderFolderContent(); };
+  let searchDebounce; searchInput.oninput = e => { clearTimeout(searchDebounce); searchDebounce = setTimeout(() => { folderSearch[activeFolder] = e.target.value; renderFolderContent(); }, 250); };
   searchWrap.appendChild(searchInput);
   toolbar.appendChild(searchWrap);
   const filterGroup = document.createElement("div");
@@ -1618,7 +1613,7 @@ function renderQueue() {
       cancelBtn.className = "q-cancel";
       cancelBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
       cancelBtn.title = "Cancelar";
-      cancelBtn.onclick = (e) => { e.stopPropagation(); cancelledItems.add(item.id); queue = queue.filter(q => q.id !== item.id); renderQueue(); };
+      cancelBtn.onclick = (e) => { e.stopPropagation(); cancelledItems.add(item.id); queue = queue.filter(q => q.id !== item.id); renderQueue(); if (processing && queue.length === 0) { processing=false; queuePaused=false; procPill.classList.remove("on"); progWrap.classList.remove("on"); progFill.style.width="0%"; totalBatch=0; doneBatch=0; } };
       d.appendChild(cancelBtn);
     }
     queueRow.appendChild(d);
@@ -1767,7 +1762,7 @@ $("toast-undo").onclick = () => {
 function openLightbox(src) { $("lb-img").src=src; $("lightbox").classList.add("on"); }
 function closeLightbox() { $("lightbox").classList.remove("on"); }
 function closeModal(id) { $(id).classList.remove("on"); }
-function escH(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function escH(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;").replace(/\//g,"&#x2F;"); }
 
 // ---
 $("btn-clear-all").onclick = () => {
