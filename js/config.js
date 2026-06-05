@@ -21,8 +21,7 @@ let deviceId;
 let configCache = null;
 
 async function sbFetch(path, method="GET", body=null) {
-  const token = authToken || SB_KEY;
-  const opts = { method, headers: { "apikey": SB_KEY, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } };
+  const opts = { method, headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" } };
   if (body) opts.body = JSON.stringify(body);
   try {
     const r = await fetch(SB_URL + path, opts);
