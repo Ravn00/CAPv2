@@ -10,7 +10,7 @@ async function initApp() {
   }
   // Prompt for company if not set
   if (!companyId) {
-    const name = prompt("Nombre de la empresa:", "Desarmaduría Paola");
+    const name = prompt("Nombre de la empresa:", "CAPv2");
     if (name && name.trim()) {
       companyId = name.trim().toLowerCase().replace(/\s+/g, "-");
       try { localStorage.setItem("ap_company_id", companyId); } catch(_) {}
