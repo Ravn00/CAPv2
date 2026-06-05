@@ -172,10 +172,7 @@
     <button class="ico-btn" id="theme-btn" aria-label="Cambiar tema" title="Cambiar tema">
       <svg viewBox="0 0 24 24" aria-hidden="true" id="theme-icon"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
-    <span id="auth-user-badge" style="display:none;font-size:10px;color:var(--t3);padding:2px 6px"></span>
-    <button class="ico-btn" id="btn-auth" aria-label="Iniciar sesión" title="Iniciar sesión">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </button>
+
     <div id="lic-pill" onclick="showLicenseInfo()"><span class="lic-dot"></span><span id="lic-pill-txt">Licencia</span></div>
   </div>
 </header>
@@ -208,8 +205,7 @@
 <div class="tab-bar">
   <button class="tab-btn on" data-tab="catalog">📋 Catálogo</button>
   <button class="tab-btn" data-tab="dashboard">📊 Dashboard</button>
-  <button class="tab-btn" data-tab="clientes">👤 Clientes</button>
-  <button class="tab-btn" data-tab="ventas">💰 Ventas</button>
+
 </div>
 
 <!-- CATALOG TAB -->
@@ -258,7 +254,6 @@
     <div class="dash-card"><div class="dash-label">Margen Promedio</div><div class="dash-val green" id="dash-margen">0%</div></div>
     <div class="dash-card"><div class="dash-label">Rotación</div><div class="dash-val" id="dash-rotacion">0%</div></div>
     <div class="dash-card"><div class="dash-label">Reservadas</div><div class="dash-val reserv" id="dash-resv">0</div></div>
-    <div class="dash-card"><div class="dash-label">Ventas del Mes</div><div class="dash-val green" id="dash-ventas-mes">$0</div></div>
     <div class="dash-card"><div class="dash-label">Sin Ubicación</div><div class="dash-val" id="dash-sin-ubic" style="color:var(--red-lt)">0</div></div>
     <div class="dash-card"><div class="dash-label">Sin Precio</div><div class="dash-val" id="dash-sin-precio" style="color:var(--amber-lt)">0</div></div>
   </div>
@@ -268,81 +263,7 @@
   <div class="dash-table-wrap"><table class="dash-table" id="dash-table"><thead><tr><th>Fecha</th><th>Pieza</th><th>Estado</th><th>Valor</th></tr></thead><tbody id="dash-tbody"></tbody></table></div>
 </div>
 
-<!-- CLIENTES TAB -->
-<div class="tab-panel" id="tab-clientes">
-  <div class="cli-toolbar">
-    <input class="cli-search" id="cli-search" placeholder="Buscar cliente…" autocomplete="off"/>
-    <button class="btn-primary" id="cli-add-btn" style="flex:none;padding:7px 14px;font-size:11px">+ Agregar</button>
-  </div>
-  <div id="cli-list"></div>
-</div>
 
-<!-- CLIENTE MODAL -->
-<div class="modal-bg" id="cli-modal">
-  <div class="modal-sheet">
-    <div class="modal-title" id="cli-modal-title">Nuevo Cliente</div>
-    <div class="fld"><div class="fld-label">Nombre</div><input class="fld-input" id="cli-nombre" placeholder="Nombre completo"/></div>
-    <div class="fld"><div class="fld-label">Teléfono</div><input class="fld-input" id="cli-telefono" placeholder="+56 9 1234 5678"/></div>
-    <div class="fld"><div class="fld-label">Email</div><input class="fld-input" id="cli-email" type="email" placeholder="cliente@email.com"/></div>
-    <div class="fld"><div class="fld-label">Dirección</div><input class="fld-input" id="cli-direccion" placeholder="Calle, número, comuna"/></div>
-    <div class="fld"><div class="fld-label">Notas</div><textarea class="fld-input" id="cli-notas" rows="3" placeholder="Notas opcionales" style="resize:vertical"></textarea></div>
-    <button class="btn-ghost-sm" id="cli-del-btn" style="display:none;margin-top:6px;color:var(--red-lt)">🗑 Eliminar</button>
-    <div class="modal-btns">
-      <button class="btn-primary" id="cli-save">Guardar</button>
-      <button class="btn-ghost-sm" id="cli-cancel">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- VENTAS TAB -->
-<div class="tab-panel" id="tab-ventas">
-  <div class="cli-toolbar">
-    <input class="cli-search" id="ven-search" placeholder="Buscar venta…" autocomplete="off"/>
-    <button class="btn-primary" id="ven-add-btn" style="flex:none;padding:7px 14px;font-size:11px">+ Nueva Venta</button>
-  </div>
-  <div class="dash-grid" style="padding-top:0">
-    <div class="dash-card"><div class="dash-label">Ventas Totales</div><div class="dash-val gold" id="ven-total-count">0</div></div>
-    <div class="dash-card"><div class="dash-label">Ingresos Totales</div><div class="dash-val" id="ven-total-ingresos">$0</div></div>
-  </div>
-  <div id="ven-list"></div>
-</div>
-
-<!-- NUEVA VENTA MODAL -->
-<div class="modal-bg" id="ven-modal">
-  <div class="modal-sheet" style="max-width:520px">
-    <div class="modal-title" id="ven-modal-title">Nueva Venta</div>
-    <div class="modal-sub">Seleccioná cliente y agregá partes</div>
-    <div class="fld"><div class="fld-label">Cliente</div>
-      <select class="fld-input" id="ven-cliente"><option value="">— Cliente ocasional —</option></select>
-    </div>
-    <div class="fld" style="margin-top:8px"><input class="fld-input" id="ven-part-search" placeholder="Buscar parte para agregar…" autocomplete="off"/></div>
-    <div id="ven-part-results" style="max-height:160px;overflow-y:auto;margin-bottom:8px"></div>
-    <div style="font-size:10px;color:var(--t4);margin-bottom:4px">Partes en esta venta:</div>
-    <div id="ven-items"></div>
-    <div style="text-align:right;font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--gold);padding:8px 0" id="ven-total">Total: $0</div>
-    <div class="modal-btns">
-      <button class="btn-primary" id="ven-save">Guardar Venta</button>
-      <button class="btn-ghost-sm" id="ven-cancel">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- AUTH MODAL -->
-<div class="modal-bg" id="auth-modal">
-  <div class="modal-sheet" style="max-width:360px">
-    <div class="modal-title" id="auth-title">Iniciar Sesión</div>
-    <div class="modal-sub" id="auth-sub">Ingresá con tu email registrado</div>
-    <div class="fld"><div class="fld-label">Email</div><input class="fld-input" id="auth-email" type="email" placeholder="vendedor@ejemplo.com" autocomplete="email"/></div>
-    <div class="fld" style="margin-top:8px"><div class="fld-label">Contraseña</div><input class="fld-input" id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
-    <div id="auth-error" style="color:var(--red-lt);font-size:10px;margin-top:6px;min-height:16px"></div>
-    <div class="modal-btns">
-      <button class="btn-primary" id="auth-signin">Iniciar Sesión</button>
-      <button class="btn-ghost-sm" id="auth-signup">Registrarse</button>
-      <button class="btn-ghost-sm" id="auth-signout" style="display:none;color:var(--red-lt)">Cerrar Sesión</button>
-      <button class="btn-ghost-sm" onclick="closeModal('auth-modal')">Cancelar</button>
-    </div>
-  </div>
-</div>
 
 <!-- TOAST -->
 <div id="toast"><span id="toast-msg"></span><button id="toast-undo" style="display:none">Deshacer</button></div>
