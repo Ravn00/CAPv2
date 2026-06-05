@@ -81,7 +81,7 @@ $("qr-print").onclick = () => {
     <h2>${escH(part.marca)} ${escH(part.modelo)}</h2>
     <p>${escH(part.descripcion||"")} · ${escH(part.años)}</p>
     <img src="${img.src}" crossorigin="anonymous"/>
-    <p>Código QR · Desarmaduría Paola</p>
+    <p>Código QR · CAPv2</p>
     <script>window.onload=function(){window.print();}<\/script></body></html>`);
   w.document.close();
 };
