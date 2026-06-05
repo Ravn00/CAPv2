@@ -127,7 +127,7 @@
     </div>
     <div class="fld-row">
       <div class="fld"><div class="fld-label">Código OEM</div><input class="fld-input" id="m-oem" placeholder="12345-ABC"/></div>
-      <div class="fld"><div class="fld-label">Ubicación</div><input class="fld-input" id="m-ubicacion" placeholder="Estante A1"/></div>
+      <div class="fld"><div class="fld-label">Ubicación</div><input class="fld-input" id="m-ubicacion" placeholder="A-03-02-05 (Sector-Estante-Nivel-Posición)"/></div>
     </div>
     <div class="modal-btns">
       <button class="btn-primary" id="manual-save">Agregar parte</button>
@@ -195,6 +195,10 @@
     <div class="stat-label">Vendidos</div>
   </div>
   <div class="stat-card">
+    <div class="stat-val reserv" id="stat-resv">0</div>
+    <div class="stat-label">Reservados</div>
+  </div>
+  <div class="stat-card">
     <div class="stat-val default" id="stat-cats">0</div>
     <div class="stat-label">Categorías</div>
   </div>
@@ -253,6 +257,7 @@
     <div class="dash-card"><div class="dash-label">Precio Promedio</div><div class="dash-val" id="dash-promedio">$0</div></div>
     <div class="dash-card"><div class="dash-label">Margen Promedio</div><div class="dash-val green" id="dash-margen">0%</div></div>
     <div class="dash-card"><div class="dash-label">Rotación</div><div class="dash-val" id="dash-rotacion">0%</div></div>
+    <div class="dash-card"><div class="dash-label">Reservadas</div><div class="dash-val reserv" id="dash-resv">0</div></div>
     <div class="dash-card"><div class="dash-label">Ventas del Mes</div><div class="dash-val green" id="dash-ventas-mes">$0</div></div>
     <div class="dash-card"><div class="dash-label">Sin Ubicación</div><div class="dash-val" id="dash-sin-ubic" style="color:var(--red-lt)">0</div></div>
     <div class="dash-card"><div class="dash-label">Sin Precio</div><div class="dash-val" id="dash-sin-precio" style="color:var(--amber-lt)">0</div></div>

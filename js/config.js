@@ -40,6 +40,20 @@ async function sbFetch(path, method="GET", body=null) {
   }
 }
 
+async function sbFetchAll(path) {
+  let all = [], page = 0, pageSize = 1000;
+  while (true) {
+    const offset = page * pageSize;
+    const url = `${path}&offset=${offset}&limit=${pageSize}`;
+    const data = await sbFetch(url, "GET");
+    if (!data || data.length === 0) break;
+    all = all.concat(data);
+    if (data.length < pageSize) break;
+    page++;
+  }
+  return all;
+}
+
 // Read config from Supabase
 async function readConfig() {
   try {

@@ -140,7 +140,7 @@ $("ven-part-search").oninput = function() {
 let _qrPart = null;
 function showQR(part) {
   _qrPart = part;
-  $("qr-sub").textContent = `${part.marca} ${part.modelo} · ${part.años}`;
+  $("qr-sub").textContent = `${part.marca} ${part.modelo} · ${part.años}${part.ubicacion ? ` · 📍 ${part.ubicacion}` : ""}`;
   const c = $("qr-container"); c.innerHTML = "";
   const url = location.href.split("?")[0] + "?part=" + part.id;
   const img = document.createElement("img");

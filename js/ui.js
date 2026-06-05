@@ -8,9 +8,11 @@ function renderAll() {
 function updateHeaderStats() {
   const disp = parts.filter(p=>(p.estado||(p.sold?"vendida":"disponible"))==="disponible").length;
   const vend = parts.filter(p=>(p.estado||(p.sold?"vendida":"disponible"))==="vendida").length;
+  const resv = parts.filter(p=>(p.estado||(p.sold?"vendida":"disponible"))==="reservada").length;
   const cats = new Set(parts.map(p=>p.categoria).filter(Boolean)).size;
   $("stat-avail").textContent = disp;
   $("stat-sold").textContent = vend;
+  if($("stat-resv")) $("stat-resv").textContent = resv;
   const t = $("stat-total"); if(t) t.textContent = parts.length;
   const c = $("stat-cats"); if(c) c.textContent = cats;
 }
@@ -51,6 +53,14 @@ function fuzzyMatch(q, text) {
   }
   return qi === lq.length;
 }
+function validateUbicacion(u) {
+  if (!u || !u.trim()) return true;
+  return /^[A-Z]-\d{2}-\d{2}-\d{2}$/.test(u.trim());
+}
+function multiWordSearch(q, text) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  return words.every(w => fuzzyMatch(w, text));
+}
 function renderFolderContent() {
   const el = folderContent;
   const s = (folderSearch[activeFolder]||"").toLowerCase();
@@ -61,7 +71,7 @@ function renderFolderContent() {
     if (sf==="disp" && pEstado!=="disponible") return false;
     if (sf==="vend" && pEstado!=="vendida") return false;
     if (sf==="resv" && pEstado!=="reservada") return false;
-    if (s && !fuzzyMatch(s, (p.marca+p.modelo+p.años+p.descripcion+p.posicion+(p.codigoOem||"")+(p.ubicacion||"")+p.categoria))) return false;
+    if (s && !multiWordSearch(s, (p.marca+p.modelo+p.años+p.descripcion+p.posicion+(p.codigoOem||"")+(p.ubicacion||"")+p.categoria))) return false;
     return true;
   }).slice().reverse();
   el.innerHTML = "";
@@ -154,9 +164,8 @@ function buildPartCard(part) {
     const p = parts.find(p => p.id === part.id);
     if (!p) return;
     p.estado = next;
-    if (next === "vendida") { p.fechaVenta = new Date().toLocaleString("es-CL"); p.sold = true; }
-    else if (next === "descartada") { p.sold = true; }
-    else { p.sold = false; if (oldEstado === "vendida") p.fechaVenta = null; }
+    if (next === "vendida") { p.fechaVenta = new Date().toLocaleString("es-CL"); }
+    else if (oldEstado === "vendida") { p.fechaVenta = null; }
     savePartToSupabase(p);
     saveParts();
     updateHeaderStats();
@@ -165,9 +174,8 @@ function buildPartCard(part) {
       const pp = parts.find(pp => pp.id === part.id);
       if (!pp) return;
       pp.estado = oldEstado;
-      if (oldEstado === "vendida") { pp.fechaVenta = new Date().toLocaleString("es-CL"); pp.sold = true; }
-      else if (oldEstado === "descartada") { pp.sold = true; }
-      else { pp.sold = false; if (next === "vendida") pp.fechaVenta = null; }
+      if (oldEstado === "vendida") { pp.fechaVenta = new Date().toLocaleString("es-CL"); }
+      else if (next === "vendida") { pp.fechaVenta = null; }
       savePartToSupabase(pp);
       saveParts();
       updateHeaderStats();
@@ -210,8 +218,8 @@ function buildEditCard(part) {
       <div class="precio-wrap"><div style="flex:1"><div class="fld-label">Precio Compra</div><input class="fld-input" data-f="precioCompra" type="number" step="0.01" min="0" value="${editBuf.precioCompra||""}"/></div>
         <div style="flex:1"><div class="fld-label">Precio Venta</div><input class="fld-input" data-f="precioVenta" type="number" step="0.01" min="0" value="${editBuf.precioVenta||""}"/></div>
         ${margenHtml}</div>
-      <div class="fld-row"><div style="flex:1"><div class="fld-label">Código OEM</div><input class="fld-input" data-f="codigoOem" value="${escH(editBuf.codigoOem||"")}"/></div>
-        <div style="flex:1"><div class="fld-label">Ubicación</div><input class="fld-input" data-f="ubicacion" value="${escH(editBuf.ubicacion||"")}"/></div></div>
+      <div class="fld-row">        <div style="flex:1"><div class="fld-label">Código OEM</div><input class="fld-input" data-f="codigoOem" value="${escH(editBuf.codigoOem||"")}"/></div>
+        <div style="flex:1"><div class="fld-label">Ubicación</div><input class="fld-input" data-f="ubicacion" placeholder="A-03-02-05" value="${escH(editBuf.ubicacion||"")}"/></div></div>
       <div style="display:flex;gap:8px"><button class="btn-primary" id="sv-${part.id}">Guardar</button><button class="btn-ghost-sm" id="cn-${part.id}">Cancelar</button></div>
     </div>`;
   el.querySelectorAll(".fld-input").forEach(i => { i.oninput = i.onchange = e => { editBuf[e.target.dataset.f]=e.target.value; if(e.target.dataset.f==="precioCompra"||e.target.dataset.f==="precioVenta")calcMargenEdit(); }; });
@@ -221,6 +229,8 @@ function buildEditCard(part) {
     const pos = (editBuf.posicion || "").trim().toLowerCase();
     const validPos = ["delantero","trasero","izquierdo","derecho","central","no determinado",""];
     if (pos && !validPos.includes(pos)) { toast("Posición: Delantero, Trasero, Izquierdo, Derecho o Central"); return; }
+    const editUbic = (editBuf.ubicacion || "").trim();
+    if (editUbic && !validateUbicacion(editUbic)) { toast("Ubicación: formato A-03-02-05 (Letra-NN-NN-NN)"); return; }
     if(editBuf.stock)editBuf.stock=parseInt(editBuf.stock)||1;
     if(editBuf.precioCompra)editBuf.precioCompra=parseFloat(editBuf.precioCompra)||null;
     if(editBuf.precioVenta)editBuf.precioVenta=parseFloat(editBuf.precioVenta)||null;
@@ -335,6 +345,8 @@ function calcMargen(){
   }else{badge.style.display="none"}
 }
 $("manual-save").onclick=async ()=>{
+  const ubic=$("m-ubicacion").value.trim();
+  if (ubic && !validateUbicacion(ubic)) { toast("Ubicación: formato A-03-02-05 (Letra-NN-NN-NN)"); return; }
   const marca=$("m-marca").value.trim()||"Sin marca";
   const modelo=$("m-modelo").value.trim()||"Sin modelo";
   const estado=$("m-estado").value;
@@ -466,6 +478,7 @@ function renderDashboard() {
   });
   const totalVentasMes = ventasMes.reduce((s,v) => s+(v.total||0), 0);
 
+  const resv = parts.filter(p=>(p.estado||(p.sold?"vendida":"disponible"))==="reservada").length;
   const sinUbic = parts.filter(p => !p.ubicacion).length;
   const sinPrecio = parts.filter(p => !p.precioVenta || p.precioVenta <= 0).length;
 
@@ -473,6 +486,7 @@ function renderDashboard() {
   $("dash-promedio").textContent = "$"+Math.round(precioProm).toLocaleString("es-CL");
   $("dash-margen").textContent = Math.round(margenProm)+"%";
   $("dash-rotacion").textContent = rotacion+"%";
+  if($("dash-resv")) $("dash-resv").textContent = resv;
   $("dash-ventas-mes").textContent = "$"+Math.round(totalVentasMes).toLocaleString("es-CL");
   $("dash-sin-ubic").textContent = sinUbic;
   $("dash-sin-precio").textContent = sinPrecio;
@@ -771,7 +785,7 @@ function approveReview(i) {
   if (!r) return;
   const part = {
     id: r.id, preview: r.preview, previewFull: r.previewFull,
-    fileName: r.fileName, fileSize: r.fileSize, sold: false,
+    fileName: r.fileName, fileSize: r.fileSize, estado: "disponible",
     categoria: r.categoria, marca: r.marca, modelo: r.modelo,
     años: r.años, descripcion: r.descripcion, posicion: r.posicion,
     confianza: r.confianza, _ok: true,
@@ -811,7 +825,7 @@ function editReview(i) {
     const stock = parseInt($("m-stock").value) || 1;
     const part = {
       id: r.id, preview: r.preview, previewFull: r.previewFull,
-      fileName: r.fileName, fileSize: r.fileSize, sold: false,
+      fileName: r.fileName, fileSize: r.fileSize, estado,
       categoria: $("m-cat").value, marca, modelo,
       años: $("m-años").value.trim() || "No determinado",
       posicion: $("m-pos").value.trim() || "No determinado",

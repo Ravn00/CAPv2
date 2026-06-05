@@ -89,7 +89,7 @@ async function sbUploadPhoto(partId, dataUrl) {
 }
 
 async function loadPartsFromSupabase() {
-  const data = await sbFetch("/rest/v1/partes?select=id,data,created_at&order=created_at.desc");
+  const data = await sbFetchAll("/rest/v1/partes?select=id,data,created_at&order=created_at.desc");
   if (!data || !Array.isArray(data)) return;
   parts = data.map(d => {
     const p = { id: d.id, ...(d.data || {}), created_at: d.created_at };
@@ -271,7 +271,7 @@ async function checkMaintenance() {
 // CLIENTES CRUD
 // ---
 async function loadClientesFromSupabase() {
-  const data = await sbFetch("/rest/v1/clientes?select=id,data,created_at&order=created_at.desc");
+  const data = await sbFetchAll("/rest/v1/clientes?select=id,data,created_at&order=created_at.desc");
   if (!data || !Array.isArray(data)) return;
   clientes = data.map(d => ({ id: d.id, ...(d.data || {}), created_at: d.created_at }));
 }
@@ -294,7 +294,7 @@ async function deleteClienteFromSupabase(clienteId) {
 // VENTAS CRUD
 // ---
 async function loadVentasFromSupabase() {
-  const data = await sbFetch("/rest/v1/ventas?select=id,data,created_at&order=created_at.desc");
+  const data = await sbFetchAll("/rest/v1/ventas?select=id,data,created_at&order=created_at.desc");
   if (!data || !Array.isArray(data)) return;
   ventas = data.map(d => ({ id: d.id, ...(d.data || {}), created_at: d.created_at }));
 }
