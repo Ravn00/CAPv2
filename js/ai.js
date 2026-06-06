@@ -94,6 +94,7 @@ async function processQueue() {
     // Handle based on confidence
     if (result._ok && result.confianza === "Alta") {
       const extraPhotos = item.batchPhotos || [];
+      const price = result.precio_sugerido ?? null;
       const part = {
         id:item.id, preview:item.preview, previewFull:item.fileDataUrl||item.preview,
         fileName:item.file.name, fileSize:item.file.size,
@@ -101,7 +102,8 @@ async function processQueue() {
         marca:result.marca, modelo:result.modelo, años:result.años,
         descripcion:result.descripcion, posicion:result.posicion,
         confianza:result.confianza, _ok:result._ok,
-        precio_sugerido:result.precio_sugerido ?? null,
+        precio_sugerido: price,
+        precioVenta: price,
         fuentes:result.fuentes || [],
         addedAt:new Date().toLocaleString("es-CL"),
         photos: extraPhotos.length ? [item.preview, ...extraPhotos.map(p => p.preview)] : undefined
@@ -117,6 +119,7 @@ async function processQueue() {
       await logScan(part.id, part.categoria, "success", ms);
     } else if (result._ok && result.confianza === "Media") {
       const extraPhotos = item.batchPhotos || [];
+      const mPrice = result.precio_sugerido ?? null;
       const review = {
         id:item.id, preview:item.preview, previewFull:item.fileDataUrl||item.preview,
         fileName:item.file.name, fileSize:item.file.size,
@@ -124,7 +127,8 @@ async function processQueue() {
         marca:result.marca, modelo:result.modelo, años:result.años,
         descripcion:result.descripcion, posicion:result.posicion,
         confianza:result.confianza, codigo_oem:result.codigo_oem||"",
-        precio_sugerido:result.precio_sugerido ?? null,
+        precio_sugerido: mPrice,
+        precioVenta: mPrice,
         fuentes:result.fuentes || [],
         addedAt:new Date().toLocaleString("es-CL"),
         photos: extraPhotos.length ? [item.preview, ...extraPhotos.map(p => p.preview)] : undefined,
