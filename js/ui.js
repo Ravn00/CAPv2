@@ -632,7 +632,8 @@ function openReviewModal() {
   pendingReviews.forEach((r, i) => {
     const card = document.createElement("div"); card.className = "ven-card";
     card.style.cursor = "default";
-    const priceHtml = r.precio_sugerido ? `<span style="color:var(--green);font-weight:600">$${r.precio_sugerido.toLocaleString("es-CL")}</span>` : "";
+    const pDisplay = r.precioVenta || r.precio_sugerido;
+    const priceHtml = pDisplay ? `<span style="color:var(--green);font-weight:600">$${pDisplay.toLocaleString("es-CL")}</span>` : "";
     card.innerHTML = `<div class="ven-card-hdr"><span class="ven-card-cli">${escH(r.marca+" "+r.modelo)}</span>${priceHtml ? " · "+priceHtml : ""}<span style="font-size:10px;color:var(--amber)">Media</span></div>
       <div class="ven-card-meta">${r.años} · ${r.posicion} · ${r.descripcion}${r.fuentes?.length && r.fuentes[0].startsWith("http") ? ' · <a href="'+escH(r.fuentes[0])+'" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-size:10px">🔗 ref</a>' : ""}</div>
       <div style="display:flex;gap:6px;margin-top:8px">
