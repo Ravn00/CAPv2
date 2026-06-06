@@ -185,10 +185,15 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "unsupported provider" }), { status: 400, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
     }
 
+    // Diagnostic info (always included)
+    vision._diag = { tavily: null, enhanced: false, searchQuery: null };
+
     if (vision._ok && vision.confianza !== "Baja") {
       const query = buildSearchQuery(vision);
+      vision._diag.searchQuery = query;
       if (query) {
         const results = await searchTavily(query);
+        vision._diag.tavily = results ? results.map(r => ({ title: r.title, url: r.url })) : [];
         if (results && results.length > 0) {
           const searchText = results.map(r => `- ${r.title}\n  ${r.content}\n  ${r.url}`).join("\n\n");
           const enhanceBody = ENHANCE_PROMPT
@@ -236,12 +241,17 @@ serve(async (req) => {
 
           if (enhanced) {
             enhanced.fuentes = results.map(r => r.url).filter(Boolean).slice(0,3);
-            return new Response(JSON.stringify(enhanced), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+            vision._diag.enhanced = true;
+            Object.assign(vision, enhanced);
+            return new Response(JSON.stringify(vision), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
           }
         }
       }
     }
 
+    // Ensure precio_sugerido and fuentes are always present
+    if (vision.precio_sugerido === undefined) vision.precio_sugerido = null;
+    if (!vision.fuentes) vision.fuentes = [];
     return new Response(JSON.stringify(vision), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
   } catch (e) {
     return new Response(JSON.stringify({ error: e.message || "internal error" }), { status: 500, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });

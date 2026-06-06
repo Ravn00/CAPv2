@@ -476,6 +476,27 @@ $("diag-real-run").onclick = async () => {
   if (!result._ok) { addStep("err",`Error: ${result.descripcion}`,"err",`${ms}ms`); log(`[2] Error: ${result.descripcion}`); $("diag-real-run").disabled=false; $("diag-real-run").textContent="Repetir prueba"; return; }
   addStep("ok",`IA respondió en ${ms}ms`,"ok",`${result.marca} ${result.modelo} · ${result.años} · Confianza: ${result.confianza}`);
   addStep("ok","JSON parseado correctamente","ok",`Marca: ${result.marca} | Modelo: ${result.modelo} | Categoría: ${result.categoria}`);
+
+  // Tavily / price info
+  const diag = result._diag;
+  if (diag) {
+    if (diag.searchQuery) {
+      addStep("ok",`Búsqueda Tavily: "${diag.searchQuery}"`,"ok",`${(diag.tavily||[]).length} resultados`);
+    }
+    if (diag.tavily && diag.tavily.length > 0) {
+      diag.tavily.slice(0,3).forEach(t => addStep("skip",t.title,"skip",t.url));
+    }
+    if (result.precio_sugerido) {
+      addStep("ok",`Precio sugerido: $${result.precio_sugerido.toLocaleString("es-CL")}`,"ok",
+        result.fuentes?.length ? `Fuentes: ${result.fuentes.slice(0,2).join(" · ")}` : "");
+    } else if (diag.enhanced) {
+      addStep("warn","Precio no disponible en los resultados","warn");
+    }
+    if (diag.tavily && diag.tavily.length === 0 && diag.searchQuery) {
+      addStep("warn","Tavily no encontró resultados para esta pieza","warn");
+    }
+  }
+
   log(`[2] Resultado: ${JSON.stringify(result)}`);
   $("diag-real-run").disabled=false; $("diag-real-run").textContent="Repetir prueba";
 };
