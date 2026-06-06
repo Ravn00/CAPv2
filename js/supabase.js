@@ -3,6 +3,7 @@
 let apiKeys = [];
 let aiProvider = "gemini";
 let aiModel = "gemini-2.0-flash";
+let writeToken = "";
 
 async function loadConfig() {
   const cfg = await readConfig();
@@ -11,6 +12,7 @@ async function loadConfig() {
     aiProvider = cfg.ai_provider || "gemini";
     aiModel = cfg.ai_model || "gemini-2.0-flash";
     if (cfg.license_secret) LICENSE_SECRET = cfg.license_secret;
+    writeToken = cfg.write_token || "";
   }
   return !!cfg;
 }
@@ -44,10 +46,6 @@ async function logScan(partId, categoria, resultado, latenciaMs) {
     id, device_id: deviceId, part_id: partId, categoria, timestamp: new Date().toISOString(),
     resultado, latencia_ms: latenciaMs || 0
   });
-  // Increment device scan count
-  const dev = await sbFetch(`/rest/v1/devices?id=eq.${deviceId}&select=total_scans`);
-  const current = (dev && dev[0]?.total_scans) || 0;
-  await sbFetch(`/rest/v1/devices?id=eq.${deviceId}`, "PATCH", { total_scans: current + 1 });
 }
 
 // ---
@@ -108,59 +106,78 @@ async function loadPartsFromSupabase() {
   });
 }
 
+async function apiProxy(table, method, body, query) {
+  if (!writeToken) { console.warn("apiProxy: no write token configured"); return null; }
+  try {
+    const res = await fetch(`${SB_URL}/functions/v1/api-proxy`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-write-token": writeToken },
+      body: JSON.stringify({ table, method, body, query: query || "" })
+    });
+    if (!res.ok) { console.warn("apiProxy error:", res.status); return null; }
+    return true;
+  } catch(e) { console.warn("apiProxy error:", e.message); return null; }
+}
+
+async function resetAllData() {
+  const step1 = confirm("⚠️ RESET TOTAL\n\nEsto eliminará TODOS los datos:\n• Catálogo completo\n• Ventas registradas\n• Historial de escaneos\n• Dispositivos\n• Configuración\n\n¿Estás seguro?");
+  if (!step1) return;
+  const step2 = confirm("ÚLTIMA ADVERTENCIA\n\nEsta acción NO se puede deshacer.\nTodo el localStorage y los datos en Supabase serán eliminados.\n\n¿Confirmas?");
+  if (!step2) return;
+  localStorage.clear();
+  if (writeToken) {
+    try {
+      await fetch(`${SB_URL}/functions/v1/api-proxy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-write-token": writeToken },
+        body: JSON.stringify({ action: "reset-all" })
+      });
+    } catch(e) { console.warn("reset-all error:", e); }
+  }
+  location.reload();
+}
+
 async function savePartToSupabase(part) {
   const { fileDataUrl, file, batchFiles, ...rest } = part;
 
-  // Upload full photo to Storage if not already uploaded
+  const uploads = [];
   if (!rest.photoUrl) {
     const fullDataUrl = fileDataUrl || part.previewFull || part.preview || null;
     if (fullDataUrl && fullDataUrl.startsWith("data:")) {
-      const url = await sbUploadPhoto(part.id, fullDataUrl);
-      if (url) {
-        rest.photoUrl    = url;
-        rest.preview     = url;
-        rest.previewFull = url;
-        const idx = parts.findIndex(p => p.id === part.id);
-        if (idx > -1) {
-          parts[idx].photoUrl    = url;
-          parts[idx].preview     = url;
-          parts[idx].previewFull = url;
-          saveParts();
-        }
-      }
+      uploads.push(sbUploadPhoto(part.id, fullDataUrl));
     }
   }
-
-  // Upload additional batch photos
-  const photoUrls = [rest.photoUrl || rest.preview || ""];
   if (batchFiles && batchFiles.length) {
-    for (let i = 0; i < batchFiles.length; i++) {
-      const bf = batchFiles[i];
+    batchFiles.forEach((bf, i) => {
       const dataUrl = bf.fileDataUrl || bf.preview;
       if (dataUrl && dataUrl.startsWith("data:")) {
-        const url = await sbUploadPhoto(`${part.id}-${i+1}`, dataUrl);
-        if (url) photoUrls.push(url);
+        uploads.push(sbUploadPhoto(`${part.id}-${i+1}`, dataUrl));
       }
+    });
+  }
+
+  let results = [];
+  if (uploads.length) results = await Promise.all(uploads);
+
+  if (results.length) {
+    const photoUrl = results[0];
+    if (photoUrl) {
+      rest.photoUrl = rest.preview = rest.previewFull = photoUrl;
+      const idx = parts.findIndex(p => p.id === part.id);
+      if (idx > -1) Object.assign(parts[idx], { photoUrl, preview: photoUrl, previewFull: photoUrl });
     }
-    rest.photos = photoUrls;
-    // Update local part
-    const idx = parts.findIndex(p => p.id === part.id);
-    if (idx > -1) {
-      parts[idx].photos = photoUrls;
-      saveParts();
+    if (results.length > 1) {
+      const urls = results.filter(Boolean);
+      rest.photos = urls;
+      const idx = parts.findIndex(p => p.id === part.id);
+      if (idx > -1) parts[idx].photos = urls;
     }
   }
 
   rest.company_id = companyId || null;
-  const body = { data: rest };
-  const existing = await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(part.id)}&select=id`);
-  if (existing && existing.length > 0) {
-    await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(part.id)}`, "PATCH", body);
-    await sbLogAudit(part.id, "update", { marca: part.marca, modelo: part.modelo });
-  } else {
-    await sbFetch("/rest/v1/partes", "POST", { id: part.id, data: rest });
-    await sbLogAudit(part.id, "create", { marca: part.marca, modelo: part.modelo });
-  }
+  const ok = await apiProxy("partes", "POST", { id: part.id, data: rest });
+  if (!ok) { console.error("savePartToSupabase: apiProxy falló para", part.id); return; }
+  await sbLogAudit(part.id, "create", { marca: part.marca, modelo: part.modelo });
 }
 
 async function sbLogAudit(partId, action, changes) {
@@ -176,23 +193,34 @@ async function sbLogAudit(partId, action, changes) {
 async function deletePartFromSupabase(partId) {
   const p = parts.find(x => x.id === partId);
   const changes = p ? { marca: p.marca, modelo: p.modelo } : {};
+  const ok = await apiProxy("partes", "DELETE", null, `?id=eq.${encodeURIComponent(partId)}`);
+  if (!ok) { console.error("deletePartFromSupabase: apiProxy falló para", partId); return false; }
   await sbLogAudit(partId, "delete", changes);
-  await sbFetch(`/rest/v1/partes?id=eq.${encodeURIComponent(partId)}`, "DELETE");
+  return true;
 }
 
 // ---
+async function loadPartHistory(partId) {
+  try {
+    const data = await sbFetch(`/rest/v1/partes_log?select=*&part_id=eq.${encodeURIComponent(partId)}&order=timestamp.desc&limit=20`, "GET");
+    return Array.isArray(data) ? data : [];
+  } catch(e) { return []; }
+}
+
 async function checkMaintenance() {
   const cfg = await readConfig();
   if (!cfg) return;
   const overlay = document.getElementById("maint-overlay");
+  if (!overlay) return;
+  const msgEl = document.getElementById("maint-msg");
   if (cfg.maintenance_mode) {
-    document.getElementById("maint-msg").textContent = cfg.maintenance_message || "El sistema está en mantenimiento. Volvé más tarde.";
+    if(msgEl) msgEl.textContent = cfg.maintenance_message || "El sistema está en mantenimiento. Volvé más tarde.";
     overlay.classList.add("on");
   } else {
     overlay.classList.remove("on");
   }
-  // Admin banner
   const banner = document.getElementById("admin-banner");
+  if (!banner) return;
   if (cfg.admin_message) {
     banner.textContent = cfg.admin_message;
     banner.className = "on " + (cfg.admin_message_type || "info");
