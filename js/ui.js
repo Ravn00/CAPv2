@@ -10,8 +10,8 @@ function updateHeaderStats() {
   const vend = parts.filter(p=>(p.estado||(p.sold?"vendida":"disponible"))==="vendida").length;
   const resv = parts.filter(p=>(p.estado||(p.sold?"vendida":"disponible"))==="reservada").length;
   const cats = new Set(parts.map(p=>p.categoria).filter(Boolean)).size;
-  $("stat-avail").textContent = disp;
-  $("stat-sold").textContent = vend;
+  const sa=$("stat-avail");if(sa)sa.textContent=disp;
+  const ss=$("stat-sold");if(ss)ss.textContent=vend;
   if($("stat-resv")) $("stat-resv").textContent = resv;
   const t = $("stat-total"); if(t) t.textContent = parts.length;
   const c = $("stat-cats"); if(c) c.textContent = cats;
@@ -110,7 +110,7 @@ function renderFolderContent() {
   const list = document.createElement("div"); list.className = "prod-list";
   if (filtered.length===0) {
     list.innerHTML = `<div class="folder-empty" style="text-align:center;padding:44px 20px;color:var(--t4)">
-      <div style="font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--t5);margin-bottom:5px">${s?"Sin resultados":sf!=="all"?"Sin partes en este estado":"Carpeta vacía"}</div>
+      <div style="font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--t5);margin-bottom:5px">${s?"Sin resultados para &ldquo;"+escH(s)+"&rdquo;":sf!=="all"?"Sin partes en este estado":"Carpeta vacía"}</div>
       <div style="font-size:11px;color:var(--t4);line-height:1.6">${s?"Probá con otro término":"Subí imágenes usando los botones de categoría"}</div></div>`;
   } else {
     filtered.forEach(p => {
@@ -121,6 +121,32 @@ function renderFolderContent() {
   el.appendChild(list);
 }
 
+function formatWhatsAppText(part) {
+  const est = part.estado || (part.sold ? "vendida" : "disponible");
+  return [
+    `*Producto:* ${part.marca} ${part.modelo}`,
+    `*Compatibilidad:* ${part.años} · ${part.posicion}`,
+    `${part.ubicacion ? `*Ubicación:* ${part.ubicacion}` : ""}`,
+    `${part.precioVenta ? `*Precio:* $${Number(part.precioVenta).toLocaleString("es-CL")}` : ""}`,
+    `*Estado:* ${est.charAt(0).toUpperCase() + est.slice(1)}`,
+    `${part.descripcion ? `\n${part.descripcion}` : ""}`
+  ].filter(Boolean).join("\n");
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => toast("Copiado al portapapeles")).catch(() => fallbackCopy(text));
+  } else { fallbackCopy(text); }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); toast("Copiado"); } catch(_) { toast("Error al copiar"); }
+  document.body.removeChild(ta);
+}
+
 function buildPartCard(part) {
   const cat = CATS[part.categoria]||CATS.varios;
   const imgSrc = part.preview||part.previewFull||"";
@@ -128,7 +154,7 @@ function buildPartCard(part) {
   const photos = (part.photos && part.photos.length > 1) ? part.photos : null;
   const el = document.createElement("div");
   el.className="pcard"; el.id=`card-${part.id}`;
-  el.innerHTML = (imgSrc?`<div class="pcard-img-wrap"><img class="pcard-img" src="${escH(imgSrc)}" onclick="openLightbox('${escH(imgSrc)}')">${photos?`<div class="pcard-gallery">${photos.map((s,i)=>`<img class="pcard-gallery-thumb${i===0?' on':''}" src="${escH(s)}" onclick="event.stopPropagation();const p=this.parentElement.parentElement;const m=p.querySelector('.pcard-img');const prev=m.src;m.src=this.src;this.src=prev;this.parentElement.querySelectorAll('.pcard-gallery-thumb').forEach(t=>t.classList.remove('on'));this.classList.add('on')">`).join('')}</div>`:''}</div>`
+  el.innerHTML = (imgSrc?`<div class="pcard-img-wrap"><img class="pcard-img" src="${escH(imgSrc)}" width="400" height="130" loading="lazy" alt="${escH(part.marca+' '+part.modelo)}" data-img="${escH(imgSrc)}">${photos?`<div class="pcard-gallery">${photos.map((s,i)=>`<img class="pcard-gallery-thumb${i===0?' on':''}" src="${escH(s)}" width="36" height="36" loading="lazy" alt="" data-thumb="${escH(s)}" data-full="${escH(imgSrc)}">`).join('')}</div>`:''}</div>`
     :`<div class="pcard-img no-img">${cat.icon}</div>`)+
     `<div class="pcard-body">
       <div class="pcard-title">${escH(part.marca)} ${escH(part.modelo)}</div>
@@ -139,6 +165,8 @@ function buildPartCard(part) {
         ${part.ubicacion?`<span class="pcard-ubicacion">📍 ${escH(part.ubicacion)}</span>`:""}
       </div>
       ${part.fechaVenta?`<div style="font-size:8px;color:var(--t4);margin-top:1px">Vendido: ${escH(part.fechaVenta)}</div>`:""}
+      ${estado==="reservada" && part.reservadoPor?`<div style="font-size:8px;color:var(--amber-lt);margin-top:1px">🔒 ${escH(part.reservadoPor)}${part.telefonoCliente?` · 📞 ${escH(part.telefonoCliente)}`:""}${part.fechaReserva?` · ${escH(part.fechaReserva)}`:""}</div>`:""}
+      ${estado==="reservada" && part.notaReserva?`<div style="font-size:8px;color:var(--t4);margin-top:1px">📝 ${escH(part.notaReserva)}</div>`:""}
       <div class="pcard-tags" style="margin-top:2px">
         <span class="estado-badge estado-${estado}">${estado.charAt(0).toUpperCase()+estado.slice(1)}</span>
         ${part.stock>0?`<span class="pcard-stock">📦 x${part.stock}</span>`:""}
@@ -150,37 +178,61 @@ function buildPartCard(part) {
       <button class="sold-btn ${estado==='vendida'||estado==='descartada'?'sold':'avail'}" data-id="${part.id}"><span class="sold-dot"></span>${estado.charAt(0).toUpperCase()+estado.slice(1)}</button>
       <div class="pcard-actions">
         <button class="qr-btn" data-qr="${part.id}" aria-label="QR" title="Código QR">${QR_ICON}</button>
+        <button class="pact" data-hist="${part.id}" aria-label="Historial" title="Historial"><svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>
+        <button class="pact" data-whatsapp="${part.id}" aria-label="Copiar a WhatsApp" title="Copiar a WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></button>
         <button class="pact" data-edit="${part.id}" aria-label="Editar" title="Editar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="pact del" data-del="${part.id}" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+        <button class="pact del" data-del="${part.id}" aria-label="Eliminar parte" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
     </div>`;
+  el.querySelector(".pcard-img[data-img]")?.addEventListener("click", e => { e.stopPropagation(); openLightbox(e.currentTarget.dataset.img); });
+  el.querySelectorAll(".pcard-gallery-thumb").forEach(t => t.addEventListener("click", e => {
+    e.stopPropagation();
+    const thumb = e.currentTarget;
+    const wrap = thumb.closest(".pcard-img-wrap");
+    const main = wrap?.querySelector(".pcard-img");
+    if (!main || !wrap) return;
+    const prevSrc = main.src;
+    main.src = thumb.src;
+    thumb.src = prevSrc;
+    wrap.querySelectorAll(".pcard-gallery-thumb").forEach(t => t.classList.remove("on"));
+    thumb.classList.add("on");
+  }));
   el.querySelector("[data-edit]").onclick = () => { editId=part.id; editBuf={...part}; renderFolderContent(); };
-  el.querySelector("[data-del]").onclick = () => showConfirm("Eliminar parte",`"${part.marca} ${part.modelo}" será eliminada.`,()=>{ parts=parts.filter(p=>p.id!==part.id); deletePartFromSupabase(part.id); saveParts(); renderAll(); toast("Parte eliminada"); },true);
+  el.querySelector("[data-del]").onclick = () => showConfirm("Eliminar parte",`"${part.marca} ${part.modelo}" será eliminada.`,async ()=>{ const ok=await deletePartFromSupabase(part.id); if(!ok){ toast("Error al eliminar en servidor"); return; } parts=parts.filter(p=>p.id!==part.id); saveParts(); renderAll(); toast("Parte eliminada"); },true);
   el.querySelector("[data-qr]").onclick = () => showQR(part);
-  el.querySelector(".sold-btn").onclick = () => {
+  el.querySelector("[data-whatsapp]").onclick = () => copyToClipboard(formatWhatsAppText(part));
+  el.querySelector("[data-hist]").onclick = () => showPartHistory(part);
+  el.querySelector(".sold-btn").onclick = async () => {
     const oldEstado = estado;
-    const estados = ["disponible","reservada","vendida","descartada"];
+    const oldFechaVenta = part.fechaVenta;
+    const oldFechaReserva = part.fechaReserva;
+    const oldReservadoPor = part.reservadoPor;
+    const oldTelefonoCliente = part.telefonoCliente;
+    const oldNotaReserva = part.notaReserva;
+    const estados = estado === "reservada" ? ["reservada","disponible","vendida","descartada"] : ["disponible","reservada","vendida","descartada"];
     const idx = estados.indexOf(part.estado||"disponible");
     const next = estados[(idx+1)%estados.length];
     const p = parts.find(p => p.id === part.id);
     if (!p) return;
     p.estado = next;
-    if (next === "vendida") { p.fechaVenta = new Date().toLocaleString("es-CL"); }
+    if (next === "vendida") { p.fechaVenta = new Date().toLocaleString("es-CL"); p.fechaReserva = null; p.reservadoPor = null; p.telefonoCliente = null; p.notaReserva = null; }
+    else if (next === "disponible" && oldEstado === "reservada") { p.fechaReserva = null; p.reservadoPor = null; p.telefonoCliente = null; p.notaReserva = null; }
     else if (oldEstado === "vendida") { p.fechaVenta = null; }
-    savePartToSupabase(p);
     saveParts();
     updateHeaderStats();
     renderFolderContent();
+    await savePartToSupabase(p).catch(()=>{});
     toastWithUndo(`Estado: ${next}`, () => {
       const pp = parts.find(pp => pp.id === part.id);
       if (!pp) return;
       pp.estado = oldEstado;
-      if (oldEstado === "vendida") { pp.fechaVenta = new Date().toLocaleString("es-CL"); }
+      if (oldEstado === "reservada") { pp.fechaReserva = oldFechaReserva; pp.reservadoPor = oldReservadoPor; pp.telefonoCliente = oldTelefonoCliente; pp.notaReserva = oldNotaReserva; }
+      else if (oldEstado === "vendida") { pp.fechaVenta = oldFechaVenta; }
       else if (next === "vendida") { pp.fechaVenta = null; }
-      savePartToSupabase(pp);
       saveParts();
       updateHeaderStats();
       renderFolderContent();
+      savePartToSupabase(pp).catch(()=>{});
       toast(`Deshecho: vuelto a ${oldEstado}`);
     });
   };
@@ -207,7 +259,7 @@ function buildEditCard(part) {
   const margen= (editBuf.precioCompra>0&&editBuf.precioVenta>0) ? ((editBuf.precioVenta-editBuf.precioCompra)/editBuf.precioCompra*100) : null;
   const margenCls=margen!==null?(margen>=50?"ok":margen>=20?"warn":"bad"):"";
   const margenHtml=margen!==null?`<span class="margen-badge ${margenCls}" id="margen-edit-badge">${margen>=0?"+":""}${Math.round(margen)}%</span>`:`<span class="margen-badge" id="margen-edit-badge" style="display:none"></span>`;
-  el.innerHTML = (imgSrc?`<div style="width:100%"><img src="${escH(imgSrc)}" style="width:100%;height:180px;object-fit:cover;cursor:zoom-in" onclick="openLightbox('${escH(imgSrc)}')">${photos?`<div style="display:flex;gap:3px;padding:4px;overflow-x:auto;background:var(--s2)">${photos.map((s,i)=>`<img src="${escH(s)}" style="width:36px;height:36px;object-fit:cover;border-radius:var(--r4);cursor:pointer;opacity:${i===0?1:.5};border:1.5px solid ${i===0?'var(--gold)':'transparent'};flex-shrink:0" onclick="event.stopPropagation();this.parentElement.previousElementSibling.src=this.src">`).join('')}</div>`:''}</div>`:`<div style="width:100%;height:60px;display:flex;align-items:center;justify-content:center;background:var(--s3);color:var(--t4)">${cat.icon}</div>`)+
+  el.innerHTML = (imgSrc?`<div style="width:100%"><img src="${escH(imgSrc)}" loading="lazy" style="width:100%;height:180px;object-fit:cover;cursor:zoom-in" onclick="openLightbox('${escH(imgSrc)}')">${photos?`<div style="display:flex;gap:3px;padding:4px;overflow-x:auto;background:var(--s2)">${photos.map((s,i)=>`<img src="${escH(s)}" loading="lazy" style="width:36px;height:36px;object-fit:cover;border-radius:var(--r4);cursor:pointer;opacity:${i===0?1:.5};border:1.5px solid ${i===0?'var(--gold)':'transparent'};flex-shrink:0" onclick="event.stopPropagation();this.parentElement.previousElementSibling.src=this.src">`).join('')}</div>`:''}</div>`:`<div style="width:100%;height:60px;display:flex;align-items:center;justify-content:center;background:var(--s3);color:var(--t4)">${cat.icon}</div>`)+
     `<div style="padding:12px;display:flex;flex-direction:column;gap:9px">
       <div class="fld-row"><div style="flex:1"><div class="fld-label">Marca</div><input class="fld-input" data-f="marca" value="${escH(editBuf.marca||"")}"/></div>
         <div style="flex:1"><div class="fld-label">Modelo</div><input class="fld-input" data-f="modelo" value="${escH(editBuf.modelo||"")}"/></div></div>
@@ -233,9 +285,9 @@ function buildEditCard(part) {
     if (pos && !validPos.includes(pos)) { toast("Posición: Delantero, Trasero, Izquierdo, Derecho o Central"); return; }
     const editUbic = (editBuf.ubicacion || "").trim();
     if (editUbic && !validateUbicacion(editUbic)) { toast("Ubicación: formato A-03-02-05 (Letra-NN-NN-NN)"); return; }
-    if(editBuf.stock)editBuf.stock=parseInt(editBuf.stock)||1;
-    if(editBuf.precioCompra)editBuf.precioCompra=parseFloat(editBuf.precioCompra)||null;
-    if(editBuf.precioVenta)editBuf.precioVenta=parseFloat(editBuf.precioVenta)||null;
+    editBuf.stock=Math.max(1,parseInt(editBuf.stock)||1);
+    editBuf.precioCompra=parseFloat(editBuf.precioCompra)??null;
+    editBuf.precioVenta=parseFloat(editBuf.precioVenta)??null;
     const updated={...part,...editBuf}; parts=parts.map(p=>p.id===part.id?updated:p); editId=null; await savePartToSupabase(updated); saveParts(); renderAll(); toast("Cambios guardados");
   };
   el.querySelector(`#cn-${part.id}`).onclick = () => { editId=null; renderFolderContent(); };
@@ -332,6 +384,7 @@ function openManualWithResult(result) {
   $("m-desc").value = result.descripcion !== "Sin descripción" ? result.descripcion : "";
   if (result.categoria && CATS[result.categoria]) $("m-cat").value = result.categoria;
   if (result.codigo_oem) $("m-oem").value = result.codigo_oem;
+  if (result.precio_sugerido) $("m-precio-venta").value = result.precio_sugerido;
   $("manual-title").textContent = "Catalogar manualmente (IA: " + result.confianza + ")";
   $("manual-modal").classList.add("on");
 }
@@ -353,9 +406,9 @@ $("manual-save").onclick=async ()=>{
   const modelo=$("m-modelo").value.trim()||"Sin modelo";
   const estado=$("m-estado").value;
   const stock=parseInt($("m-stock").value)||1;
-  const precioCompra=parseFloat($("m-precio-compra").value)||null;
-  const precioVenta=parseFloat($("m-precio-venta").value)||null;
-  const part={ id:`m-${Date.now()}-${Math.random().toString(36).slice(2)}`, preview:manualPreviewDataUrl||null, previewFull:manualPreviewDataUrl||null, fileName:manualPreviewFile?.name||"manual", fileSize:manualPreviewFile?.size||0, estado, stock, precioCompra, precioVenta, codigoOem:$("m-oem").value.trim()||null, ubicacion:$("m-ubicacion").value.trim()||null, categoria:$("m-cat").value, marca, modelo, años:$("m-años").value.trim()||"No determinado", posicion:$("m-pos").value.trim()||"No determinado", descripcion:$("m-desc").value.trim()||"Sin descripción", confianza:"Alta", _ok:true, manual:true, addedAt:new Date().toLocaleString("es-CL") };
+  const precioCompra=parseFloat($("m-precio-compra").value)??null;
+  const precioVenta=parseFloat($("m-precio-venta").value)??null;
+  const part={ id:`m-${Date.now()}-${Math.random().toString(36).slice(2)}`, preview:manualPreviewDataUrl||null, previewFull:manualPreviewDataUrl||null, fileName:manualPreviewFile?.name||"manual", fileSize:manualPreviewFile?.size||0, estado, stock, precioCompra, precioVenta, codigoOem:$("m-oem").value.trim()||null, ubicacion:$("m-ubicacion").value.trim()||null, categoria:$("m-cat").value, marca, modelo, años:$("m-años").value.trim()||"No determinado", posicion:$("m-pos").value.trim()||"No determinado", descripcion:$("m-desc").value.trim()||"Sin descripción", confianza:"Alta", _ok:true, manual:true, precio_sugerido:precioVenta??null, addedAt:new Date().toLocaleString("es-CL") };
   parts.push(part); await savePartToSupabase(part); saveParts(); renderAll(); renderDashboard(); closeModal("manual-modal"); toast(`Agregado: ${marca} ${modelo}`);
 };
 
@@ -363,9 +416,17 @@ $("manual-save").onclick=async ()=>{
 // IMAGE TEST (kept from diag)
 // ---
 $("btn-test-ai").onclick = () => {
+  // Reset test-ai tab
   $("diag-file-in").value=""; $("diag-real-wrap").style.display="none";
   $("diag-real-steps").innerHTML=""; $("diag-real-log").style.display="none";
   $("diag-real-log").textContent="";
+  // Switch to test-ai tab
+  document.querySelectorAll(".diag-tab").forEach(b=>b.classList.remove("on"));
+  document.querySelectorAll(".diag-panel").forEach(p=>p.classList.remove("on"));
+  const tab = document.querySelector('[data-diag-tab="test-ai"]');
+  const panel = document.getElementById("diag-test-ai");
+  if (tab) tab.classList.add("on");
+  if (panel) panel.classList.add("on");
   $("diag-test-modal").classList.add("on");
 };
 $("diag-file-in").onchange = async e => {
@@ -453,7 +514,7 @@ $("toast-undo").onclick = () => {
 };
 function openLightbox(src) { $("lb-img").src=src; $("lightbox").classList.add("on"); }
 function closeLightbox() { $("lightbox").classList.remove("on"); }
-function closeModal(id) { $(id).classList.remove("on"); }
+function closeModal(id) { const el = $(id); if (el) el.classList.remove("on"); }
 function escH(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;").replace(/\//g,"&#x2F;"); }
 
 // ---
@@ -501,7 +562,7 @@ function renderDashboard() {
 
   // Últimos movimientos
   const tbody = $("dash-tbody"); tbody.innerHTML = "";
-  const sorted = [...parts].sort((a,b)=>new Date(b.addedAt||0)-new Date(a.addedAt||0)).slice(0,20);
+  const sorted = [...parts].sort((a,b)=>{const da=new Date(a.addedAt).getTime()||0;const db=new Date(b.addedAt).getTime()||0;return db-da}).slice(0,20);
   sorted.forEach(p => {
     const tr = document.createElement("tr");
     const est = p.estado||(p.sold?"vendida":"disponible");
@@ -550,21 +611,22 @@ function openReviewModal() {
   pendingReviews.forEach((r, i) => {
     const card = document.createElement("div"); card.className = "ven-card";
     card.style.cursor = "default";
-    card.innerHTML = `<div class="ven-card-hdr"><span class="ven-card-cli">${escH(r.marca+" "+r.modelo)}</span><span style="font-size:10px;color:var(--amber)">Media</span></div>
-      <div class="ven-card-meta">${r.años} · ${r.posicion} · ${r.descripcion}</div>
+    const priceHtml = r.precio_sugerido ? `<span style="color:var(--green);font-weight:600">$${r.precio_sugerido.toLocaleString("es-CL")}</span>` : "";
+    card.innerHTML = `<div class="ven-card-hdr"><span class="ven-card-cli">${escH(r.marca+" "+r.modelo)}</span>${priceHtml ? " · "+priceHtml : ""}<span style="font-size:10px;color:var(--amber)">Media</span></div>
+      <div class="ven-card-meta">${r.años} · ${r.posicion} · ${r.descripcion}${r.fuentes?.length && r.fuentes[0].startsWith("http") ? ' · <a href="'+escH(r.fuentes[0])+'" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-size:10px">🔗 ref</a>' : ""}</div>
       <div style="display:flex;gap:6px;margin-top:8px">
         <button class="btn-primary" style="flex:1;font-size:10px;padding:6px" data-approve="${i}">✓ Aprobar</button>
         <button class="btn-ghost-sm" style="flex:1;font-size:10px;padding:6px" data-edit="${i}">✎ Editar</button>
         <button class="btn-ghost-sm" style="flex:none;font-size:10px;padding:6px;color:var(--red-lt)" data-discard="${i}">✕</button>
       </div>`;
-    card.querySelector("[data-approve]").onclick = () => approveReview(i);
-    card.querySelector("[data-edit]").onclick = () => { bg.remove(); editReview(i); };
+    card.querySelector("[data-approve]").onclick = async () => { await approveReview(i); };
+    card.querySelector("[data-edit]").onclick = () => editReview(i);
     card.querySelector("[data-discard]").onclick = () => discardReview(i);
     list.appendChild(card);
   });
 }
 
-function approveReview(i) {
+async function approveReview(i) {
   const r = pendingReviews[i];
   if (!r) return;
   const part = {
@@ -574,16 +636,18 @@ function approveReview(i) {
     años: r.años, descripcion: r.descripcion, posicion: r.posicion,
     confianza: r.confianza, _ok: true,
     codigoOem: r.codigo_oem, photos: r.photos, batchFiles: r.batchFiles,
+    precio_sugerido: r.precio_sugerido ?? null,
+    fuentes: r.fuentes || [],
     addedAt: r.addedAt
   };
   parts.push(part);
-  savePartToSupabase(part);
+  await savePartToSupabase(part);
   saveParts();
   pendingReviews.splice(i, 1);
   savePendingReviews();
   showReviewBadge();
   const modal = document.getElementById("review-modal");
-  if (pendingReviews.length) openReviewModal(); else modal?.remove();
+  if (pendingReviews.length) openReviewModal(); else if (modal) modal.remove();
   renderAll();
   toast("Parte aprobada y guardada");
 }
@@ -602,6 +666,7 @@ function editReview(i) {
   $("m-stock").value = "1";
   $("manual-title").textContent = "Editar y guardar (pendiente de revisión)";
   const origSave = $("manual-save").onclick;
+  const cleanup = () => { $("manual-save").onclick = origSave; };
   $("manual-save").onclick = async () => {
     const marca = $("m-marca").value.trim() || "Sin marca";
     const modelo = $("m-modelo").value.trim() || "Sin modelo";
@@ -616,6 +681,8 @@ function editReview(i) {
       descripcion: $("m-desc").value.trim() || "Sin descripción",
       confianza: r.confianza, _ok: true, manual: true,
       codigoOem: $("m-oem").value.trim() || null,
+      precio_sugerido: r.precio_sugerido ?? null,
+      fuentes: r.fuentes || [],
       photos: r.photos, batchFiles: r.batchFiles,
       estado, stock, addedAt: r.addedAt || new Date().toLocaleString("es-CL")
     };
@@ -625,11 +692,12 @@ function editReview(i) {
     pendingReviews.splice(i, 1);
     savePendingReviews();
     showReviewBadge();
+    cleanup();
     closeModal("manual-modal");
     renderAll();
     toast("Parte aprobada y guardada");
-    $("manual-save").onclick = origSave;
   };
+  $("manual-cancel").onclick = () => { cleanup(); closeModal("manual-modal"); };
   closeModal("review-modal");
   $("manual-modal").classList.add("on");
 }
@@ -644,5 +712,38 @@ function discardReview(i) {
 
 function savePendingReviews() {
   try { localStorage.setItem("ap_reviews_v2", JSON.stringify(pendingReviews)); } catch(e) {}
+}
+
+// ---
+// PART HISTORY
+// ---
+const ACTION_LABELS = { create:"Creada", update:"Editada", delete:"Eliminada", sale:"Vendida", reserve:"Reservada", release:"Liberada" };
+async function showPartHistory(part) {
+  const bg = document.createElement("div"); bg.className = "modal-bg on"; bg.id = "hist-modal";
+  bg.innerHTML = `<div class="modal-sheet" style="max-width:450px">
+    <div class="modal-title">Historial: ${escH(part.marca)} ${escH(part.modelo)}</div>
+    <div class="modal-sub">Últimos movimientos registrados</div>
+    <div id="hist-content" style="max-height:60vh;overflow-y:auto;margin-bottom:12px"><div style="text-align:center;padding:20px;color:var(--t4);font-size:12px">Cargando…</div></div>
+    <div class="modal-btns"><button class="btn-ghost-sm" onclick="document.getElementById('hist-modal').remove()">Cerrar</button></div>
+  </div>`;
+  document.body.appendChild(bg);
+  const content = document.getElementById("hist-content");
+  const logs = await loadPartHistory(part.id);
+  if (!logs || logs.length === 0) {
+    content.innerHTML = '<div style="text-align:center;padding:30px 20px;color:var(--t4);font-size:12px">Sin movimientos registrados para esta pieza.</div>';
+    return;
+  }
+  content.innerHTML = logs.map(l => {
+    const ts = l.timestamp ? new Date(l.timestamp.endsWith("Z")||l.timestamp.includes("+")?l.timestamp:l.timestamp+"Z").toLocaleString("es-CL") : "???";
+    const action = ACTION_LABELS[l.action] || l.action;
+    let detail = "";
+    try { const c = JSON.parse(l.changes || "{}"); detail = Object.entries(c).map(([k,v]) => `${k}:${v}`).join(", "); } catch(_) {}
+    return `<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr);align-items:flex-start">
+      <span style="white-space:nowrap;font-size:9px;color:var(--t4);min-width:60px">${ts}</span>
+      <span class="estado-badge estado-${l.action === "delete" ? "vendida" : l.action === "create" ? "disponible" : "reservada"}">${action}</span>
+      <span style="font-size:10px;color:var(--t3);flex:1">${escH(detail)}</span>
+      <span style="font-size:8px;color:var(--t4);font-family:monospace">${escH((l.device_id||"").slice(0,10))}</span>
+    </div>`;
+  }).join("");
 }
 // ---

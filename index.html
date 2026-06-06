@@ -56,27 +56,45 @@
 <!-- NETWORK BANNER -->
 <div id="net-banner">Sin conexión — los cambios se guardarán cuando vuelvas a estar online</div>
 
-<!-- IMAGE TEST MODAL (only diag kept) -->
+<!-- DIAGNOSTIC MODAL (Test IA + Sistema) -->
 <div class="modal-bg" id="diag-test-modal">
-  <div class="modal-sheet">
-    <div class="modal-title">Probar IA con foto real</div>
-    <div class="modal-sub">Subí una foto y verás cada paso de lo que hace la IA en tiempo real.</div>
-    <div id="diag-img-zone" onclick="document.getElementById('diag-file-in').click()">
-      <div style="color:var(--t4);margin-bottom:4px;display:flex;align-items:center;justify-content:center">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
-      </div>
-      <div style="font-size:11px;color:var(--t4);letter-spacing:.3px">Toca para seleccionar una foto</div>
+  <div class="modal-sheet diag-sheet">
+    <div class="diag-tabs">
+      <button class="diag-tab on" data-diag-tab="test-ai">Test IA</button>
+      <button class="diag-tab" data-diag-tab="sistema">Diagnóstico</button>
     </div>
-    <input type="file" id="diag-file-in" accept="image/*" style="display:none"/>
-    <div id="diag-real-wrap" style="display:none">
-      <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
-        <img id="diag-real-preview" src="" alt=""/>
-        <div id="diag-real-meta"></div>
+
+    <!-- TAB: Test IA -->
+    <div class="diag-panel on" id="diag-test-ai">
+      <div class="modal-title">Probar IA con foto real</div>
+      <div class="modal-sub" style="margin-bottom:12px">Subí una foto y verás cada paso de lo que hace la IA en tiempo real.</div>
+      <div id="diag-img-zone" onclick="document.getElementById('diag-file-in').click()">
+        <div style="color:var(--t4);margin-bottom:4px;display:flex;align-items:center;justify-content:center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+        </div>
+        <div style="font-size:11px;color:var(--t4);letter-spacing:.3px">Toca para seleccionar una foto</div>
       </div>
-      <div id="diag-real-steps"></div>
-      <div id="diag-real-log"></div>
-      <button class="btn-primary" id="diag-real-run" style="width:100%">Probar con esta foto</button>
+      <input type="file" id="diag-file-in" accept="image/*" style="display:none"/>
+      <div id="diag-real-wrap" style="display:none">
+        <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
+          <img id="diag-real-preview" src="" alt=""/>
+          <div id="diag-real-meta"></div>
+        </div>
+        <div id="diag-real-steps"></div>
+        <div id="diag-real-log"></div>
+        <button class="btn-primary" id="diag-real-run" style="width:100%">Probar con esta foto</button>
+      </div>
     </div>
+
+    <!-- TAB: Sistema -->
+    <div class="diag-panel" id="diag-sistema">
+      <div class="modal-title">Diagnóstico del Sistema</div>
+      <div class="modal-sub" style="margin-bottom:12px">Verifica el estado de todos los servicios críticos.</div>
+      <div id="diag-sys-steps"></div>
+      <div id="diag-sys-log"></div>
+      <button class="btn-primary" id="diag-sys-run" style="width:100%">Ejecutar diagnóstico</button>
+    </div>
+
     <div class="modal-btns">
       <button class="btn-ghost-sm" style="flex:1" onclick="closeModal('diag-test-modal')">Cerrar</button>
     </div>
@@ -166,6 +184,9 @@
   <div class="hdr-right">
     <button class="ico-btn" id="btn-test-ai" aria-label="Probar IA" title="Probar IA">
       <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </button>
+    <button class="ico-btn" id="btn-diagnose" aria-label="Diagnóstico del sistema" title="Diagnóstico">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
     </button>
     <button class="ico-btn" id="btn-resync" aria-label="Sincronizar fotos a la nube" title="Sincronizar fotos a la nube" onclick="resyncMissingPhotos()">
       <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
@@ -304,6 +325,7 @@
 <script src="js/init.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/diag.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

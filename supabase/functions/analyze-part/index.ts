@@ -1,14 +1,9 @@
-// Supabase Edge Function: analyze-part
-// Deploy: supabase functions deploy analyze-part --no-verify-jwt
-// Set secrets: supabase functions set GROQ_API_KEYS='["key1","key2","key3"]' OPENROUTER_API_KEY=xxx GEMINI_API_KEY=xxx
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
-// --- Key rotation state ---
 let groqKeys: string[] = [];
 let keyLastUsed: number[] = [];
-const KEY_COOLDOWN = 1800; // ms between uses per key
-const RATE_PENALTY = 62000; // ms penalty on 429
+const KEY_COOLDOWN = 1800;
+const RATE_PENALTY = 62000;
 
 function loadGroqKeys(): string[] {
   const raw = Deno.env.get("GROQ_API_KEYS");
@@ -25,16 +20,10 @@ function getNextGroqKey(): string | null {
   if (!groqKeys.length) return null;
   if (keyLastUsed.length !== groqKeys.length) keyLastUsed = new Array(groqKeys.length).fill(0);
   const now = Date.now();
-  let bestIdx = -1;
-  let bestReady = Infinity;
   for (let i = 0; i < groqKeys.length; i++) {
-    const elapsed = now - (keyLastUsed[i] || 0);
-    if (elapsed >= KEY_COOLDOWN) return groqKeys[i]; // first ready found
-    const remaining = KEY_COOLDOWN - elapsed;
-    if (remaining < bestReady) { bestReady = remaining; bestIdx = i; }
+    if (now - (keyLastUsed[i] || 0) >= KEY_COOLDOWN) return groqKeys[i];
   }
-  if (bestIdx === -1) return null;
-  return groqKeys[bestIdx];
+  return null;
 }
 
 function penalizeKey(key: string) {
@@ -47,134 +36,254 @@ function markKeyUsed(key: string) {
   if (idx >= 0) keyLastUsed[idx] = Date.now();
 }
 
-const SYSTEM_PROMPT = `Eres el motor de IA del sistema "Desarmaduría Paola" — un catálogo profesional de autopartes con inteligencia artificial.
+const FALLBACK = { marca:"No determinado", modelo:"No determinado", años:"No determinado", categoria:"varios", descripcion:"", posicion:"No determinado", confianza:"Baja", codigo_oem:"", precio_sugerido:null, fuentes:[], _ok:false };
 
-## CAPACIDADES DEL SISTEMA
-Este sistema tiene las siguientes funcionalidades, y tu análisis alimenta todas ellas:
+async function callGroqChat(key: string, model: string, messages: unknown[], timeoutMs = 45000): Promise<Record<string, unknown>> {
+  return callAI("https://api.groq.com/openai/v1/chat/completions",
+    { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+    { model, messages, max_tokens: 500 },
+    timeoutMs
+  );
+}
 
-1. **Catálogo de autopartes** — Cada pieza se guarda con: marca, modelo, años, categoría, descripción, posición. El usuario puede buscar por cualquiera de estos campos.
-
-2. **Códigos QR** — Cada pieza recibe un QR único. Se puede imprimir y pegar físicamente en la pieza. Escaneando el QR se abre la ficha de esa pieza.
-
-3. **Stock y precios** — Cada pieza tiene: estado (disponible, reservada, vendida, descartada), stock (cantidad), precio de compra, precio de venta, margen de ganancia, código OEM, y ubicación física (estante, pasillo).
-
-4. **Dashboard ejecutivo** — Muestra valor del inventario, precio promedio, margen promedio, rotación, distribución por categoría (gráfico de barras), y últimos movimientos.
-
-5. **Módulo Clientes** — Registro de clientes con nombre, teléfono, email, dirección, notas.
-
-6. **Módulo Ventas** — Registro de ventas vinculadas a clientes, con desglose de piezas, cantidades y totales.
-
-7. **Multi-tenant** — El sistema soporta múltiples empresas, cada una con su propio catálogo aislado.
-
-8. **Búsqueda avanzada** — Se puede buscar por: marca, modelo, año, posición, descripción, código OEM, ubicación física.
-
-## TU TRABAJO
-Analizás la foto de una autoparte y devolvés un JSON con la mayor precisión posible.
-
-### INSTRUCCIONES DETALLADAS:
-- **No te rindas fácilmente.** Usá todo lo que veas: texto, logotipos, forma, color, material, número de parte.
-- **Tenés acceso a internet y conocimiento general** de autopartes de todas las marcas (Toyota, Honda, Nissan, Ford, Chevrolet, Hyundai, Kia, BMW, Mercedes, VW, Peugeot, Renault, Fiat, etc.).
-- **Si ves un código, número de parte o fabricante** (ej: "44320-06010", "MB-XXX"), incluilo en "codigo_oem".
-- **Si no hay marcas visibles**, inferí por la forma y el contexto. Ej: una parrilla cromada con forma específica puede ser de cierta marca aunque no diga el nombre.
-- **Si la pieza es de una categoría que no está en la lista**, igual elegí la más cercana.
-
-### CATEGORÍAS DISPONIBLES:
-parachoques, opticos, focos, guardabarros, capots, varios
-
-### CRITERIOS DE CONFIANZA:
-- "Alta" — Estás 90%+ seguro. Viste texto claro (marca, logo, código) o diseño inconfundible.
-- "Media" — 60-89% seguro. Identificás la categoría y posible marca pero no el modelo/año exacto.
-- "Baja" — Menos de 60%. Solo podés adivinar la categoría o no se entiende la foto.
-
-NUNCA devuelvas "Alta" si tenés dudas.
-
-### FORMATO DE RESPUESTA (SOLO JSON, SIN MARKDOWN NI BACKTICKS):
-{"marca":"marca compatible o No determinado","modelo":"modelo o No determinado","años":"rango (ej: 1995-2005) o año exacto (ej: 1998) o No determinado","categoria":"parachoques|opticos|focos|guardabarros|capots|varios","descripcion":"descripción breve máx 60 chars","posicion":"Delantero|Trasero|Izquierdo|Derecho|Central|No determinado","confianza":"Alta|Media|Baja","codigo_oem":"código OEM visible o vacío"}`;
-
-serve(async (req) => {
+async function callAI(apiURL: string, headers: Record<string,string>, body: unknown, timeoutMs = 45000): Promise<Record<string, unknown>> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const { image, provider, model } = await req.json();
-    if (!image) return new Response(JSON.stringify({ error: "image required" }), { status: 400 });
-
-    let result;
-    if (provider === "groq") {
-      const key = getNextGroqKey();
-      if (!key) return new Response(JSON.stringify({ error: "No Groq keys available" }), { status: 503 });
-      result = await callGroq(key, model || "meta-llama/llama-4-scout-17b-16e-instruct", image);
-    } else if (provider === "openrouter") {
-      const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
-      if (!apiKey) return new Response(JSON.stringify({ error: "OpenRouter key not configured" }), { status: 500 });
-      result = await callOpenRouter(apiKey, model || "google/gemma-3-27b-it:free", image);
-    } else if (provider === "gemini") {
-      const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
-      if (!apiKey) return new Response(JSON.stringify({ error: "Gemini key not configured" }), { status: 500 });
-      result = await callGemini(apiKey, model || "gemini-2.0-flash", image);
-    } else {
-      return new Response(JSON.stringify({ error: "unsupported provider" }), { status: 400 });
+    const res = await fetch(apiURL, { method:"POST", headers, body: JSON.stringify(body), signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      if (res.status === 429) return { ...FALLBACK, _isRateLimit: true, _error: `429 ${txt.slice(0,80)}` };
+      return { ...FALLBACK, _error: `${res.status} ${txt.slice(0,80)}` };
     }
-
-    return new Response(JSON.stringify(result), {
-      headers: { "Content-Type": "application/json" },
-    });
+    const json = await res.json();
+    const text = json?.choices?.[0]?.message?.content || "";
+    const parsed = tryParseJSON(text);
+    if (parsed) return normalize(parsed);
+    return { ...FALLBACK, _error: "JSON no parseable", _raw: text.slice(0,200) };
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message || "internal error" }), { status: 500 });
+    clearTimeout(timer);
+    if ((e as Error).name === "AbortError") return { ...FALLBACK, _error: "timeout" };
+    return { ...FALLBACK, _error: (e as Error).message?.slice(0,80) || "fetch error" };
   }
-});
-
-async function callGroq(key: string, model: string, image: string, attempt = 0): Promise<Record<string, unknown>> {
-  const body = { model, messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: [{ type: "image_url", image_url: { url: image } }] }], max_tokens: 200 };
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST", headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
-  });
-  if (res.status === 429) {
-    penalizeKey(key);
-    if (attempt < 2) {
-      const nextKey = getNextGroqKey();
-      if (nextKey && nextKey !== key) return callGroq(nextKey, model, image, attempt + 1);
-    }
-    return { marca: "No determinado", modelo: "No determinado", años: "No determinado", descripcion: "Rate limit — todas las keys en espera", posicion: "No determinado", confianza: "Baja", codigo_oem: "", _ok: false };
-  }
-  markKeyUsed(key);
-  return handleResponse(res);
-}
-
-async function callOpenRouter(key: string, model: string, image: string) {
-  const body = { model, messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: [{ type: "image_url", image_url: { url: image } }] }], max_tokens: 200 };
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST", headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
-  });
-  return handleResponse(res);
-}
-
-async function callGemini(key: string, model: string, image: string) {
-  const body = { contents: [{ role: "user", parts: [{ inlineData: { mimeType: "image/jpeg", data: image.split(",")[1] || image } }, { text: SYSTEM_PROMPT }] }] };
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-  });
-  const json = await res.json();
-  const text = json?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  const parsed = tryParseJSON(text) || { marca: "No determinado", modelo: "No determinado", años: "No determinado", categoria: "varios", descripcion: text.slice(0, 65), posicion: "No determinado", confianza: "Baja", codigo_oem: "", _ok: false };
-  return normalize(parsed);
-}
-
-async function handleResponse(res: Response) {
-  const json = await res.json();
-  const text = json?.choices?.[0]?.message?.content || "";
-  const parsed = tryParseJSON(text) || { marca: "No determinado", modelo: "No determinado", años: "No determinado", categoria: "varios", descripcion: text.slice(0, 65), posicion: "No determinado", confianza: "Baja", codigo_oem: "", _ok: false };
-  return normalize(parsed);
-}
-
-function normalize(obj: Record<string, unknown>) {
-  const confianza = String(obj.confianza || "Baja");
-  const isOk = confianza !== "Baja";
-  return { ...obj, confianza, _ok: isOk };
 }
 
 function tryParseJSON(s: string): Record<string, unknown> | null {
+  try { return JSON.parse(s.replace(/```json\s*/gi, "").replace(/```\s*$/g, "").trim()); } catch { return null; }
+}
+
+function normalize(obj: Record<string, unknown>) {
+  const c = String(obj.confianza || "Baja");
+  const ps = obj.precio_sugerido;
+  const precio = typeof ps === "number" ? ps : (ps ? Number(ps) : null);
+  return {
+    marca: String(obj.marca || "No determinado"),
+    modelo: String(obj.modelo || "No determinado"),
+    años: String(obj.años || "No determinado"),
+    categoria: String(obj.categoria || "varios"),
+    descripcion: String(obj.descripcion || "").slice(0,60),
+    posicion: String(obj.posicion || "No determinado"),
+    confianza: c,
+    codigo_oem: String(obj.codigo_oem || ""),
+    precio_sugerido: (isNaN(precio) || precio === null || precio === 0) ? null : Math.round(precio),
+    fuentes: Array.isArray(obj.fuentes) ? obj.fuentes.slice(0,3) : [],
+    _ok: c !== "Baja"
+  };
+}
+
+const DEFAULT_PROMPT = `Identificá esta autoparte en una línea de JSON exacto.
+Buscá: marca visible (logotipo, texto), modelo, años, categoría (parachoques|opticos|focos|guardabarros|capots|varios), posición (Delantero|Trasero|Izquierdo|Derecho), código OEM si hay.
+Confianza: Alta si marca+modelo seguros, Media si dudas, Baja si no se identifica.
+{"marca":"","modelo":"","años":"","categoria":"varios","descripcion":"","posicion":"No determinado","confianza":"Baja","codigo_oem":""}`;
+
+const ENHANCE_PROMPT = `Autoparte identificada inicialmente (confirmá o corregí):
+{marca}, {modelo}, {años}, {categoria}, {posicion}, OEM:{codigo_oem}, desc:{descripcion}
+
+Resultados de búsqueda online (precios reales de tiendas):
+{searchText}
+
+Respondé SOLO JSON con los campos corregidos + precio_sugerido (número entero en CLP, ej: 45000) y fuentes (hasta 3 URLs).
+Si no hay precios claros, precio_sugerido: null.
+{"marca":"","modelo":"","años":"","categoria":"varios","descripcion":"","posicion":"No determinado","confianza":"Alta","codigo_oem":"","precio_sugerido":null,"fuentes":[]}`;
+
+async function searchTavily(query: string): Promise<{title:string;url:string;content:string}[] | null> {
+  const apiKey = Deno.env.get("TAVILY_API_KEY");
+  if (!apiKey) return null;
   try {
-    const cleaned = s.replace(/```json\s*/gi, "").replace(/```\s*$/g, "").trim();
-    const obj = JSON.parse(cleaned);
-    if (obj && typeof obj === "object") return obj;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ api_key: apiKey, query, search_depth: "basic", max_results: 5 }),
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json?.results?.length) return null;
+    return json.results.map((r: {title?:string;url?:string;content?:string}) => ({
+      title: r.title || "", url: r.url || "", content: r.content || ""
+    })).filter(r => r.content || r.title);
+  } catch {
     return null;
-  } catch { return null; }
+  }
+}
+
+function buildSearchQuery(result: Record<string, unknown>): string {
+  const parts = [
+    result.marca,
+    result.modelo,
+    result.años,
+    result.descripcion,
+    result.codigo_oem,
+    result.posicion,
+    "autoparte",
+    "precio",
+    "Chile"
+  ].filter(Boolean).filter(s => {
+    const v = String(s).toLowerCase();
+    return v !== "no determinado" && v !== "varios" && v !== "";
+  });
+  return [...new Set(parts)].join(" ").slice(0, 200);
+}
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type",
+  "Access-Control-Max-Age": "86400",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+  try {
+    const { image, provider, model, prompt } = await req.json();
+    if (!image) return new Response(JSON.stringify({ error: "image required" }), { status: 400, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+
+    const sprompt = prompt || DEFAULT_PROMPT;
+    let vision: Record<string, unknown>;
+    let usedKey = "";
+
+    if (provider === "groq") {
+      const key = getNextGroqKey();
+      if (!key) return new Response(JSON.stringify({ error: "No Groq keys available" }), { status: 503, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+      usedKey = key;
+      vision = await callGroqWithRetry(key, model || "meta-llama/llama-4-scout-17b-16e-instruct", image, sprompt);
+    } else if (provider === "openrouter") {
+      const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
+      if (!apiKey) return new Response(JSON.stringify({ error: "OpenRouter key not configured" }), { status: 500, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+      vision = await callOpenRouter(apiKey, model || "google/gemma-3-27b-it:free", image, sprompt);
+    } else if (provider === "gemini") {
+      const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
+      if (!apiKey) return new Response(JSON.stringify({ error: "Gemini key not configured" }), { status: 500, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+      vision = await callGemini(apiKey, model || "gemini-2.0-flash", image, sprompt);
+    } else {
+      return new Response(JSON.stringify({ error: "unsupported provider" }), { status: 400, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+    }
+
+    if (vision._ok && vision.confianza !== "Baja") {
+      const query = buildSearchQuery(vision);
+      if (query) {
+        const results = await searchTavily(query);
+        if (results && results.length > 0) {
+          const searchText = results.map(r => `- ${r.title}\n  ${r.content}\n  ${r.url}`).join("\n\n");
+          const enhanceBody = ENHANCE_PROMPT
+            .replace("{marca}", String(vision.marca))
+            .replace("{modelo}", String(vision.modelo))
+            .replace("{años}", String(vision.años))
+            .replace("{categoria}", String(vision.categoria))
+            .replace("{posicion}", String(vision.posicion))
+            .replace("{codigo_oem}", String(vision.codigo_oem))
+            .replace("{descripcion}", String(vision.descripcion))
+            .replace("{searchText}", searchText);
+
+          let enhanced: Record<string, unknown> | null = null;
+          if (provider === "groq") {
+            const key = getNextGroqKey();
+            if (key) {
+              const r = await callGroqChat(key, model || "meta-llama/llama-4-scout-17b-16e-instruct",
+                [{ role: "user", content: enhanceBody }], 30000);
+              if (r && !r._error) enhanced = r;
+            }
+          } else if (provider === "openrouter") {
+            const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
+            if (apiKey) {
+              const r = await callAI("https://openrouter.ai/api/v1/chat/completions",
+                { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                { model: model || "google/gemma-3-27b-it:free", messages: [{ role: "user", content: enhanceBody }], max_tokens: 500 }, 30000);
+              if (r && !r._error) enhanced = r;
+            }
+          } else if (provider === "gemini") {
+            const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
+            if (apiKey) {
+              const geminiBody = { contents: [{ role: "user", parts: [{ text: enhanceBody }] }] };
+              try {
+                const ctrl = new AbortController();
+                const t = setTimeout(() => ctrl.abort(), 30000);
+                const gres = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model || "gemini-2.0-flash"}:generateContent?key=${apiKey}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(geminiBody), signal: ctrl.signal });
+                clearTimeout(t);
+                const gj = await gres.json();
+                const gt = gj?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                const gp = tryParseJSON(gt);
+                if (gp) enhanced = normalize(gp);
+              } catch {}
+            }
+          }
+
+          if (enhanced) {
+            enhanced.fuentes = results.map(r => r.url).filter(Boolean).slice(0,3);
+            return new Response(JSON.stringify(enhanced), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+          }
+        }
+      }
+    }
+
+    return new Response(JSON.stringify(vision), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.message || "internal error" }), { status: 500, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+  }
+});
+
+async function callGroqWithRetry(key: string, model: string, image: string, prompt: string, attempt = 0): Promise<Record<string, unknown>> {
+  const result = await callAI("https://api.groq.com/openai/v1/chat/completions",
+    { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+    { model, messages: [{ role:"user", content:[{ type:"image_url", image_url:{ url:image } }, { type:"text", text:prompt }] }], max_tokens:500 },
+    30000
+  );
+  if (result._isRateLimit && attempt < 2) {
+    penalizeKey(key);
+    const nextKey = getNextGroqKey();
+    if (nextKey && nextKey !== key) return callGroqWithRetry(nextKey, model, image, prompt, attempt + 1);
+  }
+  if (!result._isRateLimit) markKeyUsed(key);
+  return result;
+}
+
+async function callOpenRouter(key: string, model: string, image: string, prompt: string) {
+  return callAI("https://openrouter.ai/api/v1/chat/completions",
+    { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+    { model, messages: [{ role:"user", content:[{ type:"image_url", image_url:{ url:image } }, { type:"text", text:prompt }] }], max_tokens:500 },
+    30000
+  );
+}
+
+async function callGemini(key: string, model: string, image: string, prompt: string) {
+  const body = { contents: [{ role:"user", parts:[{ inlineData:{ mimeType:"image/jpeg", data: image.split(",")[1] || image } }, { text: prompt }] }] };
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30000);
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body), signal: controller.signal });
+    clearTimeout(timer);
+    const json = await res.json();
+    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const parsed = tryParseJSON(text);
+    if (parsed) return normalize(parsed);
+    return { ...FALLBACK, _error: "Gemini: JSON no parseable", _raw: text.slice(0,200) };
+  } catch (e) {
+    return { ...FALLBACK, _error: (e as Error).name === "AbortError" ? "timeout" : (e as Error).message?.slice(0,80) || "gemini error" };
+  }
 }
