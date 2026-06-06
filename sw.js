@@ -1,5 +1,10 @@
-const CACHE = "capv2-v1";
-const URLS = ["index.html", "manifest.json"];
+const CACHE = "capv2-v3";
+const URLS = ["index.html", "manifest.json",
+  "css/styles.css",
+  "js/config.js", "js/supabase.js", "js/constants.js",
+  "js/license.js", "js/init.js", "js/ai.js",
+  "js/ui.js", "js/backup.js", "js/health.js", "js/diag.js",
+  "js/app.js"];
 
 self.addEventListener("install", e => {
   e.waitUntil(
