@@ -10,6 +10,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="CAPv2"/>
 <link rel="manifest" href="manifest.json" id="pwa-manifest"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="css/styles.css"/>
@@ -131,7 +134,7 @@
     </div>
     <div class="modal-btns">
       <button class="btn-primary" id="manual-save">Agregar parte</button>
-      <button class="btn-ghost-sm" onclick="closeModal('manual-modal')">Cancelar</button>
+      <button class="btn-ghost-sm" id="manual-cancel" onclick="closeModal('manual-modal')">Cancelar</button>
     </div>
   </div>
 </div>
@@ -157,6 +160,7 @@
     <div class="app-logo-text">
       <div class="app-logo-name">CAPv2</div>
       <div class="app-logo-sub">Catálogo</div>
+      <div class="app-watermark">by: ravn</div>
     </div>
   </div>
   <div class="hdr-right">
@@ -266,11 +270,11 @@
 
 
 <!-- TOAST -->
-<div id="toast"><span id="toast-msg"></span><button id="toast-undo" style="display:none">Deshacer</button></div>
+<div id="toast" aria-live="polite"><span id="toast-msg"></span><button id="toast-undo" style="display:none">Deshacer</button></div>
 
 <!-- LIGHTBOX -->
 <div id="lightbox" onclick="closeLightbox()">
-  <img id="lb-img" src="" alt=""/>
+  <img id="lb-img" src="" alt="Imagen ampliada"/>
 <button id="lb-close" onclick="closeLightbox()" aria-label="Cerrar">&#10005;</button>
 </div>
 
