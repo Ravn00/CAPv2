@@ -1,6 +1,6 @@
 // ---
-const MAX_DIM = 640;
-const MAX_B64_KB = 900;
+const MAX_DIM = 1024;
+const MAX_B64_KB = 1200;
 
 function resizeFile(file) {
   return new Promise(resolve => {
@@ -48,26 +48,27 @@ async function analyzeImage(item) {
     const provider = "groq";
     // Edge Function proxy (keys are server-side, never exposed to frontend)
     const efUrl = `${SB_URL}/functions/v1/analyze-part`;
+    let efResp;
     try {
-      const efResp = await fetch(efUrl, {
+      efResp = await fetch(efUrl, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ image: `data:${img.mime};base64,${img.b64}`, provider, model: provider === "groq" ? "meta-llama/llama-4-scout-17b-16e-instruct" : provider === "openrouter" ? "google/gemma-3-27b-it:free" : "gemini-2.0-flash", prompt: PROMPT }),
-        signal: AbortSignal.timeout(30000)
+        signal: AbortSignal.timeout(45000)
       });
-      if (efResp.ok) {
-        const efResult = await efResp.json();
-        if (efResult && efResult._ok !== false) {
-          return { marca: efResult.marca || "No determinado", modelo: efResult.modelo || "No determinado", años: efResult.años || "No determinado", categoria: efResult.categoria || "varios", descripcion: (efResult.descripcion || "").slice(0, 65), posicion: efResult.posicion || "No determinado", confianza: efResult.confianza || "Baja", _ok: true };
-        }
-        return fallback(efResult.error || "Error en edge function");
-      }
-      return fallback(`Error ${efResp.status} en edge function`);
-    } catch(_) {
+    } catch(e) {
+      if (e.name==="AbortError") return fallback("Timeout — reintentando", true);
       return fallback("No se pudo conectar con el servidor de IA");
     }
+    if (efResp.ok) {
+      const efResult = await efResp.json();
+      if (efResult && efResult._ok !== false) {
+        return { marca: efResult.marca || "No determinado", modelo: efResult.modelo || "No determinado", años: efResult.años || "No determinado", categoria: efResult.categoria || "varios", descripcion: (efResult.descripcion || "").slice(0, 65), posicion: efResult.posicion || "No determinado", confianza: efResult.confianza || "Baja", precio_sugerido: efResult.precio_sugerido ?? null, fuentes: efResult.fuentes || [], _diag: efResult._diag ?? null, _ok: true };
+      }
+      return fallback(efResult.error || "Error en edge function");
+    }
+    return fallback(`Error ${efResp.status} en edge function`);
   } catch(err) {
-    if (err.name==="AbortError") return fallback("Timeout — reintentando", true);
     return fallback(err.message?.slice(0,55)||"Error desconocido");
   }
 }
@@ -100,6 +101,8 @@ async function processQueue() {
         marca:result.marca, modelo:result.modelo, años:result.años,
         descripcion:result.descripcion, posicion:result.posicion,
         confianza:result.confianza, _ok:result._ok,
+        precio_sugerido:result.precio_sugerido ?? null,
+        fuentes:result.fuentes || [],
         addedAt:new Date().toLocaleString("es-CL"),
         photos: extraPhotos.length ? [item.preview, ...extraPhotos.map(p => p.preview)] : undefined
       };
@@ -110,7 +113,6 @@ async function processQueue() {
       await savePartToSupabase(part);
       saveParts();
       replaceLoadingCard(item.id, part);
-      const idx = queue.indexOf(item); if (idx >= 0) queue.splice(idx, 1);
       doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
       await logScan(part.id, part.categoria, "success", ms);
     } else if (result._ok && result.confianza === "Media") {
@@ -122,6 +124,8 @@ async function processQueue() {
         marca:result.marca, modelo:result.modelo, años:result.años,
         descripcion:result.descripcion, posicion:result.posicion,
         confianza:result.confianza, codigo_oem:result.codigo_oem||"",
+        precio_sugerido:result.precio_sugerido ?? null,
+        fuentes:result.fuentes || [],
         addedAt:new Date().toLocaleString("es-CL"),
         photos: extraPhotos.length ? [item.preview, ...extraPhotos.map(p => p.preview)] : undefined,
         batchFiles: extraPhotos.map(p => ({ preview: p.preview, fileDataUrl: p.fileDataUrl, fileName: p.fileName, fileSize: p.fileSize }))
@@ -130,7 +134,6 @@ async function processQueue() {
       savePendingReviews();
       replaceLoadingCard(item.id, null, "Revisar");
       showReviewBadge();
-      const idx = queue.indexOf(item); if (idx >= 0) queue.splice(idx, 1);
       doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
       await logScan(review.id, review.categoria, "pending_review", ms);
     } else {
@@ -143,6 +146,9 @@ async function processQueue() {
           marca:result.marca, modelo:result.modelo, años:result.años,
           descripcion:result.descripcion, posicion:result.posicion,
           confianza:result.confianza, _ok:result._ok,
+          precio_sugerido:result.precio_sugerido ?? null,
+          precioVenta:result.precio_sugerido ?? null,
+          fuentes:result.fuentes || [],
           addedAt:new Date().toLocaleString("es-CL"),
           photos: [item.preview, ...extraPhotos.map(p => p.preview)],
           batchFiles: extraPhotos.map(p => ({ preview: p.preview, fileDataUrl: p.fileDataUrl, fileName: p.fileName, fileSize: p.fileSize }))
@@ -156,20 +162,26 @@ async function processQueue() {
         replaceLoadingCard(item.id, null, "Manual");
         openManualWithResult(result);
       }
-      const idx = queue.indexOf(item); if (idx >= 0) queue.splice(idx, 1);
       doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
       await logScan(item.id, result.categoria||item.presetCat||"varios", "manual_needed", ms);
     }
     return false;
   }
 
+    const CONCURRENCY = 2;
     while (queue.length > 0) {
-    while (queuePaused && queue.length > 0) { await new Promise(r => setTimeout(r, 500)); }
-    if (queue.length === 0) break;
-    const item = queue[0];
-    const skipped = await doOne(item);
-    if (skipped) { const idx = queue.indexOf(item); if (idx >= 0) queue.splice(idx, 1); }
-  }
+      while (queuePaused && queue.length > 0) { await new Promise(r => setTimeout(r, 500)); }
+      if (queue.length === 0) break;
+      const batch = queue.splice(0, CONCURRENCY);
+      try {
+        await Promise.all(batch.map(async item => {
+          try {
+            const skipped = await doOne(item);
+            if (skipped) cancelledItems.delete(item.id);
+          } catch(e) { console.warn("doOne error:", e); }
+        }));
+      } catch(e) { console.warn("batch error:", e); }
+    }
 
   processing = false; queuePaused = false;
   procPill.classList.remove("on"); progWrap.classList.remove("on");
