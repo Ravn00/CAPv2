@@ -107,9 +107,9 @@ Respondé SOLO JSON con los campos corregidos + precio_sugerido (número entero 
 Si no hay precios claros, precio_sugerido: null.
 {"marca":"","modelo":"","años":"","categoria":"varios","descripcion":"","posicion":"No determinado","confianza":"Alta","codigo_oem":"","precio_sugerido":null,"fuentes":[]}`;
 
-async function searchTavily(query: string): Promise<{title:string;url:string;content:string}[] | null> {
+async function searchTavily(query: string): Promise<{results:{title:string;url:string;content:string}[]|null;error:string|null}> {
   const apiKey = Deno.env.get("TAVILY_API_KEY");
-  if (!apiKey) return null;
+  if (!apiKey) return { results: null, error: "TAVILY_API_KEY not set" };
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 10000);
@@ -120,14 +120,18 @@ async function searchTavily(query: string): Promise<{title:string;url:string;con
       signal: controller.signal
     });
     clearTimeout(timer);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      return { results: null, error: `Tavily HTTP ${res.status}: ${txt.slice(0,100)}` };
+    }
     const json = await res.json();
-    if (!json?.results?.length) return null;
-    return json.results.map((r: {title?:string;url?:string;content?:string}) => ({
+    if (!json?.results?.length) return { results: null, error: "Tavily: sin resultados" };
+    const items = json.results.map((r: {title?:string;url?:string;content?:string}) => ({
       title: r.title || "", url: r.url || "", content: r.content || ""
     })).filter(r => r.content || r.title);
-  } catch {
-    return null;
+    return { results: items.length ? items : null, error: items.length ? null : "Tavily: resultados vacíos" };
+  } catch (e) {
+    return { results: null, error: `Tavily fetch error: ${(e as Error).message?.slice(0,80) || "unknown"}` };
   }
 }
 
@@ -192,10 +196,11 @@ serve(async (req) => {
       const query = buildSearchQuery(vision);
       vision._diag.searchQuery = query;
       if (query) {
-        const results = await searchTavily(query);
+        const { results, error: tavilyErr } = await searchTavily(query);
+        if (tavilyErr) vision._diag._tavilyError = tavilyErr;
         vision._diag.tavily = results ? results.map(r => ({ title: r.title, url: r.url })) : [];
         if (results && results.length > 0) {
-          const searchText = results.map(r => `- ${r.title}\n  ${r.content}\n  ${r.url}`).join("\n\n");
+          const searchText = results.map(r => `- Título: ${r.title}\n  ${r.content}\n  URL: ${r.url}`).join("\n\n");
           const enhanceBody = ENHANCE_PROMPT
             .replace("{marca}", String(vision.marca))
             .replace("{modelo}", String(vision.modelo))
@@ -207,13 +212,11 @@ serve(async (req) => {
             .replace("{searchText}", searchText);
 
           let enhanced: Record<string, unknown> | null = null;
-          if (provider === "groq") {
-            const key = getNextGroqKey();
-            if (key) {
-              const r = await callGroqChat(key, model || "meta-llama/llama-4-scout-17b-16e-instruct",
-                [{ role: "user", content: enhanceBody }], 30000);
-              if (r && !r._error) enhanced = r;
-            }
+          // Use same key as vision (it just worked), bypass cooldown for text-only follow-up
+          if (provider === "groq" && usedKey) {
+            const r = await callGroqChat(usedKey, model || "meta-llama/llama-4-scout-17b-16e-instruct",
+              [{ role: "user", content: enhanceBody }], 30000);
+            if (r && !r._error) enhanced = r;
           } else if (provider === "openrouter") {
             const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
             if (apiKey) {
@@ -244,6 +247,8 @@ serve(async (req) => {
             vision._diag.enhanced = true;
             Object.assign(vision, enhanced);
             return new Response(JSON.stringify(vision), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+          } else {
+            vision._diag._enhanceError = "Groq enhance falló o devolvió error";
           }
         }
       }
