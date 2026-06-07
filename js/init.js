@@ -19,7 +19,7 @@ async function initApp() {
 
   // Network status indicator
   const nb = document.getElementById("net-banner");
-  function updateNet() { nb.classList.toggle("on", !navigator.onLine); }
+  function updateNet() { if(nb) nb.classList.toggle("on", !navigator.onLine); }
   window.addEventListener("online", updateNet);
   window.addEventListener("offline", updateNet);
   updateNet();
@@ -35,14 +35,28 @@ async function initApp() {
 
   // Load parts from Supabase and merge with localStorage
   await loadPartsFromSupabase();
-  // Also load any local-only parts from localStorage
+  // Sync: remove from localStorage any parts deleted from Supabase (other device),
+  // but keep parts with data: URLs (not yet uploaded)
   try {
     const saved = localStorage.getItem("ap_parts_v2");
     if (saved) {
       const local = JSON.parse(saved);
-      // Merge: keep parts that exist in local but not in supabase
       const supabaseIds = new Set(parts.map(p => p.id));
-      local.forEach(p => { if (!supabaseIds.has(p.id)) parts.push(p); });
+      const toKeep = [];
+      let removed = 0;
+      local.forEach(p => {
+        if (supabaseIds.has(p.id)) { toKeep.push(p); return; }
+        // Part not in Supabase — check if it has pending data: URLs
+        const hasDataUrl = (p.preview && String(p.preview).startsWith("data:")) ||
+                           (p.previewFull && String(p.previewFull).startsWith("data:"));
+        if (hasDataUrl) { toKeep.push(p); } else { removed++; }
+      });
+      if (removed > 0) {
+        // Save cleaned localStorage
+        try { localStorage.setItem("ap_parts_v2", JSON.stringify(toKeep)); } catch(_) {}
+      }
+      // Also keep explicitly any parts from localStorage not yet in Supabase
+      toKeep.forEach(p => { if (!supabaseIds.has(p.id)) parts.push(p); });
     }
   } catch(e) {}
 
