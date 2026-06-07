@@ -288,7 +288,12 @@ function buildEditCard(part) {
     editBuf.stock=Math.max(1,parseInt(editBuf.stock)||1);
     editBuf.precioCompra=parseFloat(editBuf.precioCompra)??null;
     editBuf.precioVenta=parseFloat(editBuf.precioVenta)??null;
-    const updated={...part,...editBuf}; parts=parts.map(p=>p.id===part.id?updated:p); editId=null; await savePartToSupabase(updated); saveParts(); renderAll(); toast("Cambios guardados");
+    const updated={...part,...editBuf}; parts=parts.map(p=>p.id===part.id?updated:p); editId=null;
+    try {
+      const ok = await savePartToSupabase(updated);
+      if (ok === false) { toast("Error: no se pudo guardar en servidor"); return; }
+    } catch(e) { console.error("save error:", e); toast("Error al guardar: " + e.message); return; }
+    saveParts(); renderAll(); toast("Cambios guardados");
   };
   el.querySelector(`#cn-${part.id}`).onclick = () => { editId=null; renderFolderContent(); };
   return el;
