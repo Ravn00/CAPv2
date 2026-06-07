@@ -62,7 +62,7 @@ let totalBatch = 0;
 
 ALL_FOLDERS.forEach(f => { folderSearch[f] = ""; folderStatus[f] = "all"; });
 
-const $ = id => document.getElementById(id);
+
 const procPill = $("proc-pill");
 const procTxt = $("proc-txt");
 const progWrap = $("prog-wrap");

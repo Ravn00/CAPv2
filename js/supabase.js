@@ -106,37 +106,6 @@ async function loadPartsFromSupabase() {
   });
 }
 
-async function apiProxy(table, method, body, query) {
-  if (!writeToken) { console.warn("apiProxy: no write token configured"); return null; }
-  try {
-    const res = await fetch(`${SB_URL}/functions/v1/api-proxy`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-write-token": writeToken },
-      body: JSON.stringify({ table, method, body, query: query || "" })
-    });
-    if (!res.ok) { console.warn("apiProxy error:", res.status); return null; }
-    return true;
-  } catch(e) { console.warn("apiProxy error:", e.message); return null; }
-}
-
-async function resetAllData() {
-  const step1 = confirm("⚠️ RESET TOTAL\n\nEsto eliminará TODOS los datos:\n• Catálogo completo\n• Ventas registradas\n• Historial de escaneos\n• Dispositivos\n• Configuración\n\n¿Estás seguro?");
-  if (!step1) return;
-  const step2 = confirm("ÚLTIMA ADVERTENCIA\n\nEsta acción NO se puede deshacer.\nTodo el localStorage y los datos en Supabase serán eliminados.\n\n¿Confirmas?");
-  if (!step2) return;
-  localStorage.clear();
-  if (writeToken) {
-    try {
-      await fetch(`${SB_URL}/functions/v1/api-proxy`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-write-token": writeToken },
-        body: JSON.stringify({ action: "reset-all" })
-      });
-    } catch(e) { console.warn("reset-all error:", e); }
-  }
-  location.reload();
-}
-
 async function savePartToSupabase(part) {
   const { fileDataUrl, file, batchFiles, ...rest } = part;
 
@@ -184,16 +153,6 @@ async function savePartToSupabase(part) {
   if (!ok) { console.error("savePartToSupabase: apiProxy falló para", part.id); return false; }
   await sbLogAudit(part.id, isUpdate ? "update" : "create", { marca: part.marca, modelo: part.modelo });
   return true;
-}
-
-async function sbLogAudit(partId, action, changes) {
-  try {
-    await fetch(`${SB_URL}/rest/v1/partes_log`, {
-      method: "POST",
-      headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
-      body: JSON.stringify({ part_id: partId, action, changes: JSON.stringify(changes || {}), device_id: deviceId, timestamp: new Date().toISOString() })
-    });
-  } catch(_) {}
 }
 
 async function deletePartFromSupabase(partId) {

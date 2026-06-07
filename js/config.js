@@ -20,50 +20,6 @@ let deviceId;
 // Config cache
 let configCache = null;
 
-function toast(msg) {
-  const el = document.getElementById("toast");
-  if (!el) return;
-  const msgEl = document.getElementById("toast-msg") || el.querySelector(".toast-msg");
-  if (msgEl) msgEl.textContent = msg;
-  el.classList.add("on");
-  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("on"), 3000);
-}
-
-async function sbFetch(path, method="GET", body=null, showError=true) {
-  const opts = { method, headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" } };
-  if (body) opts.body = JSON.stringify(body);
-  try {
-    const r = await fetch(SB_URL + path, opts);
-    if (!r.ok) {
-      if (r.status === 409) return null;
-      const txt = await r.text().catch(() => "");
-      console.error("sbFetch error:", method, path, r.status, txt.slice(0,100));
-      if (showError) toast("Error " + r.status);
-      return null;
-    }
-    if (method === "DELETE" || r.status === 204) return true;
-    return r.headers.get("content-type")?.includes("json") ? await r.json() : true;
-  } catch(e) {
-    console.error("sbFetch error:", e.message);
-    if (showError) toast("Error de red");
-    return null;
-  }
-}
-
-async function sbFetchAll(path) {
-  let all = [], page = 0, pageSize = 1000;
-  while (true) {
-    const offset = page * pageSize;
-    const url = `${path}&offset=${offset}&limit=${pageSize}`;
-    const data = await sbFetch(url, "GET");
-    if (!data || data.length === 0) break;
-    all = all.concat(data);
-    if (data.length < pageSize) break;
-    page++;
-  }
-  return all;
-}
-
 // Read config from Supabase
 async function readConfig() {
   try {
