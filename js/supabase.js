@@ -175,9 +175,14 @@ async function savePartToSupabase(part) {
   }
 
   rest.company_id = companyId || null;
-  const ok = await apiProxy("partes", "POST", { id: part.id, data: rest });
+  let isUpdate = false;
+  let ok = await apiProxy("partes", "POST", { id: part.id, data: rest });
+  if (!ok) {
+    isUpdate = true;
+    ok = await apiProxy("partes", "PATCH", { data: rest }, `?id=eq.${encodeURIComponent(part.id)}`);
+  }
   if (!ok) { console.error("savePartToSupabase: apiProxy falló para", part.id); return; }
-  await sbLogAudit(part.id, "create", { marca: part.marca, modelo: part.modelo });
+  await sbLogAudit(part.id, isUpdate ? "update" : "create", { marca: part.marca, modelo: part.modelo });
 }
 
 async function sbLogAudit(partId, action, changes) {
