@@ -23,14 +23,9 @@ let configCache = null;
 // Read config from Supabase
 async function readConfig() {
   try {
-    let rows = await sbFetch("/rest/v1/admin_config?select=*&limit=1");
-    if (!rows || !rows.length) {
-      const created = await sbFetch("/rest/v1/admin_config", "POST", { id: "global", api_keys: [] });
-      if (created) rows = await sbFetch("/rest/v1/admin_config?select=*&limit=1");
-    }
+    let rows = await apiProxyRead("admin_config", "*", "&limit=1");
     if (!rows || !rows.length) return null;
     const cfg = rows[0];
-    // api_keys may be stored as JSON string
     if (typeof cfg.api_keys === "string") {
       try { cfg.api_keys = JSON.parse(cfg.api_keys); } catch(_) { cfg.api_keys = []; }
     }

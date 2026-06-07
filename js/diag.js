@@ -51,7 +51,7 @@ async function runSystemDiag() {
   let sbOk = false, sbMs = 0;
   try {
     const t0 = performance.now();
-    const r = await fetch(`${SB_URL}/rest/v1/admin_config?select=id&limit=1`, {
+    const r = await fetch(`${SB_URL}/rest/v1/partes?select=id&limit=1`, {
       headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
       signal: AbortSignal.timeout(10000),
     });

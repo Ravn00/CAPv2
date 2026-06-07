@@ -11,32 +11,13 @@ let _backupTimer = null;
 // --- Reviews backup (stored in admin_config as JSON) ---
 async function backupReviews() {
   if (!pendingReviews || !pendingReviews.length) return;
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
-    await fetch(`${SB_URL}/rest/v1/admin_config?id=eq.global`, {
-      method: "PATCH",
-      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
-      body: JSON.stringify({ review_backup: pendingReviews.slice(0, 200) }),
-      signal: ctrl.signal,
-    });
-    clearTimeout(t);
-  } catch (e) { /* silent */ }
+  await apiProxy("admin_config", "PATCH", { review_backup: pendingReviews.slice(0, 200) }, "?id=eq.global");
 }
 
 async function restoreReviewsFromBackup() {
   try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
-    const r = await fetch(`${SB_URL}/rest/v1/admin_config?select=review_backup&id=eq.global`, {
-      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
-      signal: ctrl.signal,
-    });
-    clearTimeout(t);
-    if (!r.ok) return;
-    const rows = await r.json();
+    const rows = await apiProxyRead("admin_config", "review_backup", "&id=eq.global");
     if (rows?.[0]?.review_backup && Array.isArray(rows[0].review_backup)) {
-      // Merge with existing, avoid duplicates
       const existing = new Set(pendingReviews.map(p => p.id));
       rows[0].review_backup.forEach(r => { if (!existing.has(r.id)) pendingReviews.push(r); });
       savePendingReviews();
@@ -58,30 +39,12 @@ async function backupPartsSnapshot() {
     photoUrl: p.photoUrl || null,
     _ok: p._ok ? true : false,
   }));
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 12000);
-    await fetch(`${SB_URL}/rest/v1/admin_config?id=eq.global`, {
-      method: "PATCH",
-      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
-      body: JSON.stringify({ parts_backup: snapshot }),
-      signal: ctrl.signal,
-    });
-    clearTimeout(t);
-  } catch (e) { /* silent */ }
+  await apiProxy("admin_config", "PATCH", { parts_backup: snapshot }, "?id=eq.global");
 }
 
 async function restorePartsFromBackup() {
   try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
-    const r = await fetch(`${SB_URL}/rest/v1/admin_config?select=parts_backup&id=eq.global`, {
-      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
-      signal: ctrl.signal,
-    });
-    clearTimeout(t);
-    if (!r.ok) return [];
-    const rows = await r.json();
+    const rows = await apiProxyRead("admin_config", "parts_backup", "&id=eq.global");
     if (rows?.[0]?.parts_backup && Array.isArray(rows[0].parts_backup)) {
       return rows[0].parts_backup;
     }
