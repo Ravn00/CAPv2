@@ -133,20 +133,6 @@ function formatWhatsAppText(part) {
   ].filter(Boolean).join("\n");
 }
 
-function copyToClipboard(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => toast("Copiado al portapapeles")).catch(() => fallbackCopy(text));
-  } else { fallbackCopy(text); }
-}
-
-function fallbackCopy(text) {
-  const ta = document.createElement("textarea");
-  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
-  document.body.appendChild(ta); ta.select();
-  try { document.execCommand("copy"); toast("Copiado"); } catch(_) { toast("Error al copiar"); }
-  document.body.removeChild(ta);
-}
-
 function buildPartCard(part) {
   const cat = CATS[part.categoria]||CATS.varios;
   const imgSrc = part.preview||part.previewFull||"";
@@ -538,11 +524,6 @@ function toastWithUndo(msg, onUndo) {
 $("toast-undo").onclick = () => {
   if (undoAction) { const fn = undoAction; undoAction=null; $("toast").classList.remove("on"); $("toast-undo").style.display="none"; fn(); }
 };
-function openLightbox(src) { $("lb-img").src=src; $("lightbox").classList.add("on"); }
-function closeLightbox() { $("lightbox").classList.remove("on"); }
-function closeModal(id) { const el = $(id); if (el) el.classList.remove("on"); }
-function escH(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;").replace(/\//g,"&#x2F;"); }
-
 // ---
 // DASHBOARD
 // ---

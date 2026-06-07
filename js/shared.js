@@ -1,6 +1,6 @@
 // Shared utilities — CAPv2
 function $(id) { return document.getElementById(id); }
-function escH(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+function escH(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;").replace(/\//g,"&#x2F;"); }
 
 function toast(msg) {
   const el = document.getElementById("toast");
@@ -74,6 +74,22 @@ async function sbLogAudit(partId, action, changes) {
       body: JSON.stringify({ part_id: partId, action, changes: JSON.stringify(changes || {}), device_id: deviceId, timestamp: new Date().toISOString() })
     });
   } catch(_) {}
+}
+
+function closeModal(id) { const el = $(id); if (el) el.classList.remove("on"); }
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => toast("Copiado al portapapeles")).catch(() => fallbackCopy(text));
+  } else { fallbackCopy(text); }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); toast("Copiado"); } catch(_) { toast("Error al copiar"); }
+  document.body.removeChild(ta);
 }
 
 async function resetAllData() {
