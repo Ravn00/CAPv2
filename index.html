@@ -332,6 +332,9 @@
 <script src="js/health.js"></script>
 <script src="js/diag.js"></script>
 <script src="js/app.js"></script>
+<script>
+document.addEventListener('focusin',function(e){var i=e.target;if(i.tagName!=='INPUT'||i._enterSearch)return;var ph=i.placeholder||'';if(ph.indexOf('Buscar')<0&&ph.indexOf('buscar')<0)return;i._enterSearch=true;i._origInput=i.oninput;i.oninput=function(){};if(ph.indexOf('↵')<0)i.placeholder=ph.replace(/…*$/,'').trim()+' ↵';i.onkeydown=function(e){if(e.key==='Enter'&&i._origInput)i._origInput({target:{value:this.value}})}});
+</script>
 </body>
 </html>
 
