@@ -181,8 +181,9 @@ async function savePartToSupabase(part) {
     isUpdate = true;
     ok = await apiProxy("partes", "PATCH", { data: rest }, `?id=eq.${encodeURIComponent(part.id)}`);
   }
-  if (!ok) { console.error("savePartToSupabase: apiProxy falló para", part.id); return; }
+  if (!ok) { console.error("savePartToSupabase: apiProxy falló para", part.id); return false; }
   await sbLogAudit(part.id, isUpdate ? "update" : "create", { marca: part.marca, modelo: part.modelo });
+  return true;
 }
 
 async function sbLogAudit(partId, action, changes) {
