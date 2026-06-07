@@ -1,4 +1,4 @@
-const CACHE = "capv2-v3";
+const CACHE = "capv2-v4";
 const URLS = ["index.html", "manifest.json",
   "css/styles.css",
   "js/config.js", "js/supabase.js", "js/constants.js",
