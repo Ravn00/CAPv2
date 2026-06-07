@@ -632,10 +632,16 @@ function openReviewModal() {
   pendingReviews.forEach((r, i) => {
     const card = document.createElement("div"); card.className = "ven-card";
     card.style.cursor = "default";
+    const imgSrc = r.preview || r.previewFull || "";
     const pDisplay = r.precioVenta || r.precio_sugerido;
     const priceHtml = pDisplay ? `<span style="color:var(--green);font-weight:600">$${pDisplay.toLocaleString("es-CL")}</span>` : "";
-    card.innerHTML = `<div class="ven-card-hdr"><span class="ven-card-cli">${escH(r.marca+" "+r.modelo)}</span>${priceHtml ? " · "+priceHtml : ""}<span style="font-size:10px;color:var(--amber)">Media</span></div>
+    card.innerHTML = `<div style="display:flex;gap:10px;margin-bottom:8px">
+      ${imgSrc ? `<img src="${escH(imgSrc)}" style="width:60px;height:60px;object-fit:cover;border-radius:var(--r6);flex-shrink:0;background:var(--s3)" loading="lazy">` : ""}
+      <div style="flex:1;min-width:0">
+      <div class="ven-card-hdr"><span class="ven-card-cli">${escH(r.marca+" "+r.modelo)}</span>${priceHtml ? " · "+priceHtml : ""}<span style="font-size:10px;color:var(--amber)">Media</span></div>
       <div class="ven-card-meta">${r.años} · ${r.posicion} · ${r.descripcion}${r.fuentes?.length && r.fuentes[0].startsWith("http") ? ' · <a href="'+escH(r.fuentes[0])+'" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-size:10px">🔗 ref</a>' : ""}</div>
+      </div>
+    </div>
       <div style="display:flex;gap:6px;margin-top:8px">
         <button class="btn-primary" style="flex:1;font-size:10px;padding:6px" data-approve="${i}">✓ Aprobar</button>
         <button class="btn-ghost-sm" style="flex:1;font-size:10px;padding:6px" data-edit="${i}">✎ Editar</button>
@@ -682,6 +688,12 @@ function editReview(i) {
   $("m-años").value = r.años !== "No determinado" ? r.años : "";
   $("m-pos").value = r.posicion !== "No determinado" && r.posicion !== "Central" ? r.posicion : "";
   $("m-desc").value = r.descripcion !== "Sin descripción" ? r.descripcion : "";
+  const imgSrc = r.preview || r.previewFull || "";
+  if (imgSrc) {
+    $("manual-preview-img").src = imgSrc;
+    $("manual-preview-img").style.display = "block";
+    manualPreviewDataUrl = imgSrc.startsWith("data:") ? imgSrc : null;
+  }
   if (r.categoria && CATS[r.categoria]) $("m-cat").value = r.categoria;
   if (r.codigo_oem) $("m-oem").value = r.codigo_oem;
   $("m-estado").value = "disponible";
