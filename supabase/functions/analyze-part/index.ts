@@ -170,67 +170,37 @@ const CORS_HEADERS = {
   "Access-Control-Max-Age": "86400",
 };
 
-async function tryProvider(provider: string, model: string, image: string, prompt: string): Promise<{ result: Record<string, unknown>; usedKey?: string }> {
-  if (provider === "groq") {
-    const key = getNextGroqKey();
-    if (!key) return { result: { ...FALLBACK, _error: "No Groq keys available" } };
-    const result = await callGroqWithRetry(key, model, image, prompt);
-    return { result, usedKey: key };
-  }
-  if (provider === "openrouter") {
-    const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
-    if (!apiKey) return { result: { ...FALLBACK, _error: "OpenRouter key not configured" } };
-    return { result: await callOpenRouter(apiKey, model, image, prompt) };
-  }
-  if (provider === "gemini") {
-    const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
-    if (!apiKey) return { result: { ...FALLBACK, _error: "Gemini key not configured" } };
-    return { result: await callGemini(apiKey, model, image, prompt) };
-  }
-  return { result: { ...FALLBACK, _error: "unsupported provider" } };
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
   try {
-    const { image, provider: reqProvider, model, prompt } = await req.json();
+    const { image, provider, model, prompt } = await req.json();
     if (!image) return new Response(JSON.stringify({ error: "image required" }), { status: 400, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
 
     const sprompt = prompt || DEFAULT_PROMPT;
-    const requestedProvider = reqProvider || "groq";
-    const requestedModel = model || "meta-llama/llama-4-scout-17b-16e-instruct";
-
-    let vision: Record<string, unknown> = { ...FALLBACK, _error: "No provider available" };
+    const useModel = model || "meta-llama/llama-4-scout-17b-16e-instruct";
+    let vision: Record<string, unknown>;
     let usedKey = "";
-    let successProvider = "";
-    let successModel = "";
 
-    // Try requested provider, then fallback to others
-    const providerChain = [
-      { provider: requestedProvider, model: requestedModel },
-    ];
-    // Add fallbacks only if different from requested
-    for (const fb of [
-      { provider: "openrouter", model: "google/gemma-4-31b-it:free" },
-      { provider: "gemini", model: "gemini-2.0-flash" },
-    ]) {
-      if (fb.provider !== requestedProvider) providerChain.push(fb);
+    if (provider === "groq" || !provider) {
+      const key = getNextGroqKey();
+      if (!key) return new Response(JSON.stringify({ error: "No Groq keys available" }), { status: 503, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+      usedKey = key;
+      vision = await callGroqWithRetry(key, useModel, image, sprompt);
+    } else if (provider === "openrouter") {
+      const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
+      if (!apiKey) return new Response(JSON.stringify({ error: "OpenRouter key not configured" }), { status: 500, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+      vision = await callOpenRouter(apiKey, useModel, image, sprompt);
+    } else if (provider === "gemini") {
+      const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
+      if (!apiKey) return new Response(JSON.stringify({ error: "Gemini key not configured" }), { status: 500, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+      vision = await callGemini(apiKey, useModel, image, sprompt);
+    } else {
+      return new Response(JSON.stringify({ error: "unsupported provider" }), { status: 400, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
     }
 
-    for (const fb of providerChain) {
-      const { result, usedKey: uk } = await tryProvider(fb.provider, fb.model, image, sprompt);
-      usedKey = uk || usedKey;
-      vision = result;
-      if (!vision._error && !vision._isRateLimit) {
-        successProvider = fb.provider;
-        successModel = fb.model;
-        break;
-      }
-    }
-
-    vision._diag = { tavily: null, enhanced: false, searchQuery: null, provider: successProvider || "none" };
+    vision._diag = { tavily: null, enhanced: false, searchQuery: null };
 
     if (vision._ok && vision.confianza !== "Baja") {
       const query = buildSearchQuery(vision);
@@ -252,40 +222,11 @@ serve(async (req) => {
             .replace("{searchText}", searchText);
 
           let enhanced: Record<string, unknown> | null = null;
-
-          if (successProvider === "groq" && usedKey) {
-            const r = await callGroqChat(usedKey, successModel,
+          if (usedKey) {
+            const r = await callGroqChat(usedKey, useModel,
               [{ role: "user", content: enhanceBody }], 30000);
             if (r && !r._error) enhanced = r;
           }
-          if (!enhanced) {
-            // Fallback enhance via OpenRouter
-            const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
-            if (apiKey) {
-              const r = await callAI("https://openrouter.ai/api/v1/chat/completions",
-                { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-                { model: "google/gemma-4-31b-it:free", messages: [{ role: "user", content: enhanceBody }], max_tokens: 500 }, 30000);
-              if (r && !r._error) enhanced = r;
-            }
-          }
-          if (!enhanced) {
-            // Fallback enhance via Gemini
-            const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
-            if (apiKey) {
-              const geminiBody = { contents: [{ role: "user", parts: [{ text: enhanceBody }] }] };
-              try {
-                const ctrl = new AbortController();
-                const t = setTimeout(() => ctrl.abort(), 30000);
-                const gres = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(geminiBody), signal: ctrl.signal });
-                clearTimeout(t);
-                const gj = await gres.json();
-                const gt = gj?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                const gp = tryParseJSON(gt);
-                if (gp) enhanced = normalize(gp);
-              } catch {}
-            }
-          }
-
           if (enhanced) {
             enhanced.fuentes = results.map(r => r.url).filter(Boolean).slice(0,3);
             vision._diag.enhanced = true;
