@@ -47,7 +47,7 @@ function markKeyUsed(key: string) {
   if (idx >= 0) keyLastUsed[idx] = Date.now();
 }
 
-const SYSTEM_PROMPT = `Eres el motor de IA del sistema "Desarmaduría Paola" — un catálogo profesional de autopartes con inteligencia artificial.
+const SYSTEM_PROMPT = `Eres el motor de IA de "CAPv2" — un catálogo profesional de autopartes con inteligencia artificial.
 
 ## CAPACIDADES DEL SISTEMA
 Este sistema tiene las siguientes funcionalidades, y tu análisis alimenta todas ellas:
