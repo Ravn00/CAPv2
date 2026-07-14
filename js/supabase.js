@@ -2,7 +2,7 @@
 // The panel controls these remotely
 let apiKeys = [];
 let aiProvider = "groq";
-let aiModel = "llama-3.2-11b-vision-preview";
+let aiModel = "qwen/qwen3.6-27b";
 let writeToken = "";
 
 async function loadConfig() {
@@ -10,7 +10,7 @@ async function loadConfig() {
   if (cfg) {
     apiKeys = cfg.api_keys || [];
     aiProvider = cfg.ai_provider || "groq";
-    aiModel = cfg.ai_model || "llama-3.2-11b-vision-preview";
+    aiModel = cfg.ai_model || "qwen/qwen3.6-27b";
     if (cfg.license_secret) LICENSE_SECRET = cfg.license_secret;
     writeToken = cfg.write_token || "";
   }

@@ -176,7 +176,7 @@ serve(async (req) => {
       const key = getNextGroqKey();
       if (!key) return new Response(JSON.stringify({ error: "No Groq keys available" }), { status: 503, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
       usedKey = key;
-      vision = await callGroqWithRetry(key, model || "llama-3.2-11b-vision-preview", image, sprompt);
+      vision = await callGroqWithRetry(key, model || "qwen/qwen3.6-27b", image, sprompt);
     } else if (provider === "openrouter") {
       const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
       if (!apiKey) return new Response(JSON.stringify({ error: "OpenRouter key not configured" }), { status: 500, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
@@ -214,7 +214,7 @@ serve(async (req) => {
           let enhanced: Record<string, unknown> | null = null;
           // Use same key as vision (it just worked), bypass cooldown for text-only follow-up
           if (provider === "groq" && usedKey) {
-            const r = await callGroqChat(usedKey, model || "llama-3.2-11b-vision-preview",
+            const r = await callGroqChat(usedKey, model || "qwen/qwen3.6-27b",
               [{ role: "user", content: enhanceBody }], 30000);
             if (r && !r._error) enhanced = r;
           } else if (provider === "openrouter") {
