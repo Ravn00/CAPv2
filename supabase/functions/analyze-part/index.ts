@@ -102,7 +102,7 @@ function normalize(obj: Record<string, unknown>) {
   };
 }
 
-const DEFAULT_PROMPT = `Identificá esta autoparte en una línea de JSON exacto. NO agregues explicaciones ni pensamiento, solo el JSON.
+const DEFAULT_PROMPT = `Identificá esta autoparte en una línea de JSON exacto. NO agregues explicaciones ni pensamiento, solo el JSON. Debes responder exclusivamente en español.
 Buscá: marca visible (logotipo, texto), modelo, años, categoría (parachoques|opticos|focos|guardabarros|capots|varios), posición (Delantero|Trasero|Izquierdo|Derecho), código OEM si hay.
 Confianza: Alta si marca+modelo seguros, Media si dudas, Baja si no se identifica.
 {"marca":"","modelo":"","años":"","categoria":"varios","descripcion":"","posicion":"No determinado","confianza":"Baja","codigo_oem":""}`;
@@ -200,7 +200,7 @@ serve(async (req) => {
 
     const sprompt = prompt || DEFAULT_PROMPT;
     const requestedProvider = reqProvider || "groq";
-    const requestedModel = model || "qwen/qwen3.6-27b";
+    const requestedModel = model || "meta-llama/llama-4-scout-17b-16e-instruct";
 
     let vision: Record<string, unknown> = { ...FALLBACK, _error: "No provider available" };
     let usedKey = "";
