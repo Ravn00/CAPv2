@@ -170,37 +170,67 @@ const CORS_HEADERS = {
   "Access-Control-Max-Age": "86400",
 };
 
+async function tryProvider(provider: string, model: string, image: string, prompt: string): Promise<{ result: Record<string, unknown>; usedKey?: string }> {
+  if (provider === "groq") {
+    const key = getNextGroqKey();
+    if (!key) return { result: { ...FALLBACK, _error: "No Groq keys available" } };
+    const result = await callGroqWithRetry(key, model, image, prompt);
+    return { result, usedKey: key };
+  }
+  if (provider === "openrouter") {
+    const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
+    if (!apiKey) return { result: { ...FALLBACK, _error: "OpenRouter key not configured" } };
+    return { result: await callOpenRouter(apiKey, model, image, prompt) };
+  }
+  if (provider === "gemini") {
+    const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
+    if (!apiKey) return { result: { ...FALLBACK, _error: "Gemini key not configured" } };
+    return { result: await callGemini(apiKey, model, image, prompt) };
+  }
+  return { result: { ...FALLBACK, _error: "unsupported provider" } };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
   try {
-    const { image, provider, model, prompt } = await req.json();
+    const { image, provider: reqProvider, model, prompt } = await req.json();
     if (!image) return new Response(JSON.stringify({ error: "image required" }), { status: 400, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
 
     const sprompt = prompt || DEFAULT_PROMPT;
-    let vision: Record<string, unknown>;
-    let usedKey = "";
+    const requestedProvider = reqProvider || "groq";
+    const requestedModel = model || "qwen/qwen3.6-27b";
 
-    if (provider === "groq") {
-      const key = getNextGroqKey();
-      if (!key) return new Response(JSON.stringify({ error: "No Groq keys available" }), { status: 503, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
-      usedKey = key;
-      vision = await callGroqWithRetry(key, model || "qwen/qwen3.6-27b", image, sprompt);
-    } else if (provider === "openrouter") {
-      const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
-      if (!apiKey) return new Response(JSON.stringify({ error: "OpenRouter key not configured" }), { status: 500, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
-      vision = await callOpenRouter(apiKey, model || "google/gemma-4-31b-it:free", image, sprompt);
-    } else if (provider === "gemini") {
-      const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
-      if (!apiKey) return new Response(JSON.stringify({ error: "Gemini key not configured" }), { status: 500, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
-      vision = await callGemini(apiKey, model || "gemini-2.0-flash", image, sprompt);
-    } else {
-      return new Response(JSON.stringify({ error: "unsupported provider" }), { status: 400, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+    let vision: Record<string, unknown> = { ...FALLBACK, _error: "No provider available" };
+    let usedKey = "";
+    let successProvider = "";
+    let successModel = "";
+
+    // Try requested provider, then fallback to others
+    const providerChain = [
+      { provider: requestedProvider, model: requestedModel },
+    ];
+    // Add fallbacks only if different from requested
+    for (const fb of [
+      { provider: "openrouter", model: "google/gemma-4-31b-it:free" },
+      { provider: "gemini", model: "gemini-2.0-flash" },
+    ]) {
+      if (fb.provider !== requestedProvider) providerChain.push(fb);
     }
 
-    // Diagnostic info (always included)
-    vision._diag = { tavily: null, enhanced: false, searchQuery: null };
+    for (const fb of providerChain) {
+      const { result, usedKey: uk } = await tryProvider(fb.provider, fb.model, image, sprompt);
+      usedKey = uk || usedKey;
+      vision = result;
+      if (!vision._error && !vision._isRateLimit) {
+        successProvider = fb.provider;
+        successModel = fb.model;
+        break;
+      }
+    }
+
+    vision._diag = { tavily: null, enhanced: false, searchQuery: null, provider: successProvider || "none" };
 
     if (vision._ok && vision.confianza !== "Baja") {
       const query = buildSearchQuery(vision);
@@ -222,27 +252,46 @@ serve(async (req) => {
             .replace("{searchText}", searchText);
 
           let enhanced: Record<string, unknown> | null = null;
-          // Use same key as vision (it just worked), bypass cooldown for text-only follow-up
-          if (provider === "groq" && usedKey) {
-            const r = await callGroqChat(usedKey, model || "qwen/qwen3.6-27b",
+
+          if (successProvider === "groq" && usedKey) {
+            const r = await callGroqChat(usedKey, successModel,
               [{ role: "user", content: enhanceBody }], 30000);
             if (r && !r._error) enhanced = r;
-          } else if (provider === "openrouter") {
+          }
+          if (!enhanced) {
+            // Fallback enhance via OpenRouter
             const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
             if (apiKey) {
               const r = await callAI("https://openrouter.ai/api/v1/chat/completions",
                 { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-                { model: model || "google/gemma-4-31b-it:free", messages: [{ role: "user", content: enhanceBody }], max_tokens: 500 }, 30000);
+                { model: "google/gemma-4-31b-it:free", messages: [{ role: "user", content: enhanceBody }], max_tokens: 500 }, 30000);
               if (r && !r._error) enhanced = r;
             }
-          } else if (provider === "gemini") {
+          }
+          if (!enhanced) {
+            // Fallback enhance via Gemini
             const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
             if (apiKey) {
               const geminiBody = { contents: [{ role: "user", parts: [{ text: enhanceBody }] }] };
               try {
                 const ctrl = new AbortController();
                 const t = setTimeout(() => ctrl.abort(), 30000);
-                const gres = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model || "gemini-2.0-flash"}:generateContent?key=${apiKey}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(geminiBody), signal: ctrl.signal });
+                const gres = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(geminiBody), signal: ctrl.signal });
+                clearTimeout(t);
+                const gj = await gres.json();
+                const gt = gj?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                const gp = tryParseJSON(gt);
+                if (gp) enhanced = normalize(gp);
+              } catch {}
+            }
+          }
+            const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
+            if (apiKey) {
+              const geminiBody = { contents: [{ role: "user", parts: [{ text: enhanceBody }] }] };
+              try {
+                const ctrl = new AbortController();
+                const t = setTimeout(() => ctrl.abort(), 30000);
+                const gres = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${successModel}:generateContent?key=${apiKey}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(geminiBody), signal: ctrl.signal });
                 clearTimeout(t);
                 const gj = await gres.json();
                 const gt = gj?.candidates?.[0]?.content?.parts?.[0]?.text || "";
@@ -258,13 +307,12 @@ serve(async (req) => {
             Object.assign(vision, enhanced);
             return new Response(JSON.stringify(vision), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
           } else {
-            vision._diag._enhanceError = "Groq enhance falló o devolvió error";
+            vision._diag._enhanceError = "Enhance falló o devolvió error";
           }
         }
       }
     }
 
-    // Ensure precio_sugerido and fuentes are always present
     if (vision.precio_sugerido === undefined) vision.precio_sugerido = null;
     if (!vision.fuentes) vision.fuentes = [];
     return new Response(JSON.stringify(vision), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
