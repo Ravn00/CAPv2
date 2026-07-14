@@ -53,7 +53,7 @@ async function analyzeImage(item) {
       efResp = await fetch(efUrl, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ image: `data:${img.mime};base64,${img.b64}`, provider, model: provider === "groq" ? "qwen/qwen3.6-27b" : provider === "openrouter" ? "google/gemma-4-31b-it:free" : "gemini-2.0-flash", prompt: PROMPT }),
+        body: JSON.stringify({ image: `data:${img.mime};base64,${img.b64}`, provider, model: provider === "groq" ? "llama-3.2-11b-vision-preview" : provider === "openrouter" ? "google/gemma-4-31b-it:free" : "gemini-2.0-flash", prompt: PROMPT }),
         signal: AbortSignal.timeout(45000)
       });
     } catch(e) {
@@ -62,10 +62,22 @@ async function analyzeImage(item) {
     }
     if (efResp.ok) {
       const efResult = await efResp.json();
-      if (efResult && efResult._ok !== false) {
-        return { marca: efResult.marca || "No determinado", modelo: efResult.modelo || "No determinado", años: efResult.años || "No determinado", categoria: efResult.categoria || "varios", descripcion: (efResult.descripcion || "").slice(0, 65), posicion: efResult.posicion || "No determinado", confianza: efResult.confianza || "Baja", precio_sugerido: efResult.precio_sugerido ?? null, fuentes: efResult.fuentes || [], _diag: efResult._diag ?? null, _ok: true };
+      if (efResult && !efResult._error && !efResult.error) {
+        return {
+          marca: efResult.marca || "No determinado",
+          modelo: efResult.modelo || "No determinado",
+          años: efResult.años || "No determinado",
+          categoria: efResult.categoria || "varios",
+          descripcion: (efResult.descripcion || "").slice(0, 65),
+          posicion: efResult.posicion || "No determinado",
+          confianza: efResult.confianza || "Baja",
+          precio_sugerido: efResult.precio_sugerido ?? null,
+          fuentes: efResult.fuentes || [],
+          _diag: efResult._diag ?? null,
+          _ok: efResult._ok !== false
+        };
       }
-      return fallback(efResult.error || "Error en edge function");
+      return fallback(efResult.error || efResult._error || "Error en edge function");
     }
     return fallback(`Error ${efResp.status} en edge function`);
   } catch(err) {

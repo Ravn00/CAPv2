@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS admin_config (
   id TEXT PRIMARY KEY DEFAULT 'global',
   api_keys JSONB DEFAULT '[]',
   ai_provider TEXT DEFAULT 'groq',
-  ai_model TEXT DEFAULT 'qwen/qwen3.6-27b',
+  ai_model TEXT DEFAULT 'llama-3.2-11b-vision-preview',
   license_secret TEXT,
   maintenance_mode BOOLEAN DEFAULT false,
   maintenance_message TEXT,
