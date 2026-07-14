@@ -88,7 +88,7 @@ parachoques, opticos, focos, guardabarros, capots, varios
 
 NUNCA devuelvas "Alta" si tenés dudas.
 
-### FORMATO DE RESPUESTA (SOLO JSON, SIN MARKDOWN NI BACKTICKS):
+### FORMATO DE RESPUESTA (SOLO JSON, SIN EXPLICACIONES NI PENSAMIENTO):
 {"marca":"marca compatible o No determinado","modelo":"modelo o No determinado","años":"rango (ej: 1995-2005) o año exacto (ej: 1998) o No determinado","categoria":"parachoques|opticos|focos|guardabarros|capots|varios","descripcion":"descripción breve máx 60 chars","posicion":"Delantero|Trasero|Izquierdo|Derecho|Central|No determinado","confianza":"Alta|Media|Baja","codigo_oem":"código OEM visible o vacío"}`;
 
 serve(async (req) => {
@@ -122,7 +122,7 @@ serve(async (req) => {
 });
 
 async function callGroq(key: string, model: string, image: string, attempt = 0): Promise<Record<string, unknown>> {
-  const body = { model, messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: [{ type: "image_url", image_url: { url: image } }] }], max_tokens: 200 };
+  const body = { model, messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: [{ type: "image_url", image_url: { url: image } }] }], max_tokens: 500 };
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST", headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
   });
@@ -139,7 +139,7 @@ async function callGroq(key: string, model: string, image: string, attempt = 0):
 }
 
 async function callOpenRouter(key: string, model: string, image: string) {
-  const body = { model, messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: [{ type: "image_url", image_url: { url: image } }] }], max_tokens: 200 };
+  const body = { model, messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: [{ type: "image_url", image_url: { url: image } }] }], max_tokens: 500 };
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST", headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
   });
@@ -171,10 +171,12 @@ function normalize(obj: Record<string, unknown>) {
 }
 
 function tryParseJSON(s: string): Record<string, unknown> | null {
-  try {
-    const cleaned = s.replace(/```json\s*/gi, "").replace(/```\s*$/g, "").trim();
-    const obj = JSON.parse(cleaned);
-    if (obj && typeof obj === "object") return obj;
-    return null;
-  } catch { return null; }
+  s = s.trim();
+  s = s.replace(/^```(?:json)?\s*/gi, "").replace(/```\s*$/g, "").trim();
+  const start = s.indexOf("{");
+  const end = s.lastIndexOf("}");
+  if (start !== -1 && end > start) {
+    try { return JSON.parse(s.slice(start, end + 1)); } catch {}
+  }
+  return null;
 }

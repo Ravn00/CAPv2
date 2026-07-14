@@ -70,7 +70,17 @@ async function callAI(apiURL: string, headers: Record<string,string>, body: unkn
 }
 
 function tryParseJSON(s: string): Record<string, unknown> | null {
-  try { return JSON.parse(s.replace(/```json\s*/gi, "").replace(/```\s*$/g, "").trim()); } catch { return null; }
+  s = s.trim();
+  // Strip markdown code fences
+  s = s.replace(/^```(?:json)?\s*/gi, "").replace(/```\s*$/g, "").trim();
+  // Find first { and last } in case model added thinking text before JSON
+  const start = s.indexOf("{");
+  const end = s.lastIndexOf("}");
+  if (start !== -1 && end > start) {
+    const candidate = s.slice(start, end + 1);
+    try { return JSON.parse(candidate); } catch { /* fall through */ }
+  }
+  return null;
 }
 
 function normalize(obj: Record<string, unknown>) {
@@ -92,7 +102,7 @@ function normalize(obj: Record<string, unknown>) {
   };
 }
 
-const DEFAULT_PROMPT = `Identificá esta autoparte en una línea de JSON exacto.
+const DEFAULT_PROMPT = `Identificá esta autoparte en una línea de JSON exacto. NO agregues explicaciones ni pensamiento, solo el JSON.
 Buscá: marca visible (logotipo, texto), modelo, años, categoría (parachoques|opticos|focos|guardabarros|capots|varios), posición (Delantero|Trasero|Izquierdo|Derecho), código OEM si hay.
 Confianza: Alta si marca+modelo seguros, Media si dudas, Baja si no se identifica.
 {"marca":"","modelo":"","años":"","categoria":"varios","descripcion":"","posicion":"No determinado","confianza":"Baja","codigo_oem":""}`;
@@ -103,7 +113,7 @@ const ENHANCE_PROMPT = `Autoparte identificada inicialmente (confirmá o correg�
 Resultados de búsqueda online (precios reales de tiendas):
 {searchText}
 
-Respondé SOLO JSON con los campos corregidos + precio_sugerido (número entero en CLP, ej: 45000) y fuentes (hasta 3 URLs).
+Respondé SOLO JSON, sin explicaciones ni pensamiento, con los campos corregidos + precio_sugerido (número entero en CLP, ej: 45000) y fuentes (hasta 3 URLs).
 Si no hay precios claros, precio_sugerido: null.
 {"marca":"","modelo":"","años":"","categoria":"varios","descripcion":"","posicion":"No determinado","confianza":"Alta","codigo_oem":"","precio_sugerido":null,"fuentes":[]}`;
 
