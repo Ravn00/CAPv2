@@ -36,15 +36,7 @@ function markKeyUsed(key: string) {
   if (idx >= 0) keyLastUsed[idx] = Date.now();
 }
 
-const FALLBACK = { marca:"No determinado", modelo:"No determinado", años:"No determinado", categoria:"varios", descripcion:"", posicion:"No determinado", confianza:"Baja", codigo_oem:"", precio_sugerido:null, fuentes:[], _ok:false };
-
-async function callGroqChat(key: string, model: string, messages: unknown[], timeoutMs = 45000): Promise<Record<string, unknown>> {
-  return callAI("https://api.groq.com/openai/v1/chat/completions",
-    { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
-    { model, messages, max_tokens: 500 },
-    timeoutMs
-  );
-}
+const FALLBACK = { marca:"No determinado", modelo:"No determinado", años:"No determinado", categoria:"varios", descripcion:"", posicion:"No determinado", confianza:"Baja", codigo_oem:"", _ok:false };
 
 async function callAI(apiURL: string, headers: Record<string,string>, body: unknown, timeoutMs = 45000): Promise<Record<string, unknown>> {
   const controller = new AbortController();
@@ -85,8 +77,6 @@ function tryParseJSON(s: string): Record<string, unknown> | null {
 
 function normalize(obj: Record<string, unknown>) {
   const c = String(obj.confianza || "Baja");
-  const ps = obj.precio_sugerido;
-  const precio = typeof ps === "number" ? ps : (ps ? Number(ps) : null);
   return {
     marca: String(obj.marca || "No determinado"),
     modelo: String(obj.modelo || "No determinado"),
@@ -96,8 +86,6 @@ function normalize(obj: Record<string, unknown>) {
     posicion: String(obj.posicion || "No determinado"),
     confianza: c,
     codigo_oem: String(obj.codigo_oem || ""),
-    precio_sugerido: (isNaN(precio) || precio === null || precio === 0) ? null : Math.round(precio),
-    fuentes: Array.isArray(obj.fuentes) ? obj.fuentes.slice(0,3) : [],
     _ok: c !== "Baja"
   };
 }
@@ -106,62 +94,6 @@ const DEFAULT_PROMPT = `Identificá esta autoparte en una línea de JSON exacto.
 Buscá: marca visible (logotipo, texto), modelo, años, categoría (parachoques|opticos|focos|guardabarros|capots|varios), posición (Delantero|Trasero|Izquierdo|Derecho), código OEM si hay.
 Confianza: Alta si marca+modelo seguros, Media si dudas, Baja si no se identifica.
 {"marca":"","modelo":"","años":"","categoria":"varios","descripcion":"","posicion":"No determinado","confianza":"Baja","codigo_oem":""}`;
-
-const ENHANCE_PROMPT = `Autoparte identificada inicialmente (confirmá o corregí):
-{marca}, {modelo}, {años}, {categoria}, {posicion}, OEM:{codigo_oem}, desc:{descripcion}
-
-Resultados de búsqueda online (precios reales de tiendas):
-{searchText}
-
-Respondé SOLO JSON, sin explicaciones ni pensamiento, con los campos corregidos + precio_sugerido (número entero en CLP, ej: 45000) y fuentes (hasta 3 URLs).
-Si no hay precios claros, precio_sugerido: null.
-{"marca":"","modelo":"","años":"","categoria":"varios","descripcion":"","posicion":"No determinado","confianza":"Alta","codigo_oem":"","precio_sugerido":null,"fuentes":[]}`;
-
-async function searchTavily(query: string): Promise<{results:{title:string;url:string;content:string}[]|null;error:string|null}> {
-  const apiKey = Deno.env.get("TAVILY_API_KEY");
-  if (!apiKey) return { results: null, error: "TAVILY_API_KEY not set" };
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch("https://api.tavily.com/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ api_key: apiKey, query, search_depth: "basic", max_results: 5 }),
-      signal: controller.signal
-    });
-    clearTimeout(timer);
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      return { results: null, error: `Tavily HTTP ${res.status}: ${txt.slice(0,100)}` };
-    }
-    const json = await res.json();
-    if (!json?.results?.length) return { results: null, error: "Tavily: sin resultados" };
-    const items = json.results.map((r: {title?:string;url?:string;content?:string}) => ({
-      title: r.title || "", url: r.url || "", content: r.content || ""
-    })).filter(r => r.content || r.title);
-    return { results: items.length ? items : null, error: items.length ? null : "Tavily: resultados vacíos" };
-  } catch (e) {
-    return { results: null, error: `Tavily fetch error: ${(e as Error).message?.slice(0,80) || "unknown"}` };
-  }
-}
-
-function buildSearchQuery(result: Record<string, unknown>): string {
-  const parts = [
-    result.marca,
-    result.modelo,
-    result.años,
-    result.descripcion,
-    result.codigo_oem,
-    result.posicion,
-    "autoparte",
-    "precio",
-    "Chile"
-  ].filter(Boolean).filter(s => {
-    const v = String(s).toLowerCase();
-    return v !== "no determinado" && v !== "varios" && v !== "";
-  });
-  return [...new Set(parts)].join(" ").slice(0, 200);
-}
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -200,47 +132,6 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "unsupported provider" }), { status: 400, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
     }
 
-    vision._diag = { tavily: null, enhanced: false, searchQuery: null };
-
-    if (vision._ok && vision.confianza !== "Baja") {
-      const query = buildSearchQuery(vision);
-      vision._diag.searchQuery = query;
-      if (query) {
-        const { results, error: tavilyErr } = await searchTavily(query);
-        if (tavilyErr) vision._diag._tavilyError = tavilyErr;
-        vision._diag.tavily = results ? results.map(r => ({ title: r.title, url: r.url })) : [];
-        if (results && results.length > 0) {
-          const searchText = results.map(r => `- Título: ${r.title}\n  ${r.content}\n  URL: ${r.url}`).join("\n\n");
-          const enhanceBody = ENHANCE_PROMPT
-            .replace("{marca}", String(vision.marca))
-            .replace("{modelo}", String(vision.modelo))
-            .replace("{años}", String(vision.años))
-            .replace("{categoria}", String(vision.categoria))
-            .replace("{posicion}", String(vision.posicion))
-            .replace("{codigo_oem}", String(vision.codigo_oem))
-            .replace("{descripcion}", String(vision.descripcion))
-            .replace("{searchText}", searchText);
-
-          let enhanced: Record<string, unknown> | null = null;
-          if (usedKey) {
-            const r = await callGroqChat(usedKey, useModel,
-              [{ role: "user", content: enhanceBody }], 30000);
-            if (r && !r._error) enhanced = r;
-          }
-          if (enhanced) {
-            enhanced.fuentes = results.map(r => r.url).filter(Boolean).slice(0,3);
-            vision._diag.enhanced = true;
-            Object.assign(vision, enhanced);
-            return new Response(JSON.stringify(vision), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
-          } else {
-            vision._diag._enhanceError = "Enhance falló o devolvió error";
-          }
-        }
-      }
-    }
-
-    if (vision.precio_sugerido === undefined) vision.precio_sugerido = null;
-    if (!vision.fuentes) vision.fuentes = [];
     return new Response(JSON.stringify(vision), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
   } catch (e) {
     return new Response(JSON.stringify({ error: e.message || "internal error" }), { status: 500, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });

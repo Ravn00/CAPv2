@@ -71,9 +71,7 @@ async function analyzeImage(item) {
           descripcion: (efResult.descripcion || "").slice(0, 65),
           posicion: efResult.posicion || "No determinado",
           confianza: efResult.confianza || "Baja",
-          precio_sugerido: efResult.precio_sugerido ?? null,
-          fuentes: efResult.fuentes || [],
-          _diag: efResult._diag ?? null,
+          codigo_oem: efResult.codigo_oem || "",
           _ok: efResult._ok !== false
         };
       }
