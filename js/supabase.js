@@ -1,16 +1,16 @@
 // ---
 // The panel controls these remotely
 let apiKeys = [];
-let aiProvider = "gemini";
-let aiModel = "gemini-2.0-flash";
+let aiProvider = "groq";
+let aiModel = "qwen/qwen3.6-27b";
 let writeToken = "";
 
 async function loadConfig() {
   const cfg = await readConfig();
   if (cfg) {
     apiKeys = cfg.api_keys || [];
-    aiProvider = cfg.ai_provider || "gemini";
-    aiModel = cfg.ai_model || "gemini-2.0-flash";
+    aiProvider = cfg.ai_provider || "groq";
+    aiModel = cfg.ai_model || "qwen/qwen3.6-27b";
     if (cfg.license_secret) LICENSE_SECRET = cfg.license_secret;
     writeToken = cfg.write_token || "";
   }
