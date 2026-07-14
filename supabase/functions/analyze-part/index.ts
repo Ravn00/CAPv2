@@ -285,21 +285,6 @@ serve(async (req) => {
               } catch {}
             }
           }
-            const apiKey = Deno.env.get("GEMINI_API_KEY") || "";
-            if (apiKey) {
-              const geminiBody = { contents: [{ role: "user", parts: [{ text: enhanceBody }] }] };
-              try {
-                const ctrl = new AbortController();
-                const t = setTimeout(() => ctrl.abort(), 30000);
-                const gres = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${successModel}:generateContent?key=${apiKey}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(geminiBody), signal: ctrl.signal });
-                clearTimeout(t);
-                const gj = await gres.json();
-                const gt = gj?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                const gp = tryParseJSON(gt);
-                if (gp) enhanced = normalize(gp);
-              } catch {}
-            }
-          }
 
           if (enhanced) {
             enhanced.fuentes = results.map(r => r.url).filter(Boolean).slice(0,3);
