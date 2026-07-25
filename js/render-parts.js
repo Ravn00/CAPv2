@@ -410,7 +410,9 @@ $("manual-save").onclick=async ()=>{
   const stock=parseInt($("m-stock").value)||1;
   const precioCompra=parseFloat($("m-precio-compra").value)??null;
   const precioVenta=parseFloat($("m-precio-venta").value)??null;
-  const part={ id:`m-${Date.now()}-${Math.random().toString(36).slice(2)}`, preview:manualPreviewDataUrl||null, previewFull:manualPreviewDataUrl||null, fileName:manualPreviewFile?.name||"manual", fileSize:manualPreviewFile?.size||0, estado, stock, precioCompra, precioVenta, codigoOem:$("m-oem").value.trim()||null, ubicacion:$("m-ubicacion").value.trim()||null, categoria:$("m-cat").value, marca, modelo, años:$("m-años").value.trim()||"No determinado", posicion:$("m-pos").value.trim()||"No determinado", descripcion:$("m-desc").value.trim()||"Sin descripción", confianza:"Alta", _ok:true, manual:true, precio_sugerido:precioVenta??null, addedAt:new Date().toLocaleString("es-CL") };
+  const imgEl = $("manual-preview-img");
+  const imgSrc = manualPreviewDataUrl || (imgEl && imgEl.src) || null;
+  const part={ id:`m-${Date.now()}-${Math.random().toString(36).slice(2)}`, preview:imgSrc, previewFull:imgSrc, fileName:manualPreviewFile?.name||"manual", fileSize:manualPreviewFile?.size||0, estado, stock, precioCompra, precioVenta, codigoOem:$("m-oem").value.trim()||null, ubicacion:$("m-ubicacion").value.trim()||null, categoria:$("m-cat").value, marca, modelo, años:$("m-años").value.trim()||"No determinado", posicion:$("m-pos").value.trim()||"No determinado", descripcion:$("m-desc").value.trim()||"Sin descripción", confianza:"Alta", _ok:true, manual:true, precio_sugerido:precioVenta??null, addedAt:new Date().toLocaleString("es-CL") };
   parts.push(part); await savePartToSupabase(part); saveParts(); renderAll(); renderDashboard(); closeModal("manual-modal"); toast(`Agregado: ${marca} ${modelo}`);
 };
 // Image test / AI diagnostics (was in diag section)
