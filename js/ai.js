@@ -75,11 +75,15 @@ async function analyzeImage(item) {
           _ok: efResult._ok !== false
         };
       }
+      // Log raw AI response for debugging
+      if (efResult._raw) console.warn("Raw AI response:", efResult._raw);
+      // Rate limit — give clear message
+      if (efResult._isRateLimit) return fallback("Groq alcanzó su límite. Esperá 60s o usá el formulario manual.", true);
       return fallback(efResult.error || efResult._error || "Error en edge function");
     }
-    // Log raw AI response for debugging
-    if (efResult._raw) console.warn("Raw AI response:", efResult._raw);
-    return fallback(`Error ${efResp.status} en edge function`);
+    // Non-2xx from edge function (503, 500, etc.)
+    const errBody = await efResp.text().catch(() => "Error del servidor");
+    return fallback(`Error ${efResp.status}: ${errBody.slice(0, 60)}`);
   } catch(err) {
     return fallback(err.message?.slice(0,55)||"Error desconocido");
   }
