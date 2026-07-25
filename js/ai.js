@@ -151,31 +151,8 @@ async function processQueue() {
       doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
       await logScan(review.id, review.categoria, "pending_review", ms);
     } else {
-      const extraPhotos = item.batchPhotos || [];
-      if (extraPhotos.length) {
-        const part = {
-          id:item.id, preview:item.preview, previewFull:item.fileDataUrl||item.preview,
-          fileName:item.file.name, fileSize:item.file.size,
-          categoria:item.presetCat||result.categoria||"varios",
-          marca:result.marca, modelo:result.modelo, años:result.años,
-          descripcion:result.descripcion, posicion:result.posicion,
-          confianza:result.confianza, _ok:result._ok,
-          precio_sugerido:result.precio_sugerido ?? null,
-          precioVenta:result.precio_sugerido ?? null,
-          fuentes:result.fuentes || [],
-          addedAt:new Date().toLocaleString("es-CL"),
-          photos: [item.preview, ...extraPhotos.map(p => p.preview)],
-          batchFiles: extraPhotos.map(p => ({ preview: p.preview, fileDataUrl: p.fileDataUrl, fileName: p.fileName, fileSize: p.fileSize }))
-        };
-        parts.push(part);
-        await savePartToSupabase(part);
-        saveParts();
-        replaceLoadingCard(item.id, part);
-        await logScan(part.id, part.categoria, "manual_saved", Date.now()-t0);
-      } else {
-        replaceLoadingCard(item.id, null, "Manual");
-        openManualWithResult(result);
-      }
+      replaceLoadingCard(item.id, null, "Manual");
+      openManualWithResult(result, item.fileDataUrl || item.preview);
       doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
       await logScan(item.id, result.categoria||item.presetCat||"varios", "manual_needed", ms);
     }

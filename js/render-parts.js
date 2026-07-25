@@ -358,7 +358,7 @@ $("manual-file").onchange=e=>{
   };
   reader.readAsDataURL(f);
 };
-function openManualWithResult(result) {
+function openManualWithResult(result, previewUrl) {
   $("m-marca").value = result.marca !== "No determinado" ? result.marca : "";
   $("m-modelo").value = result.modelo !== "No determinado" ? result.modelo : "";
   $("m-años").value = result.años !== "No determinado" ? result.años : "";
@@ -367,7 +367,16 @@ function openManualWithResult(result) {
   if (result.categoria && CATS[result.categoria]) $("m-cat").value = result.categoria;
   if (result.codigo_oem) $("m-oem").value = result.codigo_oem;
   if (result.precio_sugerido) $("m-precio-venta").value = result.precio_sugerido;
-  $("manual-title").textContent = "Catalogar manualmente (IA: " + result.confianza + ")";
+  // Mostrar preview de la imagen si disponible
+  if (previewUrl) {
+    $("manual-preview-img").src = previewUrl;
+    $("manual-preview-img").style.display = "block";
+    $("manual-photo-btn").style.display = "none";
+  } else {
+    $("manual-preview-img").style.display = "none";
+    $("manual-photo-btn").style.display = "flex";
+  }
+  $("manual-title").textContent = "Catalogar manualmente" + (result.confianza !== "Baja" ? " (IA: " + result.confianza + ")" : "");
   $("manual-modal").classList.add("on");
 }
 function calcMargen(){
