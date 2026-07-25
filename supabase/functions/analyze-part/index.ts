@@ -53,7 +53,7 @@ async function callAI(apiURL: string, headers: Record<string,string>, body: unkn
     const text = json?.choices?.[0]?.message?.content || "";
     const parsed = tryParseJSON(text);
     if (parsed) return normalize(parsed);
-    return { ...FALLBACK, _error: "JSON no parseable", _raw: text.slice(0,200) };
+    return { ...FALLBACK, _error: "JSON no parseable", _raw: (text || "").slice(0,300) };
   } catch (e) {
     clearTimeout(timer);
     if ((e as Error).name === "AbortError") return { ...FALLBACK, _error: "timeout" };
@@ -65,12 +65,23 @@ function tryParseJSON(s: string): Record<string, unknown> | null {
   s = s.trim();
   // Strip markdown code fences
   s = s.replace(/^```(?:json)?\s*/gi, "").replace(/```\s*$/g, "").trim();
-  // Find first { and last } in case model added thinking text before JSON
+  // Strip Qwen thinking blocks (between  and )
+  s = s.replace(/<thinking>[\s\S]*?<\/thinking>/gi, "").trim();
+  // Strip any  tokens that indicate thinking
+  s = s.replace(/^[\s\S]*?\n(?={)/, "").trim();
+  // Find first { and last } in case model added text before/after JSON
   const start = s.indexOf("{");
   const end = s.lastIndexOf("}");
   if (start !== -1 && end > start) {
-    const candidate = s.slice(start, end + 1);
-    try { return JSON.parse(candidate); } catch { /* fall through */ }
+    let candidate = s.slice(start, end + 1);
+    // Try parsing directly
+    try { return JSON.parse(candidate); } catch {}
+    // Fix single quotes -> double quotes
+    try { return JSON.parse(candidate.replace(/'/g, '"')); } catch {}
+    // Fix trailing commas
+    try { return JSON.parse(candidate.replace(/,\s*([}\]])/g, '$1')); } catch {}
+    // Fix both
+    try { return JSON.parse(candidate.replace(/'/g, '"').replace(/,\s*([}\]])/g, '$1')); } catch {}
   }
   return null;
 }

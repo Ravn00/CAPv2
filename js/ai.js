@@ -77,6 +77,8 @@ async function analyzeImage(item) {
       }
       return fallback(efResult.error || efResult._error || "Error en edge function");
     }
+    // Log raw AI response for debugging
+    if (efResult._raw) console.warn("Raw AI response:", efResult._raw);
     return fallback(`Error ${efResp.status} en edge function`);
   } catch(err) {
     return fallback(err.message?.slice(0,55)||"Error desconocido");
