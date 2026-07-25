@@ -54,10 +54,10 @@ async function analyzeImage(item) {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ image: `data:${img.mime};base64,${img.b64}`, provider, model: provider === "groq" ? "qwen/qwen3.6-27b" : provider === "openrouter" ? "google/gemma-4-31b-it:free" : "gemini-2.0-flash", prompt: PROMPT }),
-        signal: AbortSignal.timeout(45000)
+        signal: AbortSignal.timeout(10000)
       });
     } catch(e) {
-      if (e.name==="AbortError") return fallback("Timeout — reintentando", true);
+      if (e.name==="AbortError") return fallback("Tiempo de espera agotado");
       return fallback("No se pudo conectar con el servidor de IA");
     }
     if (efResp.ok) {
@@ -188,18 +188,7 @@ $("queue-pause").onclick = () => {
 };
 
 async function analyzeImageWithRetry(item) {
-  for (let attempt = 0; attempt <= RETRY_MAX; attempt++) {
-    const result = await analyzeImage(item);
-    if (result._ok) return result;
-    if (result._isRateLimit && attempt < RETRY_MAX) continue;
-    if (!result._isRateLimit && attempt < RETRY_MAX) {
-      const waitMs = RETRY_WAITS[Math.min(attempt, RETRY_WAITS.length-1)];
-      for (let s=Math.ceil(waitMs/1000); s>0; s--) { procTxt.textContent=`⏳ ${s}s (reintento ${attempt+1})`; await new Promise(r=>setTimeout(r,1000)); }
-      continue;
-    }
-    return result;
-  }
-  return { marca:"No det.", modelo:"No det.", años:"No det.", descripcion:"Sin respuesta tras varios intentos", posicion:"No det.", confianza:"Baja", _ok:false };
+  return await analyzeImage(item);
 }
 
 function updateProg() {

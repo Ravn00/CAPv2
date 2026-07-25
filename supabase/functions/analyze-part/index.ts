@@ -142,7 +142,7 @@ async function callGroqWithRetry(key: string, model: string, image: string, prom
   const result = await callAI("https://api.groq.com/openai/v1/chat/completions",
     { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
     { model, messages: [{ role:"user", content:[{ type:"image_url", image_url:{ url:image } }, { type:"text", text:prompt }] }], max_tokens:1024, response_format: { type: "json_object" } },
-    30000
+    10000
   );
   if (result._isRateLimit && attempt < 2) {
     penalizeKey(key);
