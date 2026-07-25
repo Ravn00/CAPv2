@@ -13,6 +13,7 @@ async function loadConfig() {
     aiModel = cfg.ai_model || "qwen/qwen3.6-27b";
     if (cfg.license_secret) LICENSE_SECRET = cfg.license_secret;
     writeToken = cfg.write_token || "";
+    if (!writeToken) console.warn("loadConfig: write_token vacío en admin_config — las partes no se sincronizarán con V-CAP");
   }
   return !!cfg;
 }
@@ -145,6 +146,10 @@ async function savePartToSupabase(part) {
 
   rest.company_id = companyId || null;
   let isUpdate = false;
+  if (!writeToken) {
+    console.error("savePartToSupabase: writeToken vacío — revisar admin_config.write_token en Supabase");
+    return false;
+  }
   let ok = await apiProxy("partes", "POST", { id: part.id, data: rest });
   if (!ok) {
     isUpdate = true;

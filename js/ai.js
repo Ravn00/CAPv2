@@ -128,7 +128,8 @@ async function processQueue() {
         part.batchFiles = extraPhotos.map(p => ({ preview: p.preview, fileDataUrl: p.fileDataUrl, fileName: p.fileName, fileSize: p.fileSize }));
       }
       parts.push(part);
-      await savePartToSupabase(part);
+      const syncOk = await savePartToSupabase(part);
+      if (!syncOk) toast("⚠ Parte guardada localmente pero no sincronizada con el servidor (V-CAP no la verá hasta que se sincronice)", 4000);
       saveParts();
       replaceLoadingCard(item.id, part);
       doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();

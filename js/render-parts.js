@@ -413,7 +413,14 @@ $("manual-save").onclick=async ()=>{
   const imgEl = $("manual-preview-img");
   const imgSrc = manualPreviewDataUrl || (imgEl && imgEl.src) || null;
   const part={ id:`m-${Date.now()}-${Math.random().toString(36).slice(2)}`, preview:imgSrc, previewFull:imgSrc, fileName:manualPreviewFile?.name||"manual", fileSize:manualPreviewFile?.size||0, estado, stock, precioCompra, precioVenta, codigoOem:$("m-oem").value.trim()||null, ubicacion:$("m-ubicacion").value.trim()||null, categoria:$("m-cat").value, marca, modelo, años:$("m-años").value.trim()||"No determinado", posicion:$("m-pos").value.trim()||"No determinado", descripcion:$("m-desc").value.trim()||"Sin descripción", confianza:"Alta", _ok:true, manual:true, precio_sugerido:precioVenta??null, addedAt:new Date().toLocaleString("es-CL") };
-  parts.push(part); await savePartToSupabase(part); saveParts(); renderAll(); renderDashboard(); closeModal("manual-modal"); toast(`Agregado: ${marca} ${modelo}`);
+  parts.push(part);
+  const syncOk = await savePartToSupabase(part);
+  saveParts(); renderAll(); renderDashboard(); closeModal("manual-modal");
+  if (syncOk) {
+    toast(`Agregado: ${marca} ${modelo}`);
+  } else {
+    toast("⚠ Guardado local, pero no se pudo sincronizar con el servidor. Revisá la conexión o el token de escritura.", 5000);
+  }
 };
 // Image test / AI diagnostics (was in diag section)
 $("btn-test-ai").onclick = () => {
