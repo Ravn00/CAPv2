@@ -48,12 +48,105 @@ async function sbFetchAll(path) {
   return all;
 }
 
+// Lightbox Zoom state
+let lbZoom = { scale: 1, x: 0, y: 0, dragging: false, startX: 0, startY: 0, imgX: 0, imgY: 0 };
+
+function openLightbox(src) {
+  const lb = document.getElementById("lightbox");
+  const img = document.getElementById("lb-img");
+  if (!lb || !img) return;
+  img.src = src;
+  lbZoom.scale = 1; lbZoom.x = 0; lbZoom.y = 0;
+  img.style.transform = "scale(1) translate(0,0)";
+  img.style.cursor = "zoom-in";
+  lb.classList.add("on");
+}
+
 function closeLightbox() {
   const lb = document.getElementById("lightbox");
   if (lb) lb.classList.remove("on");
   const img = document.getElementById("lb-img");
-  if (img) img.src = "";
+  if (img) { img.src = ""; img.style.transform = "scale(1) translate(0,0)"; }
+  lbZoom.scale = 1; lbZoom.x = 0; lbZoom.y = 0;
 }
+
+function resetLightboxZoom() {
+  const img = document.getElementById("lb-img");
+  if (!img) return;
+  lbZoom.scale = 1; lbZoom.x = 0; lbZoom.y = 0;
+  img.style.transform = "scale(1) translate(0,0)";
+  img.style.cursor = "zoom-in";
+}
+
+// Init lightbox zoom controls once DOM is ready
+document.addEventListener("DOMContentLoaded", () => {
+  const img = document.getElementById("lb-img");
+  if (!img) return;
+
+  img.addEventListener("wheel", e => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.25 : 0.25;
+    const newScale = Math.max(0.5, Math.min(10, lbZoom.scale + delta));
+    lbZoom.scale = newScale;
+    img.style.transform = `scale(${newScale}) translate(${lbZoom.x}px, ${lbZoom.y}px)`;
+    img.style.cursor = newScale > 1 ? "grab" : "zoom-in";
+  }, { passive: false });
+
+  img.addEventListener("mousedown", e => {
+    if (lbZoom.scale <= 1) return;
+    lbZoom.dragging = true;
+    lbZoom.startX = e.clientX - lbZoom.x;
+    lbZoom.startY = e.clientY - lbZoom.y;
+    img.style.cursor = "grabbing";
+  });
+
+  document.addEventListener("mousemove", e => {
+    if (!lbZoom.dragging) return;
+    lbZoom.x = e.clientX - lbZoom.startX;
+    lbZoom.y = e.clientY - lbZoom.startY;
+    img.style.transform = `scale(${lbZoom.scale}) translate(${lbZoom.x}px, ${lbZoom.y}px)`;
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (!lbZoom.dragging) return;
+    lbZoom.dragging = false;
+    img.style.cursor = lbZoom.scale > 1 ? "grab" : "zoom-in";
+  });
+
+  // Double-click to zoom in / reset
+  img.addEventListener("dblclick", e => {
+    e.stopPropagation();
+    if (lbZoom.scale > 1) { resetLightboxZoom(); return; }
+    lbZoom.scale = 2.5;
+    const rect = img.getBoundingClientRect();
+    const x = (rect.width / 2 - (e.clientX - rect.left)) * 0.3;
+    const y = (rect.height / 2 - (e.clientY - rect.top)) * 0.3;
+    lbZoom.x = x; lbZoom.y = y;
+    img.style.transform = `scale(2.5) translate(${x}px, ${y}px)`;
+    img.style.cursor = "grab";
+  });
+
+  // Touch support (pinch zoom + pan)
+  let touches: TouchEvent | null = null;
+  let lastTouchDist = 0;
+  img.addEventListener("touchstart", e => {
+    if (e.touches.length === 2) {
+      lastTouchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }
+  }, { passive: true });
+
+  img.addEventListener("touchmove", e => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      const newScale = Math.max(0.5, Math.min(10, lbZoom.scale * (dist / lastTouchDist)));
+      lbZoom.scale = newScale;
+      lastTouchDist = dist;
+      img.style.transform = `scale(${newScale}) translate(${lbZoom.x}px, ${lbZoom.y}px)`;
+      img.style.cursor = newScale > 1 ? "grab" : "zoom-in";
+    }
+  }, { passive: false });
+});
 
 async function apiProxy(table, method, body, query) {
   if (!writeToken) { console.warn("apiProxy: no write token configured"); return null; }

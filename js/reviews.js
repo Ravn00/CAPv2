@@ -37,7 +37,7 @@ function openReviewModal() {
     const pDisplay = r.precioVenta || r.precio_sugerido;
     const priceHtml = pDisplay ? `<span style="color:var(--green);font-weight:600">$${pDisplay.toLocaleString("es-CL")}</span>` : "";
     card.innerHTML = `<div style="display:flex;gap:10px;margin-bottom:8px">
-      ${imgSrc ? `<img src="${escH(imgSrc)}" style="width:60px;height:60px;object-fit:cover;border-radius:var(--r6);flex-shrink:0;background:var(--s3)" loading="lazy">` : ""}
+      ${imgSrc ? `<img src="${escH(imgSrc)}" style="width:60px;height:60px;object-fit:cover;border-radius:var(--r6);flex-shrink:0;background:var(--s3);cursor:zoom-in" loading="lazy" data-click-img="${escH(imgSrc)}">` : ""}
       <div style="flex:1;min-width:0">
       <div class="ven-card-hdr"><span class="ven-card-cli">${escH(r.marca+" "+r.modelo)}</span>${priceHtml ? " · "+priceHtml : ""}<span style="font-size:10px;color:var(--amber)">Media</span></div>
       <div class="ven-card-meta">${r.años} · ${r.posicion} · ${r.descripcion}${r.fuentes?.length && r.fuentes[0].startsWith("http") ? ' · <a href="'+escH(r.fuentes[0])+'" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-size:10px">🔗 ref</a>' : ""}</div>
@@ -51,6 +51,8 @@ function openReviewModal() {
     card.querySelector("[data-approve]").onclick = async () => { await approveReview(i); };
     card.querySelector("[data-edit]").onclick = () => editReview(i);
     card.querySelector("[data-discard]").onclick = () => discardReview(i);
+    const reviewImg = card.querySelector("[data-click-img]");
+    if (reviewImg) reviewImg.addEventListener("click", () => openLightbox(reviewImg.dataset.clickImg));
     list.appendChild(card);
   });
 }

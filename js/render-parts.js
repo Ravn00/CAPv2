@@ -308,7 +308,9 @@ function renderQueue() {
     const d = document.createElement("div");
     d.className=`q-th ${item.status}`;
     const spin = item.status==="analyzing"?`<div class="spin" style="width:14px;height:14px;border-color:var(--amber-lt)"></div>`:item.status==="done"?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`:"";
-    d.innerHTML=`<img src="${item.preview}" alt=""/><div class="q-ov">${spin}</div>`;
+    const imgSrcQ = item.preview;
+    d.innerHTML=`<img src="${imgSrcQ}" alt="" style="cursor:zoom-in"/><div class="q-ov">${spin}</div>`;
+    if (imgSrcQ) d.querySelector("img").addEventListener("click", e => { e.stopPropagation(); openLightbox(imgSrcQ); });
     if (item.status !== "analyzing") {
       const cancelBtn = document.createElement("div");
       cancelBtn.className = "q-cancel";
@@ -335,6 +337,9 @@ function openManual(presetCat) {
   $("manual-preview-img").src=""; $("manual-preview-img").style.display="none";
   $("manual-file").value=""; manualPreviewDataUrl=null; manualPreviewFile=null;
   $("manual-modal").classList.add("on");
+  // Manual preview image opens lightbox on click
+  const mPreview = $("manual-preview-img");
+  if (mPreview) mPreview.onclick = () => { if (mPreview.src) openLightbox(mPreview.src); };
 }
 $("manual-photo-preview").onclick=()=>$("manual-file").click();
 $("manual-file").onchange=e=>{
@@ -378,6 +383,8 @@ function openManualWithResult(result, previewUrl) {
   }
   $("manual-title").textContent = "Catalogar manualmente" + (result.confianza !== "Baja" ? " (IA: " + result.confianza + ")" : "");
   $("manual-modal").classList.add("on");
+  const mPreview2 = $("manual-preview-img");
+  if (mPreview2) mPreview2.onclick = () => { if (mPreview2.src) openLightbox(mPreview2.src); };
 }
 function calcMargen(){
   const compra=parseFloat($("m-precio-compra").value)||0;
