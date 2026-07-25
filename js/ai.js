@@ -158,7 +158,7 @@ async function processQueue() {
       await logScan(review.id, review.categoria, "pending_review", ms);
     } else {
       replaceLoadingCard(item.id, null, "Manual");
-      openManualWithResult(result, item.fileDataUrl || item.preview);
+      openManualWithResult(result, item.preview);
       doneBatch++; updateProg(); updateUploadCounts(); updateHeaderStats();
       await logScan(item.id, result.categoria||item.presetCat||"varios", "manual_needed", ms);
     }
