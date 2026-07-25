@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Touch support (pinch zoom + pan)
-  let touches: TouchEvent | null = null;
+  let touches = null;
   let lastTouchDist = 0;
   img.addEventListener("touchstart", e => {
     if (e.touches.length === 2) {
