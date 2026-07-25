@@ -380,6 +380,7 @@ function openManualWithResult(result, previewUrl) {
   if (previewUrl && mImg) {
     mImg.src = previewUrl;
     mImg.style.display = "block";
+    manualPreviewDataUrl = previewUrl;
   } else if (mImg) {
     mImg.style.display = "none";
   }
