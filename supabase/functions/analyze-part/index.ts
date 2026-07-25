@@ -111,7 +111,7 @@ serve(async (req) => {
     if (!image) return new Response(JSON.stringify({ error: "image required" }), { status: 400, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
 
     const sprompt = prompt || DEFAULT_PROMPT;
-    const useModel = model || "meta-llama/llama-4-maverick-17b-128e-instruct";
+    const useModel = model || "qwen/qwen3.6-27b";
     let vision: Record<string, unknown>;
     let usedKey = "";
 

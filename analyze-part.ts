@@ -100,7 +100,7 @@ serve(async (req) => {
     if (provider === "groq") {
       const key = getNextGroqKey();
       if (!key) return new Response(JSON.stringify({ error: "No Groq keys available" }), { status: 503 });
-      result = await callGroq(key, model || "meta-llama/llama-4-maverick-17b-128e-instruct", image);
+      result = await callGroq(key, model || "qwen/qwen3.6-27b", image);
     } else if (provider === "openrouter") {
       const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
       if (!apiKey) return new Response(JSON.stringify({ error: "OpenRouter key not configured" }), { status: 500 });
