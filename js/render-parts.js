@@ -328,18 +328,21 @@ function renderQueue() {
 }
 // Manual entry
 function openManual(presetCat) {
-  ["m-marca","m-modelo","m-años","m-pos","m-desc","m-oem","m-ubicacion"].forEach(id=>{$(id).value="";});
-  $("m-estado").value="disponible"; $("m-stock").value="1";
-  $("m-precio-compra").value=""; $("m-precio-venta").value="";
-  $("m-margen-badge").style.display="none";
-  if (presetCat&&CATS[presetCat]) $("m-cat").value=presetCat;
-  $("manual-title").textContent=presetCat&&CATS[presetCat]?`Agregar en ${CATS[presetCat].label}`:"Agregar parte";
-  $("manual-preview-img").src=""; $("manual-preview-img").style.display="none";
-  $("manual-file").value=""; manualPreviewDataUrl=null; manualPreviewFile=null;
-  $("manual-modal").classList.add("on");
+  ["m-marca","m-modelo","m-años","m-pos","m-desc","m-oem","m-ubicacion"].forEach(id=>{const el=$(id);if(el)el.value="";});
+  const e=$("m-estado"); if(e)e.value="disponible";
+  const s=$("m-stock"); if(s)s.value="1";
+  const pc=$("m-precio-compra"); if(pc)pc.value="";
+  const pv=$("m-precio-venta"); if(pv)pv.value="";
+  const mb=$("m-margen-badge"); if(mb)mb.style.display="none";
+  if(presetCat){const mc=$("m-cat");if(mc)mc.value=presetCat;}
+  const mt=$("manual-title");
+  if(mt)mt.textContent=presetCat&&CATS[presetCat]?`Agregar en ${CATS[presetCat].label}`:"Agregar parte";
+  const mp=$("manual-preview-img"); if(mp){mp.src="";mp.style.display="none";}
+  const mf=$("manual-file"); if(mf)mf.value="";
+  manualPreviewDataUrl=null; manualPreviewFile=null;
+  const modal=$("manual-modal"); if(modal)modal.classList.add("on");
   // Manual preview image opens lightbox on click
-  const mPreview = $("manual-preview-img");
-  if (mPreview) mPreview.onclick = () => { if (mPreview.src) openLightbox(mPreview.src); };
+  if(mp)mp.onclick=()=>{if(mp.src)openLightbox(mp.src);};
 }
 $("manual-photo-preview").onclick=()=>$("manual-file").click();
 $("manual-file").onchange=e=>{
@@ -364,25 +367,27 @@ $("manual-file").onchange=e=>{
   reader.readAsDataURL(f);
 };
 function openManualWithResult(result, previewUrl) {
-  $("m-marca").value = result.marca !== "No determinado" ? result.marca : "";
-  $("m-modelo").value = result.modelo !== "No determinado" ? result.modelo : "";
-  $("m-años").value = result.años !== "No determinado" ? result.años : "";
-  $("m-pos").value = result.posicion !== "No determinado" && result.posicion !== "Central" ? result.posicion : "";
-  $("m-desc").value = result.descripcion !== "Sin descripción" ? result.descripcion : "";
-  if (result.categoria && CATS[result.categoria]) $("m-cat").value = result.categoria;
-  if (result.codigo_oem) $("m-oem").value = result.codigo_oem;
-  if (result.precio_sugerido) $("m-precio-venta").value = result.precio_sugerido;
-  // Mostrar preview de la imagen si disponible
-  if (previewUrl) {
-    $("manual-preview-img").src = previewUrl;
-    $("manual-preview-img").style.display = "block";
-  } else {
-    $("manual-preview-img").style.display = "none";
+  const $s = (id, val) => { const el = $(id); if (el) el.value = val; };
+  $s("m-marca", result.marca !== "No determinado" ? result.marca : "");
+  $s("m-modelo", result.modelo !== "No determinado" ? result.modelo : "");
+  $s("m-años", result.años !== "No determinado" ? result.años : "");
+  $s("m-pos", result.posicion !== "No determinado" && result.posicion !== "Central" ? result.posicion : "");
+  $s("m-desc", result.descripcion !== "Sin descripción" ? result.descripcion : "");
+  if (result.categoria) $s("m-cat", result.categoria);
+  if (result.codigo_oem) $s("m-oem", result.codigo_oem);
+  if (result.precio_sugerido) $s("m-precio-venta", result.precio_sugerido);
+  const mImg = $("manual-preview-img");
+  if (previewUrl && mImg) {
+    mImg.src = previewUrl;
+    mImg.style.display = "block";
+  } else if (mImg) {
+    mImg.style.display = "none";
   }
-  $("manual-title").textContent = "Catalogar manualmente" + (result.confianza !== "Baja" ? " (IA: " + result.confianza + ")" : "");
-  $("manual-modal").classList.add("on");
-  const mPreview2 = $("manual-preview-img");
-  if (mPreview2) mPreview2.onclick = () => { if (mPreview2.src) openLightbox(mPreview2.src); };
+  const mTitle = $("manual-title");
+  if (mTitle) mTitle.textContent = "Catalogar manualmente" + (result.confianza !== "Baja" ? " (IA: " + result.confianza + ")" : "");
+  const modal = $("manual-modal");
+  if (modal) modal.classList.add("on");
+  if (mImg) mImg.onclick = () => { if (mImg.src) openLightbox(mImg.src); };
 }
 function calcMargen(){
   const compra=parseFloat($("m-precio-compra").value)||0;
