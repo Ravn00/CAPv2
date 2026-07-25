@@ -376,10 +376,8 @@ function openManualWithResult(result, previewUrl) {
   if (previewUrl) {
     $("manual-preview-img").src = previewUrl;
     $("manual-preview-img").style.display = "block";
-    $("manual-photo-btn").style.display = "none";
   } else {
     $("manual-preview-img").style.display = "none";
-    $("manual-photo-btn").style.display = "flex";
   }
   $("manual-title").textContent = "Catalogar manualmente" + (result.confianza !== "Baja" ? " (IA: " + result.confianza + ")" : "");
   $("manual-modal").classList.add("on");
