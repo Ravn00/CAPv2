@@ -97,7 +97,7 @@ serve(async (req) => {
     const r = await fetch(`${sbUrl}/functions/v1/analyze-part`, {
       method: "POST",
       headers: { "Content-Type": "application/json", apikey: svcKey, Authorization: `Bearer ${svcKey}` },
-      body: JSON.stringify({ image: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AKwA=", provider: "groq", model: "meta-llama/llama-4-scout-17b-16e-instruct", prompt: "test" }),
+      body: JSON.stringify({ image: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AKwA=", provider: "groq", model: "meta-llama/llama-4-maverick-17b-128e-instruct", prompt: "test" }),
       signal: ctrl.signal,
     });
     clearTimeout(t);

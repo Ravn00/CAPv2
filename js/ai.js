@@ -53,7 +53,7 @@ async function analyzeImage(item) {
       efResp = await fetch(efUrl, {
         method: "POST",
         headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ image: `data:${img.mime};base64,${img.b64}`, provider, model: provider === "groq" ? "meta-llama/llama-4-scout-17b-16e-instruct" : provider === "openrouter" ? "google/gemma-4-31b-it:free" : "gemini-2.0-flash", prompt: PROMPT }),
+        body: JSON.stringify({ image: `data:${img.mime};base64,${img.b64}`, provider, model: provider === "groq" ? "meta-llama/llama-4-maverick-17b-128e-instruct" : provider === "openrouter" ? "google/gemma-4-31b-it:free" : "gemini-2.0-flash", prompt: PROMPT }),
         signal: AbortSignal.timeout(45000)
       });
     } catch(e) {

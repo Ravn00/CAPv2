@@ -2,7 +2,7 @@
 // The panel controls these remotely
 let apiKeys = [];
 let aiProvider = "groq";
-let aiModel = "meta-llama/llama-4-scout-17b-16e-instruct";
+let aiModel = "meta-llama/llama-4-maverick-17b-128e-instruct";
 let writeToken = "";
 
 async function loadConfig() {
@@ -10,7 +10,7 @@ async function loadConfig() {
   if (cfg) {
     apiKeys = cfg.api_keys || [];
     aiProvider = cfg.ai_provider || "groq";
-    aiModel = cfg.ai_model || "meta-llama/llama-4-scout-17b-16e-instruct";
+    aiModel = cfg.ai_model || "meta-llama/llama-4-maverick-17b-128e-instruct";
     if (cfg.license_secret) LICENSE_SECRET = cfg.license_secret;
     writeToken = cfg.write_token || "";
   }
